@@ -305,6 +305,14 @@ ExtractionResult ExtractAssetsIfNeeded(const std::string& target_o2r_path, bool 
         return { true, targetPath.string(), {}, {} };
     }
 
+#ifdef __SWITCH__
+    // On Switch, assets must be pre-extracted on a PC and placed alongside
+    // the .nro on the SD card. Torch cannot run on-device.
+    port_log("first_run: %s missing on Switch — place pre-extracted .o2r on SD card\n",
+             target_o2r_path.c_str());
+    return { false, {}, "Assets not found — pre-extract on PC with 'torch o2r baserom.us.z64' and copy .o2r to sdmc:/switch/BattleShip/", {} };
+#endif
+
     port_log("first_run: %s missing — running asset extraction\n",
              target_o2r_path.c_str());
 
@@ -428,6 +436,16 @@ ExtractionResult ExtractAssetsIfNeeded(const std::string& target_o2r_path, bool 
 
 bool RunFirstRunWizard(const std::string& target_o2r_path) {
     port_log("first_run: launching ImGui wizard\n");
+
+#ifdef __SWITCH__
+    // Switch cannot run Torch on-device. Assets must be pre-extracted on a PC
+    // and placed alongside the .nro on the SD card. Show a clean error and exit.
+    // Write error to ssb64.log (SDL message boxes don't work on Switch).
+    port_log("first_run: assets not found — place pre-extracted .o2r on SD card\n");
+    port_log("  Run on PC: torch o2r baserom.us.z64\n");
+    port_log("  Then copy .o2r files to sdmc:/switch/BattleShip/\n");
+    return false;
+#endif
 
     auto context = Ship::Context::GetInstance();
     auto window = context->GetWindow();

@@ -70,12 +70,13 @@ static void port_register_service_thread(OSThread *t)
 	}
 }
 
-static s32 sResumeDebugCount = 0;
+static s32 sResumeDebugCount = 0; /* debug first few frames, then silent */
 
 /* Called by PortPushFrame to resume all service thread coroutines
  * that have messages waiting in their blocked queues. */
 void port_resume_service_threads(void)
 {
+	#ifndef __SWITCH__
 	if (sResumeDebugCount < 3) {
 		port_log( "SSB64: port_resume_service_threads: %d threads registered\n",
 		        (int)sServiceThreadCount);
@@ -88,6 +89,7 @@ void port_resume_service_threads(void)
 		}
 		sResumeDebugCount++;
 	}
+	#endif
 
 	/* Resume threads in priority order (higher priority first).
 	 * Simple bubble: scheduler(120) > controller(115) > audio(110) > game(50)
@@ -142,6 +144,10 @@ void port_resume_service_threads(void)
 			/* Resume this thread — it will run until it yields again. */
 			t->state = OS_STATE_RUNNING;
 			port_watchdog_note_resume_start((int)t->id);
+		if (sResumeDebugCount <= 1) {
+			port_log("  about to resume thread %d (coroutine=%p)\n",
+			         (int)t->id, t->port_coroutine);
+			}
 			port_coroutine_resume((PortCoroutine *)t->port_coroutine);
 			port_watchdog_note_resume_end((int)t->id);
 			if (port_coroutine_is_finished((PortCoroutine *)t->port_coroutine)) {
@@ -789,8 +795,10 @@ void spFinish(Gfx **glistp)
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifndef __SWITCH__
 void __assert(const char *expr, const char *file, int line)
 {
 	port_log( "Assertion failed: %s, file %s, line %d\n", expr, file, line);
 	abort();
 }
+#endif
