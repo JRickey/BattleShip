@@ -72,6 +72,52 @@ I hope you enjoy the project.
 
 If you want to manually compile BattleShip, please consult the [building instructions](BUILDING.md).
 
+### Nintendo Switch
+
+The Switch port cross-compiles from macOS or Linux using the [devkitPro](https://devkitpro.org) toolchain. It runs at 60fps in handheld (720p) and docked (1080p) via OpenGL ES (Mesa/nouveau).
+
+**Prerequisites:**
+
+```bash
+# Install devkitPro and Switch packages
+dkp-pacman -S switch-dev switch-sdl2 switch-glad switch-tinyxml2 \
+               switch-libzip switch-spdlog switch-nlohmann-json
+```
+
+**One-command build:**
+
+```bash
+./scripts/build-switch.sh
+```
+
+This script:
+1. Builds Torch natively to extract `BattleShip.o2r` from your ROM
+2. Cross-compiles the game for Switch (ARM64, Cortex-A57)
+3. Bundles the `.nro` + `.o2r` files into `build-switch/switch_sd/`
+
+**Manual steps (if you prefer):**
+
+```bash
+# 1. Extract assets (requires baserom.us.z64 at project root)
+cmake -S . -B build-native -DCMAKE_BUILD_TYPE=Release
+cmake --build build-native --target TorchExternal -- -j1
+./build-native/TorchExternal/src/TorchExternal-build/torch o2r baserom.us.z64
+
+# 2. Cross-compile for Switch
+cmake -S . -B build-switch \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_TOOLCHAIN_FILE=/opt/devkitpro/cmake/Switch.cmake
+cmake --build build-switch -- -j2
+
+# 3. Package for SD card
+/opt/devkitpro/tools/bin/elf2nro build-switch/BattleShip.elf build-switch/BattleShip.nro
+cmake --build build-switch --target BundleSwitch
+```
+
+**Deploy:** Copy `build-switch/switch_sd/switch/BattleShip/` to your SD card's `sdmc:/switch/` directory. Launch via hbmenu.
+
+**First boot note:** OpenGL ES shaders are compiled at runtime. The first playthrough will populate `sdmc:/switch/BattleShip/shader_cache/` — subsequent runs will be smooth. If you delete the cache, expect shader-compilation hitches on the next boot.
+
 ## Architecture
 
 The port has three layers and they are kept deliberately separate:
