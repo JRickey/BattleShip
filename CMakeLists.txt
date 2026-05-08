@@ -180,8 +180,10 @@ file(GLOB_RECURSE SSB64_SRC_SYS     "decomp/src/sys/*.c"     "decomp/src/sys/*.h
 file(GLOB_RECURSE SSB64_SRC_WP      "decomp/src/wp/*.c"      "decomp/src/wp/*.h")
 
 # Port layer (C++ glue) — excludes port/stubs/ which is compiled as part of ssb64_game
+# and port/test/ which only links into the SSB64_BUILD_TESTS=ON test target.
 file(GLOB_RECURSE SSB64_SRC_PORT "port/*.cpp" "port/*.c" "port/*.h")
 list(FILTER SSB64_SRC_PORT EXCLUDE REGEX "port/stubs/")
+list(FILTER SSB64_SRC_PORT EXCLUDE REGEX "port/test/")
 
 # Debug tools (GBI trace + Acmd trace systems)
 file(GLOB SSB64_DEBUG_TOOLS
