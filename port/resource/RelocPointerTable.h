@@ -48,6 +48,13 @@ void *portRelocTryResolvePointer(uint32_t token);
  */
 void portRelocResetPointerTable(void);
 
+/**
+ * Test-only: like portRelocResetPointerTable but pins the generation counter
+ * to its initial value so tokens emitted by successive loads are byte-
+ * identical. Production never calls this.
+ */
+void portRelocResetPointerTableForTest(void);
+
 #ifdef __cplusplus
 }
 #endif

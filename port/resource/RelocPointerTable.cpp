@@ -152,4 +152,15 @@ void portRelocResetPointerTable(void)
 	}
 }
 
+void portRelocResetPointerTableForTest(void)
+{
+	sNextIndex = 1;
+	sGeneration = TOKEN_GENERATION_MIN;
+
+	if (sPointerTable != nullptr)
+	{
+		memset(sPointerTable, 0, sCapacity * sizeof(void *));
+	}
+}
+
 } // extern "C"

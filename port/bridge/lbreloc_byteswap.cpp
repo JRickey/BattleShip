@@ -17,6 +17,7 @@
  */
 
 #include "bridge/lbreloc_byteswap.h"
+#include "bridge/lbreloc_bridge_testing.h"
 #include "resource/RelocPointerTable.h"
 #include "resource/RelocFileTable.h"
 
@@ -630,6 +631,18 @@ static std::vector<ProtectedRange> sProtectedStructRanges;
 // Needs its own set because portFixupSpriteBitmapData already inserted the same buf
 // addresses during the pre-decode BSWAP32 pass.
 static std::unordered_set<uintptr_t> sDeswizzle4cFixups;
+
+// Tracker-set enumeration for tests. Production never reads from this; tests
+// use it after a load to convert tracker keys (which the byteswap layer stores
+// as raw uintptr_t) into snapshot fields.
+extern "C" void portRelocForEachTrackerEntry(
+	void (*cb)(uint8_t family, uint64_t addr, void *user), void *user)
+{
+	if (cb == nullptr) return;
+	for (uintptr_t k : sStructU16Fixups)    cb(/*family=*/0, (uint64_t)k, user);
+	for (uintptr_t k : sTexFixupWords)      cb(/*family=*/1, (uint64_t)k, user);
+	for (uintptr_t k : sDeswizzle4cFixups)  cb(/*family=*/2, (uint64_t)k, user);
+}
 
 static void portRegisterProtectedStructRange(const void *begin, size_t size)
 {

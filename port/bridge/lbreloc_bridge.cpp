@@ -22,6 +22,7 @@
 #include "resource/RelocFile.h"
 #include "resource/RelocFileTable.h"
 #include "resource/RelocPointerTable.h"
+#include "bridge/lbreloc_bridge_testing.h"
 #include "bridge/lbreloc_byteswap.h"
 
 extern "C" void port_aobj_register_halfswapped_range(void *base, unsigned long size);
@@ -122,6 +123,75 @@ struct PortRelocFileRange
 
 static std::vector<PortRelocFileRange> sPortRelocFileRanges;
 
+// // // // // // // // // // // //
+//                               //
+//   TEST INJECTION HOOKS        //
+//                               //
+// // // // // // // // // // // //
+
+// Resource-loader override (set by tests). When nullptr, portLoadRelocResource
+// falls through to the production Ship::Context lookup.
+static std::shared_ptr<RelocFile> (*sRelocLoaderOverride)(uint32_t file_id) = nullptr;
+
+// Chain-walk observer (set by tests). Invoked once per registered chain target.
+static PortRelocChainObserver sChainObserver = nullptr;
+
+extern "C" void portRelocSetResourceLoader(std::shared_ptr<RelocFile> (*loader)(uint32_t file_id))
+{
+	sRelocLoaderOverride = loader;
+}
+
+extern "C" void portRelocClearResourceLoader(void)
+{
+	sRelocLoaderOverride = nullptr;
+}
+
+extern "C" void portRelocSetChainObserver(PortRelocChainObserver obs)
+{
+	sChainObserver = obs;
+}
+
+extern "C" void portRelocClearChainObserver(void)
+{
+	sChainObserver = nullptr;
+}
+
+extern "C" void portRelocBridgeForgetFileRanges(void)
+{
+	sPortRelocFileRanges.clear();
+}
+
+// Test-only: status buffer storage. Owned by the bridge so tests don't need
+// to know LBFileNode's layout. Two arrays — main + force.
+static std::vector<LBFileNode> sTestStatusBuf;
+static std::vector<LBFileNode> sTestForceStatusBuf;
+
+extern "C" void portRelocBridgeSetupForTest(
+    void *intern_heap_base, size_t intern_heap_size,
+    void *extern_heap_base, size_t extern_heap_size,
+    size_t status_buffer_count,
+    size_t force_status_buffer_count)
+{
+	sTestStatusBuf.assign(status_buffer_count, LBFileNode{0u, nullptr});
+	sTestForceStatusBuf.assign(force_status_buffer_count, LBFileNode{0u, nullptr});
+
+	sLBRelocInternBuffer.rom_table_lo = 0;
+	sLBRelocInternBuffer.rom_table_hi = 0;
+	sLBRelocInternBuffer.total_files_num = 0;
+	sLBRelocInternBuffer.heap_start = intern_heap_base;
+	sLBRelocInternBuffer.heap_ptr = intern_heap_base;
+	sLBRelocInternBuffer.heap_end = (void*)((uintptr_t)intern_heap_base + intern_heap_size);
+	sLBRelocInternBuffer.status_buffer_num = 0;
+	sLBRelocInternBuffer.status_buffer_max = static_cast<s32>(status_buffer_count);
+	sLBRelocInternBuffer.status_buffer = sTestStatusBuf.data();
+	sLBRelocInternBuffer.force_status_buffer_num = 0;
+	sLBRelocInternBuffer.force_status_buffer_max = static_cast<s32>(force_status_buffer_count);
+	sLBRelocInternBuffer.force_status_buffer = sTestForceStatusBuf.data();
+
+	sLBRelocExternFileHeap = extern_heap_base;
+	(void)extern_heap_size;  /* The bridge's bump alloc has no end-check on extern heap; tests size the buffer */
+}
+
 static void portRelocEvictFileRangesInRange(void *base, size_t size)
 {
 	if ((base == nullptr) || (size == 0))
@@ -202,6 +272,18 @@ static std::shared_ptr<RelocFile> portLoadRelocResource(u32 file_id)
 	{
 		spdlog::error("lbReloc bridge: invalid file_id {} (0x{:08X})", file_id, file_id);
 		return nullptr;
+	}
+
+	// Test-only injection point: tests install a loader so we don't need a
+	// fully-initialized Ship::Context. Production never sets sRelocLoaderOverride.
+	if (sRelocLoaderOverride != nullptr)
+	{
+		auto rf = sRelocLoaderOverride(file_id);
+		if (!rf)
+		{
+			spdlog::error("lbReloc bridge: test loader returned null for file_id {}", file_id);
+		}
+		return rf;
 	}
 
 	auto ctx = Ship::Context::GetInstance();
@@ -496,6 +578,12 @@ void lbRelocLoadAndRelocFile(u32 file_id, void *ram_dst, u32 bytes_num, s32 loc)
 				figatree_reloc_words[reloc_intern] = 1;
 			}
 			*slot = token;
+
+			// Test-only: notify observer of the registered internal target.
+			if (sChainObserver != nullptr)
+			{
+				sChainObserver(file_id, slot_byte_off, /*dep_file_id=*/-1, target_byte_off);
+			}
 		}
 
 		reloc_intern = next_reloc;
@@ -565,6 +653,14 @@ void lbRelocLoadAndRelocFile(u32 file_id, void *ram_dst, u32 bytes_num, s32 loc)
 			figatree_reloc_words[reloc_extern] = 1;
 		}
 		*slot = token;
+
+		// Test-only: notify observer of the registered external target.
+		if (sChainObserver != nullptr)
+		{
+			uint32_t slot_byte_off_ext = (uint32_t)(reloc_extern * sizeof(u32));
+			uint32_t target_byte_off_ext = (uint32_t)(words_num * sizeof(u32));
+			sChainObserver(file_id, slot_byte_off_ext, (int32_t)dep_file_id, target_byte_off_ext);
+		}
 
 		extern_idx++;
 		reloc_extern = next_reloc;
