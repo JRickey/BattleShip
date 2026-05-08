@@ -31,6 +31,7 @@ option(NON_MATCHING "Build without matching decomp constraints" ON)
 option(NON_EQUIVALENT "Build without equivalent decomp constraints" ON)
 option(USE_AUTO_VCPKG "Use automated vcpkg for dependency management" ON)
 option(SSB64_STAGE_CYCLE_DEMO "Boot directly into attract-demo stage cycle for rendering regression testing" OFF)
+option(SSB64_BUILD_TESTS "Build the port/test/ GTest harness for the reloc pipeline" OFF)
 
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
@@ -559,4 +560,13 @@ if(RELOCDATA_CC AND EXISTS "${SSB64_BASEROM}")
 elseif(RELOCDATA_CC)
     message(STATUS "RelocData: baserom absent — BuildBattleShipFromSource skipped "
                    "(release CI / no-rom builds; runtime falls back to Torch-passthrough reloc data)")
+endif()
+
+################################################################################
+# Tests (-DSSB64_BUILD_TESTS=ON)
+################################################################################
+
+if(SSB64_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(port/test)
 endif()
