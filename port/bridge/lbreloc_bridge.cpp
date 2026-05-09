@@ -672,9 +672,15 @@ void lbRelocLoadAndRelocFile(u32 file_id, void *ram_dst, u32 bytes_num, s32 loc)
 
 	if (is_fighter_figatree)
 	{
-		portRelocFixupFighterFigatree(ram_dst, copySize, figatree_reloc_words);
-		/* Register the halfswapped range so port_aobj_event32_unhalfswap_stream
-		 * knows to only touch EVENT32 streams inside this file's memory. */
+		/* Skip the byte transform when torch already applied it at extraction.
+		 * The halfswapped-range registration is heap-absolute side-effect work
+		 * that must run every load regardless of where the bytes were
+		 * transformed — the lazy AObjEvent32 walker (port_aobj_fixup) and
+		 * FTKeyEvent reader (ftkey.c) both consult it. */
+		if ((relocFile->ProcessingFlags & PROC_HALFSWAP_DONE) == 0)
+		{
+			portRelocFixupFighterFigatree(ram_dst, copySize, figatree_reloc_words);
+		}
 		port_aobj_register_halfswapped_range(ram_dst, (unsigned long)copySize);
 	}
 

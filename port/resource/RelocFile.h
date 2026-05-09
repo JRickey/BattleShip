@@ -43,6 +43,14 @@ constexpr uint32_t PROC_BITMAP_DONE         = 1u << 5;
 constexpr uint32_t PROC_MOBJSUB_DONE        = 1u << 6;
 constexpr uint32_t PROC_FTATTRIBUTES_DONE   = 1u << 7;
 
+/* When set, torch already applied the u16-halfswap to fighter
+ * animation/submotion files (and reloc_scene/SCExplainMain). The runtime skips
+ * the portRelocFixupFighterFigatree byte transform but still calls
+ * port_aobj_register_halfswapped_range, since the halfswapped-range registry
+ * is heap-absolute state that the lazy AObjEvent32 walker / FTKeyEvent reader
+ * consult and must be populated every load. */
+constexpr uint32_t PROC_HALFSWAP_DONE       = 1u << 8;
+
 class RelocFile final : public Ship::Resource<void> {
 public:
     using Resource::Resource;
