@@ -179,6 +179,12 @@ ArchiveSession::ArchiveSession() : mImpl(std::make_unique<Impl>())
         "SSB64Reloc",
         static_cast<uint32_t>(SSB64::ResourceType::SSB64Reloc),
         1);
+    loader->RegisterResourceFactory(
+        std::make_shared<ResourceFactoryBinaryRelocFileV2>(),
+        RESOURCE_FORMAT_BINARY,
+        "SSB64Reloc",
+        static_cast<uint32_t>(SSB64::ResourceType::SSB64Reloc),
+        2);
 }
 
 std::shared_ptr<RelocFile> ArchiveSession::LoadFile(uint32_t file_id)

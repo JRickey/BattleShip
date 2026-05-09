@@ -529,145 +529,117 @@ void lbRelocLoadAndRelocFile(u32 file_id, void *ram_dst, u32 bytes_num, s32 loc)
 
 	sPortRelocFileRanges.push_back({ reinterpret_cast<uintptr_t>(ram_dst), copySize, file_id, gRelocFileTable[file_id], (uint32_t)relocFile->ProcessingFlags });
 
-	// --- Internal pointer relocation (token-based) ---
+	// --- Reloc chain processing ---
 	//
-	// Each reloc descriptor is a 4-byte word in the data:
-	//   bits [31:16] = next descriptor offset (in words), 0xFFFF = end
-	//   bits [15:0]  = target offset within this file (in words)
+	// Two source paths produce the same per-entry side effects:
+	//   (a) PROC_CHAIN_FLATTENED is set: torch pre-walked the chain and
+	//       emitted relocFile->InternChain / ExternChain. We iterate those
+	//       lists directly.
+	//   (b) PROC_CHAIN_FLATTENED is unset: walk the encoded chain in-place
+	//       (each slot is a u32 of [next_word_idx<<16 | target_word_idx],
+	//       0xFFFF terminates).
 	//
-	// On N64, the code overwrites this 4-byte word with a void* pointer.
-	// In the port, we compute the pointer, register it as a token, and
-	// write the 32-bit token into the 4-byte word.
-
-	u16 reloc_intern = relocFile->RelocInternOffset;
-
-	while (reloc_intern != 0xFFFF)
-	{
-		u32 *slot = (u32 *)((uintptr_t)ram_dst + (reloc_intern * sizeof(u32)));
-
-		// Read the reloc descriptor before we overwrite the slot.
-		// After the blanket u32 byte-swap, native u32 reads produce the
-		// same values as on the N64 (big-endian).  The struct layout is:
-		//   bits [31:16] = next descriptor offset (word index), 0xFFFF = end
-		//   bits [15:0]  = target offset within this file (word index)
-		u16 next_reloc = (u16)(*slot >> 16);
-		u16 words_num  = (u16)(*slot & 0xFFFF);
-
-		// All reloc chain entries are intra-file pointers.  Tokenize them
-		// normally so the resource system can resolve them to PC addresses.
-		//
-		// Note: G_DL commands that reference segment 0x0E are NOT in the reloc
-		// chain — they exist as raw 0x0Exxxxxx values in the ROM data.
-		// These are intra-file sub-DL references resolved to absolute
-		// addresses by portNormalizeDisplayListPointer at widening time.
-		{
-			// Texture fixup: if this slot is the w1 of a G_SETTIMG cmd, the
-			// chain encoding gives us the in-file target offset (words_num*4)
-			// where the actual texture bytes live.  Pass2's seg==0x0E walk
-			// can't see these (the chain encoding has random high bytes), so
-			// we apply the texture-format BSWAP32 fixup here.  Idempotent.
-			uint32_t slot_byte_off = (uint32_t)(reloc_intern * sizeof(u32));
-			uint32_t target_byte_off = (uint32_t)(words_num * sizeof(u32));
-			portRelocFixupTextureFromChain(ram_dst, copySize,
-			                               slot_byte_off, target_byte_off);
-
-			// Compute the real target pointer (within this file's data)
-			void *target = (void *)((uintptr_t)ram_dst + (words_num * sizeof(u32)));
-
-			// Register in the token table and write the 32-bit token
-			u32 token = portRelocRegisterPointer(target);
-
-			if (is_fighter_figatree && (reloc_intern < figatree_reloc_words.size()))
-			{
-				figatree_reloc_words[reloc_intern] = 1;
-			}
-			*slot = token;
-
-			// Test-only: notify observer of the registered internal target.
-			if (sChainObserver != nullptr)
-			{
-				sChainObserver(file_id, slot_byte_off, /*dep_file_id=*/-1, target_byte_off);
-			}
-		}
-
-		reloc_intern = next_reloc;
-	}
-
-	// --- External pointer relocation (token-based) ---
+	// Per-entry side effects (must be identical across both paths so the
+	// PROC_CHAIN_FLATTENED gate is purely a sourcing change):
+	//   - Internal: portRelocFixupTextureFromChain on the slot/target byte
+	//     offsets (catches G_SETTIMG/G_VTX byte fixups for chain-targeted
+	//     loads that pass2's in-DL walker can't see), then register the
+	//     resolved pointer as a token, write the token into the slot, mark
+	//     the figatree halfswap mask if applicable, fire the test observer.
+	//   - External: same shape, but the target lives in a dependency file
+	//     loaded via lbRelocGet*BufferFile. dep_file_id comes from the flat
+	//     list entry or from ExternFileIds[idx] (chain-insertion order).
 	//
-	// Same chain structure, but the target is in a DIFFERENT file.
-	// The extern file IDs come from the RelocFile metadata (extracted
-	// by Torch at ROM-extraction time), not from ROM DMA.
-
-	u16 reloc_extern = relocFile->RelocExternOffset;
-	u32 extern_idx = 0;
-
-	while (reloc_extern != 0xFFFF)
-	{
-		u32 *slot = (u32 *)((uintptr_t)ram_dst + (reloc_extern * sizeof(u32)));
-
-		u16 next_reloc = (u16)(*slot >> 16);
-		u16 words_num  = (u16)(*slot & 0xFFFF);
-
-		if (extern_idx >= relocFile->ExternFileIds.size())
-		{
-			spdlog::error("lbReloc bridge: file_id {} extern reloc overrun "
-			              "(idx={}, count={})", file_id, extern_idx,
-			              relocFile->ExternFileIds.size());
-			break;
-		}
-
-		u16 dep_file_id = relocFile->ExternFileIds[extern_idx];
-		void *vaddr_extern;
-
-		// Check if dependency is already loaded
-		if (loc == nLBFileLocationForce)
-		{
-			vaddr_extern = lbRelocFindForceStatusBufferFile(dep_file_id);
-		}
-		else
-		{
-			vaddr_extern = lbRelocFindStatusBufferFile(dep_file_id);
-		}
-
-		// Load dependency if not cached
-		if (vaddr_extern == NULL)
-		{
-			switch (loc)
-			{
-			case nLBFileLocationExtern:
-				vaddr_extern = lbRelocGetExternBufferFile(dep_file_id);
-				break;
-			case nLBFileLocationDefault:
-				vaddr_extern = lbRelocGetInternBufferFile(dep_file_id);
-				break;
-			case nLBFileLocationForce:
-				vaddr_extern = lbRelocGetForceExternBufferFile(dep_file_id);
-				break;
-			}
-		}
-
-		// Compute target pointer (offset into the dependency file's data)
-		void *target = (void *)((uintptr_t)vaddr_extern + (words_num * sizeof(u32)));
-
+	// G_DL commands that reference segment 0x0E are NOT in the reloc chain —
+	// they exist as raw 0x0Exxxxxx values in the data and are resolved by
+	// portNormalizeDisplayListPointer at widening time.
+	auto applyInternEntry = [&](uint32_t slot_byte_off, uint32_t target_byte_off) {
+		portRelocFixupTextureFromChain(ram_dst, copySize, slot_byte_off, target_byte_off);
+		u32 *slot = (u32 *)((uintptr_t)ram_dst + slot_byte_off);
+		void *target = (void *)((uintptr_t)ram_dst + target_byte_off);
 		u32 token = portRelocRegisterPointer(target);
-
-		if (is_fighter_figatree && (reloc_extern < figatree_reloc_words.size()))
-		{
-			figatree_reloc_words[reloc_extern] = 1;
+		if (is_fighter_figatree) {
+			uint32_t slot_word_idx = slot_byte_off / sizeof(u32);
+			if (slot_word_idx < figatree_reloc_words.size())
+				figatree_reloc_words[slot_word_idx] = 1;
 		}
 		*slot = token;
+		if (sChainObserver != nullptr) {
+			sChainObserver(file_id, slot_byte_off, /*dep_file_id=*/-1, target_byte_off);
+		}
+	};
 
-		// Test-only: notify observer of the registered external target.
-		if (sChainObserver != nullptr)
+	auto applyExternEntry = [&](uint32_t slot_byte_off, uint32_t target_byte_off, u16 dep_file_id) {
+		void *vaddr_extern = (loc == nLBFileLocationForce)
+			? lbRelocFindForceStatusBufferFile(dep_file_id)
+			: lbRelocFindStatusBufferFile(dep_file_id);
+		if (vaddr_extern == NULL) {
+			switch (loc) {
+			case nLBFileLocationExtern:
+				vaddr_extern = lbRelocGetExternBufferFile(dep_file_id); break;
+			case nLBFileLocationDefault:
+				vaddr_extern = lbRelocGetInternBufferFile(dep_file_id); break;
+			case nLBFileLocationForce:
+				vaddr_extern = lbRelocGetForceExternBufferFile(dep_file_id); break;
+			}
+		}
+		u32 *slot = (u32 *)((uintptr_t)ram_dst + slot_byte_off);
+		void *target = (void *)((uintptr_t)vaddr_extern + target_byte_off);
+		u32 token = portRelocRegisterPointer(target);
+		if (is_fighter_figatree) {
+			uint32_t slot_word_idx = slot_byte_off / sizeof(u32);
+			if (slot_word_idx < figatree_reloc_words.size())
+				figatree_reloc_words[slot_word_idx] = 1;
+		}
+		*slot = token;
+		if (sChainObserver != nullptr) {
+			sChainObserver(file_id, slot_byte_off, (int32_t)dep_file_id, target_byte_off);
+		}
+	};
+
+	if (relocFile->ProcessingFlags & PROC_CHAIN_FLATTENED)
+	{
+		// Path (a): flat-list iteration — torch's chain walker output.
+		for (const auto &e : relocFile->InternChain)
+			applyInternEntry(e.SlotByteOffset, e.TargetByteOffset);
+		for (const auto &e : relocFile->ExternChain)
+			applyExternEntry(e.SlotByteOffset, e.TargetByteOffset, e.DepFileId);
+	}
+	else
+	{
+		// Path (b): encoded-chain walk on the data slots in-place.
+		u16 reloc_intern = relocFile->RelocInternOffset;
+		while (reloc_intern != 0xFFFF)
 		{
-			uint32_t slot_byte_off_ext = (uint32_t)(reloc_extern * sizeof(u32));
-			uint32_t target_byte_off_ext = (uint32_t)(words_num * sizeof(u32));
-			sChainObserver(file_id, slot_byte_off_ext, (int32_t)dep_file_id, target_byte_off_ext);
+			u32 *slot = (u32 *)((uintptr_t)ram_dst + (reloc_intern * sizeof(u32)));
+			u16 next_reloc = (u16)(*slot >> 16);
+			u16 words_num  = (u16)(*slot & 0xFFFF);
+			applyInternEntry((uint32_t)(reloc_intern * sizeof(u32)),
+			                 (uint32_t)(words_num   * sizeof(u32)));
+			reloc_intern = next_reloc;
 		}
 
-		extern_idx++;
-		reloc_extern = next_reloc;
+		u16 reloc_extern = relocFile->RelocExternOffset;
+		u32 extern_idx = 0;
+		while (reloc_extern != 0xFFFF)
+		{
+			u32 *slot = (u32 *)((uintptr_t)ram_dst + (reloc_extern * sizeof(u32)));
+			u16 next_reloc = (u16)(*slot >> 16);
+			u16 words_num  = (u16)(*slot & 0xFFFF);
+			if (extern_idx >= relocFile->ExternFileIds.size())
+			{
+				spdlog::error("lbReloc bridge: file_id {} extern reloc overrun "
+				              "(idx={}, count={})", file_id, extern_idx,
+				              relocFile->ExternFileIds.size());
+				break;
+			}
+			u16 dep_file_id = relocFile->ExternFileIds[extern_idx];
+			applyExternEntry((uint32_t)(reloc_extern * sizeof(u32)),
+			                 (uint32_t)(words_num   * sizeof(u32)),
+			                 dep_file_id);
+			extern_idx++;
+			reloc_extern = next_reloc;
+		}
 	}
 
 	if (is_fighter_figatree)

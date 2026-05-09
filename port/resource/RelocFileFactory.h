@@ -19,11 +19,25 @@
  *     u32  decompressed_data_size
  *     u8[decompressed_data_size]  decompressed_data
  *
- *   v1 (current; introduced when Pass 1 BSWAP32 moved into torch):
+ *   v1 (introduced when Pass 1 BSWAP32 moved into torch):
  *     ... same prefix ...
  *     u32  processing_flags        // PROC_* bitmask in RelocFile.h
  *     u32  decompressed_data_size
  *     u8[decompressed_data_size]  decompressed_data   // already post-Pass1
+ *
+ *   v2 (current; Stage 9 — chain-flatten):
+ *     ... same prefix ...
+ *     u32  processing_flags
+ *     u32  num_intern_chain_entries
+ *     { u32 slot_byte_offset, u32 target_byte_offset }[num_intern_chain_entries]
+ *     u32  num_extern_chain_entries
+ *     { u32 slot_byte_offset, u32 target_byte_offset }[num_extern_chain_entries]
+ *     u32  decompressed_data_size
+ *     u8[decompressed_data_size]  decompressed_data
+ *
+ * v2 archives may have PROC_CHAIN_FLATTENED set (runtime iterates the flat
+ * lists) or unset (defensive — runtime falls through to the encoded walker on
+ * the `decompressed_data` slots, which torch leaves intact regardless).
  */
 class ResourceFactoryBinaryRelocFileV0 final : public Ship::ResourceFactoryBinary {
 public:
@@ -33,6 +47,13 @@ public:
 };
 
 class ResourceFactoryBinaryRelocFileV1 final : public Ship::ResourceFactoryBinary {
+public:
+    std::shared_ptr<Ship::IResource> ReadResource(
+        std::shared_ptr<Ship::File> file,
+        std::shared_ptr<Ship::ResourceInitData> initData) override;
+};
+
+class ResourceFactoryBinaryRelocFileV2 final : public Ship::ResourceFactoryBinary {
 public:
     std::shared_ptr<Ship::IResource> ReadResource(
         std::shared_ptr<Ship::File> file,

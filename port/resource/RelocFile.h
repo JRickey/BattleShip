@@ -51,6 +51,32 @@ constexpr uint32_t PROC_FTATTRIBUTES_DONE   = 1u << 7;
  * consult and must be populated every load. */
 constexpr uint32_t PROC_HALFSWAP_DONE       = 1u << 8;
 
+/* Bit 9 is reserved-unused per the Stage 7 closeout: the AObjEvent32 unhalfswap
+ * walker stays runtime-side permanently. See
+ * docs/decision_aobjevent32_runtime_walker_2026-05-09.md. */
+
+/* When set, torch pre-walked the relocation chains and emitted a flat list
+ * of (slot_byte_offset, target_byte_offset) entries — split into intern and
+ * extern sublists. The runtime iterates that list directly, skipping the
+ * encoded-chain walk in `lbreloc_bridge.cpp`. The encoded slot bytes are
+ * still present in `Data` (untouched by torch) so v2 archives without the
+ * runtime gate enabled can fall back to the encoded walker. The flat-list
+ * iterator preserves every per-entry side effect of the encoded walker:
+ * portRelocFixupTextureFromChain on internal entries, dep-file lazy-load
+ * for externals, portRelocRegisterPointer + slot overwrite, optional
+ * figatree halfswap-mask population, and the chain-observer callback used
+ * by the fixture harness. */
+constexpr uint32_t PROC_CHAIN_FLATTENED     = 1u << 10;
+
+/* One pre-walked chain entry. byte_offset values are relative to the start
+ * of `Data`. dep_file_id == 0xFFFF marks an internal entry; for externals it
+ * matches ExternFileIds[i] indexed in chain insertion order. */
+struct RelocChainEntry {
+    uint32_t SlotByteOffset;
+    uint32_t TargetByteOffset;
+    uint16_t DepFileId;             // 0xFFFF = internal
+};
+
 class RelocFile final : public Ship::Resource<void> {
 public:
     using Resource::Resource;
@@ -63,5 +89,7 @@ public:
     uint16_t RelocExternOffset;     // external reloc chain start (in u32 words), 0xFFFF = none
     std::vector<uint16_t> ExternFileIds;   // file IDs referenced by external relocations
     uint32_t ProcessingFlags = 0;          // PROC_* bitmask; v0 archives: 0
+    std::vector<RelocChainEntry> InternChain;  // populated when PROC_CHAIN_FLATTENED
+    std::vector<RelocChainEntry> ExternChain;  // populated when PROC_CHAIN_FLATTENED
     std::vector<uint8_t> Data;             // post-`ProcessingFlags` bytes
 };

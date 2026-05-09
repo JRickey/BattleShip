@@ -630,6 +630,13 @@ static int PortInitImpl(int argc, char* argv[]) {
 		1
 	);
 	loader->RegisterResourceFactory(
+		std::make_shared<ResourceFactoryBinaryRelocFileV2>(),
+		RESOURCE_FORMAT_BINARY,
+		"SSB64Reloc",
+		static_cast<uint32_t>(SSB64::ResourceType::SSB64Reloc),
+		2
+	);
+	loader->RegisterResourceFactory(
 		std::make_shared<Ship::ResourceFactoryBinaryBlobV0>(),
 		RESOURCE_FORMAT_BINARY,
 		"Blob",
