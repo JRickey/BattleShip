@@ -54,55 +54,41 @@ Stage 10 shipped enough machinery for end-to-end mod-override verification
 guardrails are deferred. Decide which to tackle before Stage 11/12 — some
 are blockers for "real" modding, others are polish.
 
-### A — Pixel-buffer enumeration (highest priority for moddability)
+### A — Pixel-buffer enumeration (DONE 2026-05-09)
 
-**Problem.** The current enumerator emits ~2,593 sub-resources for the
-2,132 reloc files, but only **1 vtx**, **0 tex**, and **0 tlut** entries
-(per `unzip -l BattleShip.o2r | grep "__sub"` audit on 2026-05-09). The
-`tex`/`tlut`/`vtx` paths only catch intra-DL `seg=0x0E` references, which
-are common in menus but rare in fighter/stage assets where most textures
-resolve through `Bitmap.buf` reloc tokens (heap-pointed, not statically
-in a DL stream). Net effect: the kinds we emit are **sprite struct,
-bitmap struct, mobjsub struct, FTAttributes, struct_u16/u32** — gameplay
-*config*, not visual *appearance*.
+Shipped via `EmitChainPixelBuffers` in torch's `RelocFactory.cpp`. The
+helper iterates each SPRITE catalog entry, looks up the file's chain
+slots at `S+0x20` (LUT), `S+0x34` (bitmap array), and per-bitmap
+`B+0x08` (pixel buffer) in a `(slot_byte_off → target_byte_off)` map
+built from the Stage-9 chain entries, reads `nbitmaps`/`nTLUT`/`bmsiz`
++ per-bitmap `width_img`/`actualHeight` from the post-pass1+rotate16
+buffer, computes `(w × h × bpp + 7) / 8` word-aligned, and emits one
+Tex sub-resource per chain-resolved pixel buffer plus one Tlut per
+sprite palette.
 
-A real character-model swap or stock-icon recolor needs the actual
-pixel-buffer bytes addressable as a sub-resource. Today they are not.
+Bitmaps reachable from a Sprite but absent from the BITMAP catalog are
+filtered out — without struct fixup their `width_img` lives at a
+different byte offset and the read would yield garbage. 4c (`bmsiz=4`)
+is also skipped: on-disk it's a half-width compressed source, so the
+runtime's `bpp=4` size formula would over-cover the buffer by 2× and a
+modder's override would clobber adjacent file bytes; 4c modding falls
+back to the whole-container override pathway (follow-up L).
 
-**Implementation sketch.** Cross-reference Stage 9's flat chain entries
-with the catalog's `BITMAP` / `MOBJSUB` entries:
+**Result.** Sub-resource count grew from **2,593 → 4,048**:
+`tex` 0 → 1,417, `tlut` 0 → 38. Drift gate stays green at
+2,132 unchanged. Archive 13.1 MB → 14.8 MB. Coverage by family:
+433 stages, 359 menus, 317 movies, 117 interface, 84 extern_data,
+64 scene, 41 fighters_main / fighters_common / `*Model`, 10 misc_named.
 
-1. For each Bitmap at byte_offset `O` in the catalog, look up the chain
-   entry whose `slot_byte_offset == O + 8` (the `Bitmap.buf` field).
-   That entry's `target_byte_offset` is where the pixel data lives in
-   the same file.
-2. Read the bitmap struct fields (already byte-fixed by struct_fixup):
-   `width_img` at offset 2, `actualHeight` at offset 12,
-   plus the parent Sprite's `bmsiz` field (4b/8b/16b/32b).
-3. Compute size = `width_img × actualHeight × bpp / 8`, rounded up to
-   word alignment.
-4. Emit a `tex_buffer/<target_offset>` (or extend the existing `tex`
-   kind) sub-resource at that target.
-5. Mirror for MObjSub's `sprites` chain target → walk through Sprite
-   table → per-Bitmap → pixel buffer.
-
-**Risks.**
-- Sub-resource emit count could grow 10–100× (every visible texture
-  becomes addressable). Watch `BattleShip.o2r` size + extract wall time.
-- Width/height fields can be zero or larger than buffer — bounds-check
-  defensively, skip emission rather than emit garbage.
-- The same target offset may be referenced by multiple bitmaps with
-  different format reads (rare); the handoff mentions this as the
-  reason for `<fmt>_<siz>` in the path scheme. Currently we collapse
-  duplicates by `(byte_offset, kind, size)`. If the conflict arises in
-  practice, expand the path to disambiguate.
-- Size-mismatch on override (mod ships a larger texture): current
-  overlay truncates silently. Acceptable for v1 if overlay logs a
-  warning when `mod_blob_size != recorded_size`.
-
-**Effort estimate:** ~1 session. Enumeration is straightforward chain
-lookup + struct read. Most time goes into bounds-checks and a verifier
-that confirms emitted byte ranges don't overlap chain slots.
+**Known gap (out of scope for follow-up A).** Fighter-mesh character
+textures drawn through direct DL `G_SETTIMG` with `seg≠0x0E` (cross-file
+texture refs into another loaded file's bitmap region) are still not
+addressable: the in-DL scanner only catches `seg=0x0E`, and these
+textures aren't reachable through the Sprite/Bitmap struct path either.
+A future enumeration pass that walks DL streams for `seg=0x06`/`seg=0x07`
+`G_SETTIMG` and resolves the segment via the file's chain-slot table
+would close this gap. For now mod authors use the whole-container
+override pathway (follow-up L) to swap entire `*Model` containers.
 
 ### B — Drift gate doesn't validate sub-resources
 
@@ -241,7 +227,7 @@ One-line CI gate.
 catalog missed a fixup site.
 
 **Hash collision check.** Probability of two sub-resource paths colliding
-is ~2⁻⁶⁴ across N=2,593 entries (negligible) but a one-time check costs
+is ~2⁻⁶⁴ across N=4,048 entries (negligible) but a one-time check costs
 nothing and rules out a misformatted-path bug. Fold into B above.
 
 ### K — Mod-author guide
