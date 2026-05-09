@@ -90,46 +90,44 @@ A future enumeration pass that walks DL streams for `seg=0x06`/`seg=0x07`
 would close this gap. For now mod authors use the whole-container
 override pathway (follow-up L) to swap entire `*Model` containers.
 
-### B — Drift gate doesn't validate sub-resources
+### B — Drift gate sub-resource validator (DONE 2026-05-09)
 
-**Problem.** `port_reloc_regen --check` only compares post-pipeline
-`Data` bytes against committed `.fixt` fixtures. It does NOT validate:
+Shipped: `port_reloc_regen --check-subres` extends the gate to validate
+the v3 sub-resource invariants the runtime overlay path relies on:
 
-- That every entry in `SubResourceHashes` resolves to a Blob the LUS
-  factory can load.
-- That each sub-resource's bytes equal `Data[byte_offset..+size]` (the
-  identity invariant the overlay path relies on for its short-circuit).
-- That `CRC64(emitted_path) == hash` recorded in the container header.
-- That no two sub-resources in the entire archive share a CRC64 hash.
+1. Every entry in `SubResourceHashes` resolves to a `Ship::Blob` the
+   LUS factory can load.
+2. The blob's payload equals `Data[byte_offset..+size]` (the byte-
+   identity short-circuit in `portRelocBuildOverlay`).
+3. `CRC64("<entryOtrPath>__sub/<kind>/<byte_offset>")` matches the
+   recorded `sr.Hash`, catching torch path-scheme drift before it
+   silently breaks override mods.
+4. No two sub-resources across the archive share a CRC64 hash.
 
-A future torch refactor (e.g. renaming a kind, changing the path
-delimiter) could silently break the override path while keeping the
-drift gate green.
+The mode is independent of `--check`; the CI test
+(`port/test/CMakeLists.txt::fixture-check`) now runs `--check
+--check-subres` together. Standalone `--check-subres` is also supported
+for ad-hoc runs.
 
-**Implementation sketch.** Extend `port_reloc_regen` with a
-`--check-subres` mode that, for each loaded `RelocFile`:
+`port/test/reloc_harness.cpp::ArchiveSession` now also registers
+`Ship::ResourceFactoryBinaryBlobV0` (mirrors the registration in
+`port.cpp`) so `LoadResource(hash)` returns a Blob in the harness.
 
-1. Iterates `SubResourceHashes`.
-2. For each entry, calls `ArchiveManager::HasFile(hash)` then
-   `LoadResource` and casts to `Ship::Blob`.
-3. Asserts `memcmp(blob.Data.data(), Data + byte_offset, size) == 0`
-   (modulo the 16-byte LUS Blob trailing padding).
-4. Tracks all (file_id, hash) tuples globally; asserts no hash collisions.
+**Result on the current archive.** validated=4,048, failed=0 across
+all seven categories (missing / cast_failed / oob / size_mismatch /
+byte_mismatch / hash_mismatch / collisions); unique_hashes=4,048
+matches the validated count. Gate adds ~0.3 s to the existing
+fixture-check (4.4 s → 4.7 s).
 
-Add to the standard CI gate alongside `--all --check --quiet`.
+### C — Mod-collision determinism (DONE 2026-05-09)
 
-**Effort estimate:** ~0.5 session. Mostly harness code.
-
-### C — Mod-collision determinism
-
-**Problem.** The Stage 10 mods scanner uses
-`std::filesystem::directory_iterator` which has filesystem-dependent
-order (APFS sorts differently from ext4 from NTFS). When two mods claim
-the same hash, LUS's last-archive-wins picks the most-recently-added —
-so cross-platform mod authors can hit "works on my machine" surprises.
-
-**Fix.** Sort entries alphabetically by filename before AddArchive in
-`port/port.cpp::560`-ish. One-line change.
+Shipped: `port/port.cpp` now collects mod paths first, sorts them by
+full path, then iterates for `AddArchive`. Replaces the previous
+`directory_iterator`-driven order, which was filesystem-dependent
+(APFS / ext4 / NTFS each diverge) and made cross-platform mod authors
+hit "works on my machine" surprises with two-mod hash collisions —
+LUS's last-archive-wins resolution depends on load order, so the
+collision winner now matches across hosts.
 
 ### D — Override identity-check optimization
 
