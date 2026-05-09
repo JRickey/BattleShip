@@ -17,12 +17,15 @@ extern "C" {
  *   Pass 2: Parse now-native-endian DL commands to find vertex and texture
  *           regions, then apply targeted fixups for u16 and byte-granular data.
  *
- * @param data     Pointer to the decompressed blob in game memory.
- * @param size     Size in bytes (must be a multiple of 4).
- * @param file_id  Reloc file id, used only by the SSB64_TEX_FIXUP_LOG path
- *                 to tag log entries. Pass UINT32_MAX if unknown.
+ * @param data        Pointer to the decompressed blob in game memory.
+ * @param size        Size in bytes (must be a multiple of 4).
+ * @param file_id     Reloc file id, used only by the SSB64_TEX_FIXUP_LOG path
+ *                    to tag log entries. Pass UINT32_MAX if unknown.
+ * @param proc_flags  PROC_* bitmask from RelocFile::ProcessingFlags. Each set
+ *                    bit advertises a transform torch already applied; the
+ *                    runtime skips the matching pass. v0 archives pass 0.
  */
-void portRelocByteSwapBlob(void *data, size_t size, unsigned int file_id);
+void portRelocByteSwapBlob(void *data, size_t size, unsigned int file_id, unsigned int proc_flags);
 
 /**
  * Apply rotate16 fixup to a region of u16 fields within a ROM-overlay struct.

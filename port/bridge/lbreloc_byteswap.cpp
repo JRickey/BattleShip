@@ -962,22 +962,31 @@ static void apply_fixups(void *data, size_t file_size,
 //  Public API
 // ============================================================
 
-extern "C" void portRelocByteSwapBlob(void *data, size_t size, unsigned int file_id)
+// Mirrors RelocFile.h to avoid pulling resource headers into the bridge.
+static constexpr unsigned int kProcPass1BswapDone = 1u << 0;
+
+extern "C" void portRelocByteSwapBlob(void *data, size_t size, unsigned int file_id, unsigned int proc_flags)
 {
 	if (data == nullptr || size < 4)
 		return;
 
 	if (stage_audit_enabled()) stage_audit_reset_per_file();
 
+	const bool pass1_done_at_build = (proc_flags & kProcPass1BswapDone) != 0;
+
 	if (stage_audit_enabled() && file_id == 104) {
 		const uint8_t *p = static_cast<const uint8_t *>(data);
-		port_log("[STAGE_AUDIT_104_LOAD] pre_pass1 bytes=%02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X\n",
+		port_log("[STAGE_AUDIT_104_LOAD] pre_pass1 bytes=%02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X (build_pass1=%d)\n",
 		         p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7],
-		         p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
+		         p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15],
+		         pass1_done_at_build ? 1 : 0);
 	}
 
-	// Pass 1: blanket u32 swap
-	pass1_swap_u32(data, size);
+	// Pass 1: blanket u32 swap. Skipped when torch already applied it at
+	// extraction (resource version 1+; PROC_PASS1_BSWAP_DONE in the header).
+	if (!pass1_done_at_build) {
+		pass1_swap_u32(data, size);
+	}
 
 	if (stage_audit_enabled() && file_id == 104) {
 		const uint8_t *p = static_cast<const uint8_t *>(data);
