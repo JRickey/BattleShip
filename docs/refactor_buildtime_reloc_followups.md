@@ -2,11 +2,11 @@
 
 Tracker for the post-Stage-10 follow-ups. Pulled out of
 `docs/refactor_buildtime_reloc_handoff.md` so the handoff can focus on
-the next active stage (Stage 11 — runtime simplification).
+the next active stage (Stage 12 — productize the mods/ scanner).
 
-A, B, C are already shipped on `agent/buildtime-reloc`; their commit
-messages are the canonical write-up. D-L remain — pick what fits a
-session, or pivot to Stage 11.
+A, B, C, E are already shipped on `agent/buildtime-reloc`; their commit
+messages are the canonical write-up. D, F-L remain — pick what fits a
+session, or pivot to Stage 12.
 
 | ID | Topic                                       | Status                  | Effort      |
 |----|---------------------------------------------|-------------------------|-------------|
@@ -14,7 +14,7 @@ session, or pivot to Stage 11.
 | B  | Drift-gate sub-resource validator           | DONE — commit `0b81d3e` | —           |
 | C  | Mods-scanner determinism                    | DONE — commit `77afbc5` | —           |
 | D  | Override identity-check optimization        | Defer until profiled    | ~1 session  |
-| E  | V0/V1/V2 reader drop coordination           | Couples to Stage 11     | ~30 min     |
+| E  | V0/V1/V2 reader drop coordination           | DONE — commit `ba3098d` | —           |
 | F  | OTR path stability vs. yaml refactors       | Doc-only or schema bump | 10 min – 1 session |
 | G  | `__sub` suffix collision audit              | Audit + doc / rename    | ~10 min     |
 | H  | Pixel-format disambiguation in tex paths    | Audit first             | ~30 min     |
@@ -49,25 +49,14 @@ Defer until profiling shows it matters.
 
 ## E — Container schema cohabitation when V0/V1/V2 readers are dropped
 
-**Problem.** When Stage 11 trims runtime byteswap helpers, archives
-written by V0/V1/V2 (where flags would be unset and the runtime would
-compensate) lose their fallback path. Two options:
-
-- **Keep V0/V1/V2 readers** with a slow-path that re-runs byteswap
-  helpers. Maintains compatibility with stale archives but doesn't let
-  Stage 11 fully delete the helpers — they're kept as a fallback.
-- **Drop V0/V1/V2 entirely.** Asset/torch coupling already forces
-  re-extract on every torch SHA bump, so older archives are de-facto
-  unsupported anyway. Simpler, smaller binary.
-
-**Recommend drop**, gated on a torch SHA bump that emits v3 and a
-smoke pass on a freshly-extracted archive. Document the transition in
-the Stage 11 commit message. Implementation: remove the V0/V1/V2
-`RegisterResourceFactory` calls in `port.cpp` + `reloc_harness.cpp`,
-delete the matching factory classes in `port/resource/RelocFileFactory.cpp`.
-
-Tightly coupled to Stage 11 — pick this up while doing the byteswap
-trim, not separately.
+**DONE — commit `ba3098d` (Stage 11 Phase 5).** V0/V1/V2 readers have
+been removed: their `RegisterResourceFactory` calls in `port.cpp` and
+`reloc_harness.cpp` are gone, and the matching factory classes in
+`port/resource/RelocFileFactory.{h,cpp}` are deleted. Only the V3 reader
+is registered. Asset/torch coupling already forced re-extract on every
+torch SHA bump, so the path was unused in practice; deleting it lets
+Stage 11 fully drop the byteswap helpers V0/V1/V2 relied on without a
+slow-path fallback.
 
 ---
 

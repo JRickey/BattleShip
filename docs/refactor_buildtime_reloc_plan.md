@@ -580,7 +580,7 @@ mod loaded.
 
 ---
 
-### Stage 11 — Runtime simplification (~0.5 session)
+### Stage 11 — Runtime simplification (~0.5 session, DONE 2026-05-09)
 
 After every `processing_flags` bit (except the intentionally-unused
 bit 9, see Stage 7) is set on every file:
@@ -589,17 +589,38 @@ bit 9, see Stage 7) is set on every file:
   implementations (or guard them under a debug-only fallback for
   hypothetical pre-build-time-fixup archives).
 - Tests stay green.
-- Code shrinks meaningfully — `port/bridge/lbreloc_byteswap.cpp`
-  shrinks from ~1500 LOC to ~150 LOC of heap-absolute trackers
-  (`sStructU16Fixups` etc.), 4c post-decode deswizzle
-  (`portDeswizzleDecodedSprite4c`, kept per Stage 8 closeout —
-  `docs/decision_4c_sprite_codec_runtime_2026-05-09.md`), and chain
-  registration glue.
 - `port/port_aobj_fixup.{h,cpp}` stays in place — the AObjEvent32
   unhalfswap walker is permanently runtime-side per the Stage 7
   closeout decision (`docs/decision_aobjevent32_runtime_walker_2026-05-09.md`).
 
-**Verification**: full game attract + 1P + VS + BTT + training mode.
+**Closeout commits** (5 phased on `agent/buildtime-reloc`):
+`671eb43` (Phase 1, pass1/pass2 helpers), `36c131a` (Phase 2, struct
+fixup byte-transform bodies), `4b77fe4` (Phase 3, halfswap helper +
+figatree_reloc_words tracking), `ed056d7` (Phase 4, rename
+portRelocByteSwapBlob → portRelocSeedVertexTrackers + drop proc_flags
+parameter), `ba3098d` (Phase 5, follow-up E — drop V0/V1/V2 reloc-file
+readers).
+
+**Outcome correction**: the original "~150 LOC" target for
+`lbreloc_byteswap.cpp` was optimistic. Post-Stage-11 size is ~2000 LOC
+(from 2367). Deleted: pass1_swap_u32, scan-time apply_fixup_*, the
+fixup_torch_already_did_it gate + kProc<Family>Done constants, and
+the byte-transform bodies of every portFixupStruct* / portFixupSprite
+/ portFixupBitmap / portFixupMObjSub / portFixupFTAttributes /
+portFixupRawTextureBSWAP32 helper. Survives: every tracker plus the
+chain-walk fixup (chain_fixup_settimg/vertex), runtime lazy fixup
+(portRelocFixupVertex/TextureAtRuntime), portFixupSpriteBitmapData
+(non-4c bitmap pixel-data BSWAP + TMEM deswizzle — torch's
+EmitChainPixelBuffers emits sub-resources but does not pre-transform
+the bytes), portDeswizzleDecodedSprite4c (Stage 8 ADR), and ~550 LOC
+of env-gated diagnostics. Pushing more of those into torch is a
+future-work decision; Stage 11 dropped only what was provably dead
+on v3.
+
+**Verification**: drift gate stays green at 2,132 / 4,048 unchanged
+through every phase commit. Full attract + 1P + VS + BTT + training
+mode smoke pending — the gate is the load-bearing automated check;
+manual sweep is recommended before merging to `main`.
 
 ---
 

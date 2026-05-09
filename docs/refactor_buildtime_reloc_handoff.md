@@ -1,32 +1,37 @@
-# Build-time reloc refactor — Stage 11 handoff (2026-05-09, Stage 10 + follow-ups A/B/C closed)
+# Build-time reloc refactor — Stage 12 handoff (2026-05-09, Stage 11 closed)
 
 You are picking up the build-time reloc refactor described in
-`docs/refactor_buildtime_reloc_plan.md`. Stages 1–10 plus Stage 10
+`docs/refactor_buildtime_reloc_plan.md`. Stages 1–11 plus Stage 10
 follow-ups A (chain-resolved pixel-buffer enumeration), B (drift-gate
-sub-resource validator), and C (mods-scanner determinism) have landed
-on `agent/buildtime-reloc`. This handoff is the delta on top of the
-plan for Stage 11 — runtime simplification.
+sub-resource validator), C (mods-scanner determinism), and E (V0/V1/V2
+reader drop) have landed on `agent/buildtime-reloc`. This handoff is the
+delta on top of the plan for Stage 12 — productizing the mods/ scanner.
 
 **Read the plan first.** This handoff covers what's specific to
-Stage 11; it does not re-explain the architecture.
+Stage 12; it does not re-explain the architecture.
 
 ---
 
 ## Status entering this session
 
 Branch HEAD on `agent/buildtime-reloc`: see `git log --oneline -10`.
-Recent landings:
+Recent landings (Stage 11 commits in commit-order):
 
 ```
+ba3098d Stage 11 Phase 5: drop V0/V1/V2 reloc-file readers (follow-up E)
+ed056d7 Stage 11 Phase 4: rename portRelocByteSwapBlob → portRelocSeedVertexTrackers
+4b77fe4 Stage 11 Phase 3: drop runtime halfswap helper
+36c131a Stage 11 Phase 2: drop struct fixup byte-transform bodies
+671eb43 Stage 11 Phase 1: drop pass1/pass2 byte-transform helpers
+d830ee4 docs: add Stage 11 next-agent kickoff prompt
+57e2b52 docs: split follow-up backlog out of handoff, focus handoff on Stage 11
 6e43ef0 docs: mark Stage 10 follow-ups B + C done in handoff
 0b81d3e port_reloc_regen: add --check-subres v3 sub-resource validator (B)
 77afbc5 Sort mods/ scanner entries alphabetically (C)
-0ad444f Bump torch + emit chain-resolved pixel buffers (A)
-80baeb0 docs: enumerate Stage 10 follow-ups in handoff before Stage 11/12
-7deca7a Bump torch + emit reloc sub-resources + overlay path (Stage 10)
 ```
 
-The bit map of `processing_flags` after Stage 10:
+The bit map of `processing_flags` after Stage 11 (unchanged from
+Stage 10 — Stage 11 only deleted runtime code that consumed each bit):
 
 | bit  | name                          | stage     | status                   |
 |------|-------------------------------|-----------|--------------------------|
@@ -43,13 +48,11 @@ The bit map of `processing_flags` after Stage 10:
 | 10   | `PROC_CHAIN_FLATTENED`        | 9         | done                     |
 | 11   | `PROC_SUBRESOURCES_EMITTED`   | 10        | done                     |
 
-In v3 archives every flag bits 0–8, 10, 11 is set on every file
-(bit 9 is the deliberate Stage-7 carve-out). The runtime byteswap path
-that consults each flag has been a no-op on v3 input since Stage 10
-landed.
+V0/V1/V2 archive readers were dropped in Stage 11 Phase 5 — only V3
+archives load now. Asset/torch coupling already forced re-extraction on
+every torch SHA bump, so older archives are de-facto unsupported.
 
-Two ADRs document the carve-outs — read these before deleting anything
-runtime-side under Stage 11:
+Two ADRs document the Stage 7 / Stage 8 carve-outs:
 
 - `docs/decision_aobjevent32_runtime_walker_2026-05-09.md` — Stage 7:
   the AObjEvent32 unhalfswap walker stays runtime-side. Bit 9 is
@@ -73,7 +76,7 @@ regen: done in ~4500 ms — written=0, unchanged=2132, missing=0, mismatch=0, �
 regen: subres — validated=4048, failed=0 (all categories 0), unique_hashes=4048
 ```
 
-If either gate drifts, **stop and diagnose before any Stage 11 edits.**
+If either gate drifts, **stop and diagnose before any Stage 12 edits.**
 Recovery steps live in `docs/refactor_buildtime_reloc_plan.md`
 (wipe + re-extract); the asset/torch coupling means any torch SHA
 change requires deleting `BattleShip.o2r` + the torch build dir +
@@ -81,88 +84,43 @@ re-running `cmake --build build --target ExtractAssets`.
 
 ---
 
-## Stage 11 — Runtime simplification
+## Stage 11 closeout note
 
-Per the plan: now that every transformation bit (except the deliberately
-reserved bit 9) is set on every file in v3 archives, the runtime
-byteswap/halfswap helpers are dead code along the hot path. Stage 11
-trims them.
+Stage 11 deleted the following along with all dead-on-v3 byte transforms:
 
-### Scope
+- `port/bridge/lbreloc_byteswap.cpp`: 2,367 → 2,009 LOC. Deletions:
+  pass1_swap_u32, scan-time apply_fixup_{vertex,tex_bytes,tex_u16},
+  static fixup_{rotate16,bswap32,u16_u8u8}, fixup_torch_already_did_it,
+  the kProc<Family>Done constants, and the byte-transform bodies of
+  portFixupStruct{U16,U32}, portFixupRawTextureBSWAP32, portFixupSprite,
+  portFixupBitmap, portFixupMObjSub, portFixupFTAttributes. Survived:
+  every tracker (sStructU16Fixups + cache-invalidation friends), the
+  4c deswizzle, portFixupSpriteBitmapData (chain-resolved Bitmap.buf
+  bytes are NOT pre-transformed by torch — see follow-up A scope),
+  chain_fixup_*, runtime lazy fixup, all diagnostics.
+- `port/bridge/lbreloc_bridge.cpp`: dropped portRelocFixupFighterFigatree
+  + figatree_reloc_words tracking inside applyInternEntry/applyExternEntry.
+  port_aobj_register_halfswapped_range still fires per Stage 7 ADR.
+- `port/bridge/lbreloc_byteswap.h`: renamed portRelocByteSwapBlob to
+  portRelocSeedVertexTrackers, dropped proc_flags parameter.
+- `port/resource/RelocFileFactory.{h,cpp}` + the V0/V1/V2 register
+  calls in `port/port.cpp` and `port/test/reloc_harness.cpp` — gone.
 
-- `port/bridge/lbreloc_byteswap.cpp` is ~1500 LOC mixing three concerns:
-  1. Byteswap helpers (pass1, pass2, struct, halfswap) — **dead on v3**.
-  2. Heap-absolute trackers (`sStructU16Fixups`, the cache-eviction
-     callbacks `portTextureCacheDeleteRange` etc.) — **stay**, used by
-     the bridge for cache invalidation, unrelated to byteswap.
-  3. Sprite codec utilities including `portDeswizzleDecodedSprite4c` —
-     **stay** per Stage 8 ADR.
-
-- `port/port_aobj_fixup.{h,cpp}` — **stay** per Stage 7 ADR. Skip.
-
-- `port/bridge/lbreloc_bridge.cpp::portRelocByteSwapBlob` — every flag
-  it consults is set on v3 input, so the call is a no-op. Either
-  delete the call or keep it as a defensive `assert(all flags set)`.
-
-Plan-target outcome: `lbreloc_byteswap.cpp` shrinks from ~1500 LOC
-to ~150 LOC of heap-absolute trackers + the kept sprite codec helpers.
-Don't `rm` the file; split it into a thin tracker/cache-invalidation
-header + delete the byteswap guts.
-
-### V0/V1/V2 reader decision (Stage 10 follow-up E)
-
-Coupled to Stage 11. Once the byteswap helpers are gone, V0/V1/V2
-archives (where the flags are unset and the runtime *was* the
-fallback) won't load correctly. Two options:
-
-- **Keep V0/V1/V2 readers** with a slow path that re-runs the byteswap
-  helpers. Forces Stage 11 to keep the helpers as a fallback —
-  partial gain only.
-- **Drop V0/V1/V2 entirely** (recommended). Asset/torch coupling
-  already forces a re-extract on every torch SHA bump; older archives
-  are de-facto unsupported. Strictly simpler + smaller binary.
-
-Recommend **drop**. Implementation: remove the V0/V1/V2
-`RegisterResourceFactory` calls in `port/port.cpp` +
-`port/test/reloc_harness.cpp`, delete the corresponding factory
-classes in `port/resource/RelocFileFactory.cpp`. Document in the
-Stage 11 commit message.
-
-See `docs/refactor_buildtime_reloc_followups.md` for the full
-follow-up E write-up.
-
-### Verification
-
-After each delete:
-1. `cmake --build build --target ssb64 -j 4` — clean build.
-2. `cmake --build build --target port_reloc_regen -j 4` — gate tool
-   still compiles after the byteswap helpers it links against shrink.
-3. `./build/port/test/port_reloc_regen --all --check --check-subres --quiet`
-   — both gates green: 2,132 unchanged, 4,048 validated.
-4. Run the binary headless on an attract chain (or just boot to title)
-   to catch anything the gate doesn't cover (e.g. tracker code paths
-   that invoked a deleted helper as a side effect).
-
-Phase the work — don't try to delete everything in one commit.
-Reasonable phasing:
-
-- Phase 1: delete the pass1/pass2 helpers + their call sites (the
-  bridge already early-returns when both flags are set; verify and
-  delete).
-- Phase 2: delete the struct fixup helpers (each family individually
-  if you want bisectable commits).
-- Phase 3: delete the halfswap helpers.
-- Phase 4: delete `portRelocByteSwapBlob` (or convert to assert).
-- Phase 5: V0/V1/V2 factory drop (E) — last, since the helpers it
-  needed are already gone by then.
-
-Keep the gate green between phases.
+The plan-target outcome ("~150 LOC of trackers + sprite codec") was
+optimistic. Real residual ~2k LOC because the chain-walk fixup
+(chain_fixup_settimg/vertex), runtime lazy fixup
+(portRelocFixupVertex/TextureAtRuntime), sprite bitmap data BSWAP +
+non-4c TMEM deswizzle (portFixupSpriteBitmapData), and ~550 LOC of
+env-gated diagnostics (stage audit / tex log / tex dump) all do real
+work or are kept by the Stage 8 ADR. Whether to push more of those
+into torch is a future-work decision; the present file is "no dead
+code", not "no code".
 
 ---
 
-## Stage 12 — Productize mods/ scanner (deferred)
+## Stage 12 — Productize mods/ scanner
 
-After Stage 11, two UX gaps remain in the mod path:
+Two UX gaps remain in the mod path:
 
 1. **Discoverability UI**: list active mods in the Esc menu
    (`port/PortMenu.{h,cpp}`), expose toggles to enable/disable per-mod
@@ -183,14 +141,10 @@ wider set of demo mods showing different override kinds.
 
 ## Open follow-ups
 
-The Stage 10 follow-up backlog (D, E, F, G, H, I, J, K, L) is in
-`docs/refactor_buildtime_reloc_followups.md`. **E is tightly coupled
-to Stage 11** — pick it up while doing the byteswap trim, not
-separately. The rest can be picked off independently or pivoted to
-after Stage 11 lands.
-
-A, B, C are done; their canonical write-ups are in commits
-`0ad444f`, `0b81d3e`, `77afbc5`.
+The Stage 10 follow-up backlog is in
+`docs/refactor_buildtime_reloc_followups.md`. A, B, C, E are done.
+D, F, G, H, I, J, K, L remain — pick what fits a session, or focus on
+Stage 12. K (mod-author guide) is naturally a Stage 12 deliverable.
 
 ---
 
@@ -202,12 +156,11 @@ git -C libultraship push origin ssb64-buildtime-reloc   # 1 commit (Stage 1)
 git -C decomp       push origin port-patches-buildtime-reloc   # 0 commits, harmless
 ```
 
-The `agent/buildtime-reloc` outer branch is mergeable to `main` today
-if the project wants to land Stages 1–10 plus follow-ups A/B/C
-standalone — Stage 10 delivers the user-visible mod path (build the
-example mod, drop in `mods/`, boot, see the override fire) and the
-follow-ups close the highest-impact addressability + correctness gaps.
-Stages 11–12 are correctness/UX refinements on top.
+The `agent/buildtime-reloc` outer branch is mergeable to `main` today —
+Stages 1–11 plus follow-ups A/B/C/E land the user-visible mod path (build
+the example mod, drop in `mods/`, boot, see the override fire), close the
+highest-impact addressability + correctness gaps, and remove all dead
+runtime byteswap code. Stage 12 is UX refinement on top.
 
 ---
 
