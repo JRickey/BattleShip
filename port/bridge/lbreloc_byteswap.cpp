@@ -1025,18 +1025,125 @@ extern "C" void portRelocByteSwapBlob(void *data, size_t size, unsigned int file
 }
 
 // ============================================================
+//  Struct fixup capture (SSB64_FIXUP_CAPTURE=1)
+// ============================================================
+//
+// Stage 6 prep: log every (file_id, byte_offset_in_file, family) tuple the
+// portFixup* helpers process during a play session so torch can apply the
+// transforms at extraction time. Output goes to
+// $SSB64_FIXUP_CAPTURE_FILE (default `port_fixup_capture.json`) on process
+// exit. Dedup is per-tuple so repeat fighter spawns / heap reuse don't bloat
+// the output. Disabled by default — zero overhead when env var is unset.
+
+namespace fixup_family {
+	enum : uint8_t {
+		STRUCT_U16   = 2,
+		STRUCT_U32   = 3,
+		SPRITE       = 4,
+		BITMAP       = 5,
+		MOBJSUB      = 6,
+		FTATTRIBUTES = 7,
+	};
+}
+
+struct CaptureTuple {
+	uint16_t family;
+	uint16_t file_id;
+	uint32_t byte_offset;
+	uint32_t extra;     // num_words for U16/U32, 0 for fixed-size structs
+};
+
+static int sFixupCaptureState = 0;  // 0=unchecked, 1=on, -1=off
+static std::vector<CaptureTuple> sFixupCaptureTuples;
+static std::unordered_set<uint64_t> sFixupCaptureSeen;
+
+static void fixup_capture_dump();
+
+static bool fixup_capture_enabled()
+{
+	if (sFixupCaptureState == 0) {
+		const char *e = std::getenv("SSB64_FIXUP_CAPTURE");
+		sFixupCaptureState = (e != nullptr && e[0] == '1') ? 1 : -1;
+		if (sFixupCaptureState == 1) {
+			std::atexit(fixup_capture_dump);
+		}
+	}
+	return sFixupCaptureState == 1;
+}
+
+static inline void capture_emit(uint8_t family, const void *target, uint32_t extra)
+{
+	if (!fixup_capture_enabled() || target == nullptr)
+		return;
+	uintptr_t file_base = 0;
+	int file_id = portRelocFindFileIdAndBase(target, &file_base);
+	if (file_id < 0)
+		return;
+	uintptr_t addr = reinterpret_cast<uintptr_t>(target);
+	uint32_t byte_offset = static_cast<uint32_t>(addr - file_base);
+	uint64_t key = (static_cast<uint64_t>(family) << 56)
+	             | (static_cast<uint64_t>(file_id) << 32)
+	             | byte_offset;
+	if (sFixupCaptureSeen.insert(key).second) {
+		sFixupCaptureTuples.push_back({
+			static_cast<uint16_t>(family),
+			static_cast<uint16_t>(file_id),
+			byte_offset,
+			extra,
+		});
+	}
+}
+
+static void fixup_capture_dump()
+{
+	const char *path = std::getenv("SSB64_FIXUP_CAPTURE_FILE");
+	if (path == nullptr || path[0] == '\0')
+		path = "port_fixup_capture.json";
+
+	std::sort(sFixupCaptureTuples.begin(), sFixupCaptureTuples.end(),
+	          [](const CaptureTuple &a, const CaptureTuple &b) {
+		          if (a.family != b.family)         return a.family < b.family;
+		          if (a.file_id != b.file_id)       return a.file_id < b.file_id;
+		          if (a.byte_offset != b.byte_offset) return a.byte_offset < b.byte_offset;
+		          return a.extra < b.extra;
+	          });
+
+	FILE *f = std::fopen(path, "wb");
+	if (f == nullptr) {
+		port_log("[FIXUP_CAPTURE] failed to open %s\n", path);
+		return;
+	}
+	std::fprintf(f, "[\n");
+	for (size_t i = 0; i < sFixupCaptureTuples.size(); i++) {
+		const auto &t = sFixupCaptureTuples[i];
+		std::fprintf(f, "  [%u,%u,%u,%u]%s\n",
+		             unsigned(t.family), unsigned(t.file_id),
+		             unsigned(t.byte_offset), unsigned(t.extra),
+		             i + 1 == sFixupCaptureTuples.size() ? "" : ",");
+	}
+	std::fprintf(f, "]\n");
+	std::fclose(f);
+	port_log("[FIXUP_CAPTURE] wrote %zu unique tuples to %s\n",
+	         sFixupCaptureTuples.size(), path);
+}
+
+// ============================================================
 //  Struct u16 fixup — rotate16 for u16 fields in ROM structs
 // ============================================================
 
 extern "C" void portFixupStructU16(void *base, unsigned int byte_offset, unsigned int num_words)
 {
-	uintptr_t key = reinterpret_cast<uintptr_t>(base) + byte_offset;
+	if (base == nullptr)
+		return;
+	uint8_t *target = static_cast<uint8_t *>(base) + byte_offset;
+	capture_emit(fixup_family::STRUCT_U16, target, num_words);
+
+	uintptr_t key = reinterpret_cast<uintptr_t>(target);
 	if (sStructU16Fixups.count(key))
 		return;
 	sStructU16Fixups.insert(key);
 
-	uint32_t *words = reinterpret_cast<uint32_t *>(
-		static_cast<uint8_t *>(base) + byte_offset);
+	uint32_t *words = reinterpret_cast<uint32_t *>(target);
 	for (unsigned int i = 0; i < num_words; i++)
 	{
 		words[i] = (words[i] << 16) | (words[i] >> 16);
@@ -1049,13 +1156,17 @@ extern "C" void portFixupStructU16(void *base, unsigned int byte_offset, unsigne
 // C struct definition expects to read it.  Idempotent via sStructU16Fixups.
 extern "C" void portFixupStructU32(void *base, unsigned int byte_offset, unsigned int num_words)
 {
-	uintptr_t key = reinterpret_cast<uintptr_t>(base) + byte_offset;
+	if (base == nullptr)
+		return;
+	uint8_t *target = static_cast<uint8_t *>(base) + byte_offset;
+	capture_emit(fixup_family::STRUCT_U32, target, num_words);
+
+	uintptr_t key = reinterpret_cast<uintptr_t>(target);
 	if (sStructU16Fixups.count(key))
 		return;
 	sStructU16Fixups.insert(key);
 
-	uint32_t *words = reinterpret_cast<uint32_t *>(
-		static_cast<uint8_t *>(base) + byte_offset);
+	uint32_t *words = reinterpret_cast<uint32_t *>(target);
 	for (unsigned int i = 0; i < num_words; i++)
 	{
 		words[i] = BSWAP32(words[i]);
@@ -1111,6 +1222,11 @@ extern "C" void portFixupRawTextureBSWAP32(void *base, size_t bytes)
 	if (base == nullptr || bytes == 0)
 		return;
 
+	// Same byte-transform shape as portFixupStructU32 (BSWAP32 over a word
+	// range), so it shares the STRUCT_U32 catalog family.
+	size_t num_words = bytes / 4;
+	capture_emit(fixup_family::STRUCT_U32, base, static_cast<uint32_t>(num_words));
+
 	uintptr_t key = reinterpret_cast<uintptr_t>(base);
 	if (sStructU16Fixups.count(key))
 		return;
@@ -1118,7 +1234,6 @@ extern "C" void portFixupRawTextureBSWAP32(void *base, size_t bytes)
 
 	// Round down to full u32s — pass1 only touched 4-byte-aligned words,
 	// so any trailing tail bytes were never swapped and shouldn't be now.
-	size_t num_words = bytes / 4;
 	uint32_t *words = static_cast<uint32_t *>(base);
 	for (size_t i = 0; i < num_words; i++)
 	{
@@ -1712,6 +1827,8 @@ extern "C" void portFixupSprite(void *sprite)
 	if (sprite == NULL)
 		return;
 
+	capture_emit(fixup_family::SPRITE, sprite, 0);
+
 	uintptr_t key = reinterpret_cast<uintptr_t>(sprite);
 	if (sStructU16Fixups.count(key))
 		return;
@@ -1759,6 +1876,8 @@ extern "C" void portFixupBitmap(void *bitmap)
 {
 	if (bitmap == NULL)
 		return;
+
+	capture_emit(fixup_family::BITMAP, bitmap, 0);
 
 	uintptr_t key = reinterpret_cast<uintptr_t>(bitmap);
 	if (sStructU16Fixups.count(key))
@@ -2057,6 +2176,8 @@ extern "C" void portFixupMObjSub(void *mobjsub)
 	if (mobjsub == NULL)
 		return;
 
+	capture_emit(fixup_family::MOBJSUB, mobjsub, 0);
+
 	uintptr_t key = reinterpret_cast<uintptr_t>(mobjsub);
 	if (sStructU16Fixups.count(key))
 		return;
@@ -2149,6 +2270,8 @@ extern "C" void portFixupFTAttributes(void *attr)
 {
 	if (attr == NULL)
 		return;
+
+	capture_emit(fixup_family::FTATTRIBUTES, attr, 0);
 
 	uintptr_t key = reinterpret_cast<uintptr_t>(attr);
 	if (sStructU16Fixups.count(key))
