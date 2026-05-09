@@ -117,12 +117,20 @@ target_link_libraries(port_reloc_regen PRIVATE
 )
 
 # CTest hook: invoking `ctest --test-dir port/test -R fixture-check` runs the
-# regen tool in --check mode against the committed fixtures. Fails on any
-# drift between the runtime pipeline and the committed snapshots — this is
-# the per-commit guard we want for every migration step in stages 4+.
+# regen tool against the committed fixtures + the v3 sub-resource gates.
+# Fails on:
+#   - any drift between the runtime pipeline and committed .fixt snapshots,
+#   - any v3 sub-resource that fails to load as a Ship::Blob,
+#   - any blob whose bytes != Data[byte_offset..+size] (the byte-identity
+#     invariant the runtime overlay path's identity short-circuit relies on),
+#   - any CRC64(rebuilt path) != recorded sr.Hash mismatch (catches torch
+#     path-scheme drift),
+#   - any pair of sub-resources sharing a CRC64 hash.
+# This is the per-commit guard we want for every migration step in stages 4+
+# plus the Stage 10 mod-override correctness invariants.
 add_test(
     NAME fixture-check
-    COMMAND $<TARGET_FILE:port_reloc_regen> --all --check --quiet
+    COMMAND $<TARGET_FILE:port_reloc_regen> --all --check --check-subres --quiet
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 set_tests_properties(fixture-check PROPERTIES

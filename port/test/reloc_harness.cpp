@@ -13,6 +13,8 @@
 #include <ship/resource/ResourceManager.h>
 #include <ship/resource/ResourceLoader.h>
 #include <ship/resource/Resource.h>
+#include <ship/resource/factory/BlobFactory.h>
+#include <ship/resource/ResourceType.h>
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/null_sink.h>
@@ -191,6 +193,18 @@ ArchiveSession::ArchiveSession() : mImpl(std::make_unique<Impl>())
         "SSB64Reloc",
         static_cast<uint32_t>(SSB64::ResourceType::SSB64Reloc),
         3);
+    /* Blob factory — needed for the regen --check-subres mode (Stage 10
+     * follow-up B), which validates that every entry in
+     * RelocFile::SubResourceHashes resolves to a Blob whose bytes match
+     * the container slice. The ssb64 binary registers the same factory
+     * in port.cpp; the harness mirrors it so LoadResource(hash) returns
+     * a Ship::Blob instead of a raw File. */
+    loader->RegisterResourceFactory(
+        std::make_shared<Ship::ResourceFactoryBinaryBlobV0>(),
+        RESOURCE_FORMAT_BINARY,
+        "Blob",
+        static_cast<uint32_t>(Ship::ResourceType::Blob),
+        0);
 }
 
 std::shared_ptr<RelocFile> ArchiveSession::LoadFile(uint32_t file_id)
