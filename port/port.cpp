@@ -595,6 +595,45 @@ static int PortInitImpl(int argc, char* argv[]) {
 			return 1;
 		}
 		port_log("SSB64: game archive registered\n");
+
+		// Stage 10: scan for mod .o2r files in `mods/` next to the binary.
+		// Each mod is added AFTER BattleShip.o2r so LUS's last-archive-wins
+		// resolution lets the mod claim any matching CRC64 hashes — the
+		// reloc-bridge overlay step then overlays those sub-resource bytes
+		// into the container before memcpy. Stage 12 may surface this in
+		// the menu; for Stage 10 it just runs every boot. Already inside
+		// the file-level `extern "C" {` block (see line ~346), so the
+		// forward decl matches the bridge-side definition's linkage.
+		void portRelocSetOverridesActive(int active);
+		try {
+			std::filesystem::path modsDir = std::filesystem::path(ssb64o2r).parent_path() / "mods";
+			std::error_code modsEc;
+			if (std::filesystem::exists(modsDir, modsEc)
+			    && std::filesystem::is_directory(modsDir, modsEc)) {
+				size_t modCount = 0;
+				for (const auto& entry : std::filesystem::directory_iterator(modsDir, modsEc)) {
+					if (modsEc) break;
+					if (!entry.is_regular_file()) continue;
+					const auto ext = entry.path().extension().string();
+					if (ext != ".o2r" && ext != ".otr") continue;
+					const std::string modPath = entry.path().string();
+					if (am->AddArchive(modPath)) {
+						port_log("SSB64: mod archive registered -> %s\n", modPath.c_str());
+						modCount++;
+					} else {
+						port_log("SSB64: AddArchive failed for mod %s (skipped)\n",
+						         modPath.c_str());
+					}
+				}
+				if (modCount > 0) {
+					portRelocSetOverridesActive(1);
+					port_log("SSB64: %zu mod archive(s) loaded — sub-resource overlay active\n",
+					         modCount);
+				}
+			}
+		} catch (const std::exception& e) {
+			port_log("SSB64: mods/ scan exception (skipped): %s\n", e.what());
+		}
 	}
 
 	{
@@ -635,6 +674,13 @@ static int PortInitImpl(int argc, char* argv[]) {
 		"SSB64Reloc",
 		static_cast<uint32_t>(SSB64::ResourceType::SSB64Reloc),
 		2
+	);
+	loader->RegisterResourceFactory(
+		std::make_shared<ResourceFactoryBinaryRelocFileV3>(),
+		RESOURCE_FORMAT_BINARY,
+		"SSB64Reloc",
+		static_cast<uint32_t>(SSB64::ResourceType::SSB64Reloc),
+		3
 	);
 	loader->RegisterResourceFactory(
 		std::make_shared<Ship::ResourceFactoryBinaryBlobV0>(),

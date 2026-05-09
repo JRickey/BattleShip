@@ -68,6 +68,16 @@ constexpr uint32_t PROC_HALFSWAP_DONE       = 1u << 8;
  * by the fixture harness. */
 constexpr uint32_t PROC_CHAIN_FLATTENED     = 1u << 10;
 
+/* When set, torch emitted per-sub-asset Blob resources alongside the
+ * container at "<entryOtrPath>__sub/<kind>/<offset>" and recorded
+ * (hash, byte_offset, size, kind) for each in `SubResourceHashes`. The
+ * lbReloc bridge resolves each hash via the resource manager before memcpy
+ * — when a side-loaded mod .o2r overrides one (last-archive-wins), the
+ * override bytes are overlaid into a mutable copy of `Data` at the recorded
+ * offset, and the resulting buffer is what gets memcpy'd into the heap.
+ * Containers without overrides take the no-op path (no allocation). */
+constexpr uint32_t PROC_SUBRESOURCES_EMITTED = 1u << 11;
+
 /* One pre-walked chain entry. byte_offset values are relative to the start
  * of `Data`. dep_file_id == 0xFFFF marks an internal entry; for externals it
  * matches ExternFileIds[i] indexed in chain insertion order. */
@@ -75,6 +85,33 @@ struct RelocChainEntry {
     uint32_t SlotByteOffset;
     uint32_t TargetByteOffset;
     uint16_t DepFileId;             // 0xFFFF = internal
+};
+
+/* Sub-resource kind tags. Mirrors torch/src/factories/ssb64/RelocFactory.cpp's
+ * SubResKind enum. The runtime treats them as opaque labels — overlay logic
+ * in lbreloc_bridge does not switch on them — but external tooling (the
+ * Phase C example_mod scripts, a future mod-manager UI) reads them when
+ * deciding which sub-resources a mod should target. */
+enum class SubResKind : uint8_t {
+    Vtx          = 0,
+    Tex          = 1,
+    Tlut         = 2,
+    Sprite       = 3,
+    Bitmap       = 4,
+    MObjSub      = 5,
+    StructU16    = 6,
+    StructU32    = 7,
+    FTAttributes = 8,
+};
+
+/* One sub-resource record: hash of the OTR path, byte offset/size into
+ * `Data` for overlay, and a kind tag. Populated in v3 archives when
+ * PROC_SUBRESOURCES_EMITTED is set; empty otherwise. */
+struct RelocSubResource {
+    uint64_t   Hash;
+    uint32_t   ByteOffset;
+    uint32_t   Size;
+    SubResKind Kind;
 };
 
 class RelocFile final : public Ship::Resource<void> {
@@ -91,5 +128,6 @@ public:
     uint32_t ProcessingFlags = 0;          // PROC_* bitmask; v0 archives: 0
     std::vector<RelocChainEntry> InternChain;  // populated when PROC_CHAIN_FLATTENED
     std::vector<RelocChainEntry> ExternChain;  // populated when PROC_CHAIN_FLATTENED
+    std::vector<RelocSubResource> SubResourceHashes;  // populated when PROC_SUBRESOURCES_EMITTED
     std::vector<uint8_t> Data;             // post-`ProcessingFlags` bytes
 };

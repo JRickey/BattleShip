@@ -12,9 +12,11 @@
 
 #include <ship/Context.h>
 #include <ship/resource/ResourceManager.h>
+#include <ship/resource/type/Blob.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cstring>
 #include <memory>
 #include <vector>
@@ -26,6 +28,111 @@
 #include "bridge/lbreloc_byteswap.h"
 
 extern "C" void port_aobj_register_halfswapped_range(void *base, unsigned long size);
+
+// ----------------------------------------------------------------------------
+//  Sub-resource override (Stage 10)
+// ----------------------------------------------------------------------------
+//
+// When a mod .o2r is added to the ArchiveManager *after* BattleShip.o2r,
+// LUS's last-archive-wins resolution claims any matching CRC64 hashes from
+// the mod. The container's SubResourceHashes table records (hash, byte_off,
+// size, kind) per sub-resource at extraction time, so the runtime can ask
+// LoadResource for each hash and overlay the resulting bytes into a mutable
+// copy of `relocFile->Data` before memcpy'ing into the heap.
+//
+// `sAnyOverridesActive` short-circuits the whole scan when no mods are
+// loaded — without it, every reloc-file load would issue N LoadResource
+// calls against BattleShip.o2r itself just to confirm "nothing differs".
+// Set to true by `portRelocSetOverridesActive(true)` from the mods/
+// directory scanner (see port.cpp).
+//
+// `relocFile->Data` is preserved unchanged on disk and as the in-memory
+// resource — overlays land in a transient std::vector built per-load. This
+// keeps subsequent loads of the same file_id (e.g. force-extern stage
+// reloads) deterministic and means the test harness's drift gate sees the
+// raw container bytes, not the overlay output.
+static std::atomic<bool> sAnyOverridesActive{false};
+
+extern "C" void portRelocSetOverridesActive(int active) {
+    sAnyOverridesActive.store(active != 0, std::memory_order_release);
+}
+
+// LUS's BlobFactory pads each Blob with 16 zero bytes after the recorded
+// data length so N64 readers that overshoot by a few bytes (compressed-MIDI
+// parsers, etc.) don't run off the end of an allocation. We trim those when
+// computing the actual override bytes to memcmp / memcpy.
+static constexpr size_t kBlobTrailingPadding = 16;
+
+// Builds an overlay copy of `relocFile->Data` with each sub-resource override
+// (if any) memcpy'd in at its recorded byte offset. Returns an empty vector
+// when no overrides apply — the caller falls back to `relocFile->Data` and
+// avoids the copy. Bounds-checked: out-of-range entries (size 0, offset past
+// end, etc.) are skipped silently to keep a malformed mod from crashing.
+//
+// Identity check: if a sub-resource resolves to bytes that exactly match the
+// container's existing slice, that's the base archive's own copy of the
+// sub-resource, NOT an override — skip it. Without this check, the test
+// harness (which loads only BattleShip.o2r — no mods) would still allocate
+// + memcpy on every load even though nothing changed.
+static std::vector<uint8_t> portRelocBuildOverlay(const RelocFile& relocFile) {
+    if (!sAnyOverridesActive.load(std::memory_order_acquire)) {
+        return {};
+    }
+    if ((relocFile.ProcessingFlags & PROC_SUBRESOURCES_EMITTED) == 0) {
+        return {};
+    }
+    if (relocFile.SubResourceHashes.empty()) {
+        return {};
+    }
+
+    auto context = Ship::Context::GetInstance();
+    if (!context) return {};
+    auto resMgr = context->GetResourceManager();
+    if (!resMgr) return {};
+
+    std::vector<uint8_t> overlay;
+    bool overlayBuilt = false;
+
+    for (const auto& sr : relocFile.SubResourceHashes) {
+        if (sr.Size == 0) continue;
+        if (sr.ByteOffset > relocFile.Data.size()) continue;
+        if (sr.Size > relocFile.Data.size() - sr.ByteOffset) continue;
+
+        auto resource = resMgr->LoadResource(sr.Hash);
+        if (!resource) continue;
+        auto blob = std::dynamic_pointer_cast<Ship::Blob>(resource);
+        if (!blob) continue;
+
+        const size_t paddedSize = blob->Data.size();
+        const size_t blobSize   = paddedSize > kBlobTrailingPadding
+                                      ? paddedSize - kBlobTrailingPadding
+                                      : 0;
+        if (blobSize == 0) continue;
+
+        // Copy at most `sr.Size` bytes (the recorded extent) — never overrun
+        // the container slot regardless of mod-blob length. Smaller blobs
+        // get truncated to fit; larger ones get truncated to the slot.
+        const size_t copyBytes = std::min<size_t>(sr.Size, blobSize);
+
+        // Identity short-circuit: bytes match → base archive's own copy →
+        // no override → don't allocate.
+        const uint8_t* containerSlice = relocFile.Data.data() + sr.ByteOffset;
+        if (copyBytes == sr.Size
+            && std::memcmp(containerSlice, blob->Data.data(), copyBytes) == 0) {
+            continue;
+        }
+
+        // First real override: lazily clone Data so subsequent overrides
+        // mutate the same buffer.
+        if (!overlayBuilt) {
+            overlay.assign(relocFile.Data.begin(), relocFile.Data.end());
+            overlayBuilt = true;
+        }
+        std::memcpy(overlay.data() + sr.ByteOffset, blob->Data.data(), copyBytes);
+    }
+
+    return overlay;
+}
 
 // Bridge-local type definitions.
 // These MUST be ABI-compatible with the decomp definitions in lbtypes.h.
@@ -476,7 +583,22 @@ void lbRelocLoadAndRelocFile(u32 file_id, void *ram_dst, u32 bytes_num, s32 loc)
 	extern void portPackedDisplayListCacheDeleteRange(const void *base, size_t size);
 	portPackedDisplayListCacheDeleteRange(ram_dst, copySize);
 	portRelocEvictFileRangesInRange(ram_dst, copySize);
-	memcpy(ram_dst, relocFile->Data.data(), copySize);
+
+	// Stage-10 sub-resource overlay. When a mod .o2r in the ArchiveManager
+	// last-archive-wins claims any of this container's sub-resource hashes,
+	// portRelocBuildOverlay returns a mutable copy of relocFile->Data with
+	// the override bytes spliced in at their recorded offsets. Empty vector
+	// = no overrides applied (the common case — short-circuit avoids the
+	// copy + memcmp scan unless a mod is actually loaded). Override bytes
+	// land in `ram_dst` via the same memcpy path; chain registration below
+	// runs against the post-overlay bytes since the chain-slot encodings
+	// and chain-target byte offsets are stable across overrides (sub-asset
+	// regions never overlap chain slots, by construction in torch).
+	std::vector<uint8_t> overlay = portRelocBuildOverlay(*relocFile);
+	const uint8_t* memcpySrc = !overlay.empty()
+	                              ? overlay.data()
+	                              : relocFile->Data.data();
+	memcpy(ram_dst, memcpySrc, copySize);
 
 	// One-shot raw dump for verification against ROM extraction.
 	// Set SSB64_DUMP_FILE_ID env var to a file_id; this writes the post-memcpy,

@@ -25,7 +25,7 @@
  *     u32  decompressed_data_size
  *     u8[decompressed_data_size]  decompressed_data   // already post-Pass1
  *
- *   v2 (current; Stage 9 — chain-flatten):
+ *   v2 (Stage 9 — chain-flatten):
  *     ... same prefix ...
  *     u32  processing_flags
  *     u32  num_intern_chain_entries
@@ -35,9 +35,21 @@
  *     u32  decompressed_data_size
  *     u8[decompressed_data_size]  decompressed_data
  *
- * v2 archives may have PROC_CHAIN_FLATTENED set (runtime iterates the flat
+ *   v3 (current; Stage 10 — sub-resource emission):
+ *     ... v2 prefix through extern chain entries ...
+ *     u32  num_sub_resource_hashes
+ *     { u64 hash, u32 byte_offset, u32 size, u8 kind, u8[3] pad }[num_sub_resource_hashes]
+ *     u32  decompressed_data_size
+ *     u8[decompressed_data_size]  decompressed_data
+ *
+ * v2/v3 archives may have PROC_CHAIN_FLATTENED set (runtime iterates the flat
  * lists) or unset (defensive — runtime falls through to the encoded walker on
  * the `decompressed_data` slots, which torch leaves intact regardless).
+ *
+ * v3 archives may have PROC_SUBRESOURCES_EMITTED set (override-overlay path
+ * checks the resource manager for each hash and overlays bytes into a
+ * mutable copy of Data before memcpy) or unset (no overrides possible —
+ * skip the entire overlay path).
  */
 class ResourceFactoryBinaryRelocFileV0 final : public Ship::ResourceFactoryBinary {
 public:
@@ -54,6 +66,13 @@ public:
 };
 
 class ResourceFactoryBinaryRelocFileV2 final : public Ship::ResourceFactoryBinary {
+public:
+    std::shared_ptr<Ship::IResource> ReadResource(
+        std::shared_ptr<Ship::File> file,
+        std::shared_ptr<Ship::ResourceInitData> initData) override;
+};
+
+class ResourceFactoryBinaryRelocFileV3 final : public Ship::ResourceFactoryBinary {
 public:
     std::shared_ptr<Ship::IResource> ReadResource(
         std::shared_ptr<Ship::File> file,

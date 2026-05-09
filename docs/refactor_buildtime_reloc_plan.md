@@ -492,32 +492,91 @@ torch v2 + asset re-extract. Headless 12s boot smoke clean.
 
 ---
 
-### Stage 10 — Sub-resource emission for moddability (~2 sessions)
+### Stage 10 — Sub-resource emission for moddability (~1 session, DONE 2026-05-09)
 
-For each reloc file, torch emits sub-resources alongside the container:
+For each reloc file, torch emits sub-resources alongside the container as
+standard `Blob` resources at deterministic OTR paths of the form
+`<container_otr_path>__sub/<kind>/<dec_offset>`. The container's v3
+header records `(u64 CRC64(path), u32 byte_offset, u32 size, u8 kind)`
+per sub-resource so the runtime can look each one up in the resource
+manager.
 
-- `reloc/<id>/vtx/<offset>` — each Vtx run discovered by Pass 2
-- `reloc/<id>/tex/<offset>/<fmt>_<siz>` — each texture image
-- `reloc/<id>/tlut/<offset>` — each palette
-- `reloc/<id>/dl/<offset>` — each top-level DL
-- `reloc/<id>/anim/<offset>` — each AObjEvent32 head
-- `reloc/<id>/sprite/<offset>` — each Sprite/Bitmap pair
-- `reloc/<id>/struct/<offset>/<type>` — each fixed-up struct (FTAttributes
-  etc.) for moddability of stat/balance data
+Kinds emitted (mapped from existing static enumerators — Pass 2 DL scan +
+struct-fixup catalog):
 
-Sub-resource paths are stable across rebuilds (they key on file ID +
-internal offset, both of which are deterministic). The container
-references its sub-resources by CRC64 hash, mirroring the pattern already
-used by `DisplayListFactory.cpp::260-318`.
+| Kind         | Source                                | Notes                          |
+|--------------|---------------------------------------|--------------------------------|
+| `vtx`        | Pass 2 `Pass2Kind::Vertex`            | seg=0E G_VTX target ranges     |
+| `tex`        | Pass 2 `Pass2Kind::TexBytes/TexU16`   | LoadBlock images (4b/8b/16b)   |
+| `tlut`       | Pass 2 `Pass2Kind::Tlut` (NEW)        | LoadTlut palettes              |
+| `sprite`     | Catalog `SPRITE` (68 B)               | per-Sprite struct              |
+| `bitmap`     | Catalog `BITMAP` (16 B)               | per-Bitmap struct              |
+| `mobjsub`    | Catalog `MOBJSUB` (120 B)             | per-MObjSub struct             |
+| `struct_u16` | Catalog `STRUCT_U16` (extra×4 B)      | variable-size rotate16 fixup   |
+| `struct_u32` | Catalog `STRUCT_U32` (extra×4 B)      | variable-size BSWAP32 fixup    |
+| `ftattributes` | Catalog `FTATTRIBUTES` (840 B)      | per-fighter stat block         |
 
-Containers store sub-resource hashes in their header so the runtime can
-ask the resource manager whether any are overridden — and if so, overlay
-the sub-resource bytes into the container blob *before* chain-walking.
+**Carve-outs from the original kind list**: `dl/<offset>` (top-level DL
+entry points) and `anim/<offset>` (AObjEvent32 heads) are NOT emitted.
+DL emission requires a separate top-level DL enumerator that doesn't
+exist today — modders touch DLs through the OTR `DisplayList` resource
+pattern (`torch/src/factories/DisplayListFactory.cpp`), which is a
+different system. Anim heads stay deferred per the Stage 7 closeout
+(`docs/decision_aobjevent32_runtime_walker_2026-05-09.md`) — modders
+don't author through AObjEvent32 streams.
 
-`processing_flags` bit 11 = `PROC_SUBRESOURCES_EMITTED`.
+**Texture-buffer pixel data**: not yet enumerated. The `tex` and `tlut`
+sub-resources are intra-DL `seg=0x0E` references — common in menus,
+rare in fighter/stage assets where most textures resolve through
+`Bitmap.buf` reloc tokens. A future enhancement could cross-reference
+the catalog's `BITMAP` entries with the chain-target list (Stage 9 flat
+list) to enumerate pixel buffers + their sizes from `Bitmap.width_img`
+× `Bitmap.actualHeight` × bpp.
 
-**Verification**: `ctest` green; one hand-rolled override test (replace a
-Mario animation Vtx blob and confirm it renders).
+`processing_flags` bit 11 = `PROC_SUBRESOURCES_EMITTED`. Set per-file
+when the sub-resource list is non-empty.
+
+**Container schema bumped to v3** (`port/resource/RelocFileFactory.{h,cpp}`).
+v0/v1/v2 readers stay registered for archive-format backward compat;
+the v3 reader adds the sub-resource hash list section after the chain
+sidecar and before the data block.
+
+**Runtime overlay**: `port/bridge/lbreloc_bridge.cpp::portRelocBuildOverlay`
+runs before the existing memcpy. When `sAnyOverridesActive` is false
+(the default — set true by `portRelocSetOverridesActive(1)` from the
+mods scanner), the overlay short-circuits with no allocation. When
+true, it walks `SubResourceHashes`, asks `ResourceManager::LoadResource`
+for each, and (if the returned bytes differ from the container's slice)
+clones `Data` and splices the override bytes in at the recorded offset.
+The chain walker that runs after `memcpy` operates on the overlaid
+bytes — chain slot positions are stable across overrides by
+construction (sub-asset regions never overlap chain slots).
+
+**Mods scanner**: `port/port.cpp` adds a minimal directory scan for
+`<bin_dir>/mods/*.o2r` + `*.otr` immediately after `BattleShip.o2r` is
+registered. Each found file is added via `ArchiveManager::AddArchive`,
+inheriting LUS's last-archive-wins resolution. Stage 12 will refine
+into a discoverable UI; Stage 10 just runs the scan unconditionally so
+Phase C can demo the override end-to-end.
+
+**Phase C demo**: `tools/example_mod/build_example_mod.py` builds a
+single-entry mod `.o2r` that XORs one byte of Mario's `FTAttributes`
+struct. Verified end-to-end on 2026-05-09 by dumping `MarioMain`
+(file_id 203) via `SSB64_DUMP_FILE_ID=203` with mod absent vs. present
+— byte at offset 1064 changes from `0x29` to `0x83` = `0x29 ^ 0xAA`,
+matching the mod's mutation. Game continues into the attract chain
+without crash, confirming the chain walker's pointer registrations
+remain valid against the overlaid bytes.
+
+**Closeout commits**: see `git log` on `agent/buildtime-reloc` —
+Stage 10 commits the torch SHA bump (sub-resource emission +
+PROC_SUBRESOURCES_EMITTED) and the port-side V3 reader / overlay /
+mods scanner / example_mod tooling.
+
+**Verification**: drift gate stays green at 2132/2132 unchanged after
+torch v3 + asset re-extract (no `Data` block changes; only header layout
+grows). Headless 12s boot smoke clean both with and without the example
+mod loaded.
 
 ---
 
