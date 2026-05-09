@@ -8,24 +8,18 @@ extern "C" {
 #endif
 
 /**
- * Byte-swap a decompressed reloc file blob from N64 big-endian to native
- * little-endian. Must be called AFTER memcpy and BEFORE the reloc chain walk.
+ * Walk the DL stream of a freshly-loaded reloc-file blob and register each
+ * in-file Vtx region into sStructU16Fixups so the lazy interpreter-time
+ * fixup (portRelocFixupVertexAtRuntime) treats them as already-fixed —
+ * v3 archives carry the byte transforms baked in at extraction. Must run
+ * AFTER memcpy and BEFORE the reloc chain walk.
  *
- * Two-pass approach:
- *   Pass 1: Blanket u32 swap of every word (fixes DL commands, struct fields,
- *           reloc chain descriptors, 32bpp textures, zeros).
- *   Pass 2: Parse now-native-endian DL commands to find vertex and texture
- *           regions, then apply targeted fixups for u16 and byte-granular data.
- *
- * @param data        Pointer to the decompressed blob in game memory.
- * @param size        Size in bytes (must be a multiple of 4).
- * @param file_id     Reloc file id, used only by the SSB64_TEX_FIXUP_LOG path
- *                    to tag log entries. Pass UINT32_MAX if unknown.
- * @param proc_flags  PROC_* bitmask from RelocFile::ProcessingFlags. Each set
- *                    bit advertises a transform torch already applied; the
- *                    runtime skips the matching pass. v0 archives pass 0.
+ * @param data     Pointer to the decompressed blob in game memory.
+ * @param size     Size in bytes (must be a multiple of 4).
+ * @param file_id  Reloc file id, used only by the SSB64_TEX_FIXUP_LOG path
+ *                 to tag log entries. Pass UINT32_MAX if unknown.
  */
-void portRelocByteSwapBlob(void *data, size_t size, unsigned int file_id, unsigned int proc_flags);
+void portRelocSeedVertexTrackers(void *data, size_t size, unsigned int file_id);
 
 /**
  * Apply rotate16 fixup to a region of u16 fields within a ROM-overlay struct.
@@ -97,7 +91,7 @@ void portFixupBitmapArray(void *bitmaps, unsigned int count);
  *
  * Performs two passes per bitmap:
  *
- *   1. Restore N64 BE byte order. Pass2 of portRelocByteSwapBlob only finds
+ *   1. Restore N64 BE byte order. Pass2's DL scan only finds
  *      textures referenced by an in-file SETTIMG/LOADBLOCK pair; sprites build
  *      their LOAD blocks at runtime from bitmap.buf and never embed those
  *      addresses in stored DLs, so pass2 misses them. Apply BSWAP32 again to

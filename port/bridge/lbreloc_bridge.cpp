@@ -598,13 +598,11 @@ void lbRelocLoadAndRelocFile(u32 file_id, void *ram_dst, u32 bytes_num, s32 loc)
 		}
 	}
 
-	// Byte-swap from N64 big-endian to native little-endian.
-	// Must happen BEFORE the reloc chain walk (which reads u16 fields
-	// from u32 words using bit shifts that assume native byte order).
-	// Each transform torch already ran at extraction time is advertised
-	// via ProcessingFlags so we skip the duplicate runtime work.
-	portRelocByteSwapBlob(ram_dst, copySize, (unsigned int)file_id,
-	                      (unsigned int)relocFile->ProcessingFlags);
+	// Walk the DL stream and seed sStructU16Fixups with each in-file Vtx
+	// region so the lazy interpreter-time fixup path treats them as
+	// already-fixed. The byte transforms (pass1, pass2, struct, halfswap)
+	// were applied at extraction by torch — see RelocFile::ProcessingFlags.
+	portRelocSeedVertexTrackers(ram_dst, copySize, (unsigned int)file_id);
 
 	// Register in status buffer
 	if (loc == nLBFileLocationForce)

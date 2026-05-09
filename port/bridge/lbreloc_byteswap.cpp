@@ -45,7 +45,7 @@ extern "C" bool portRelocDescribePointer(const void *ptr, uintptr_t *out_base, s
 // ============================================================
 //
 // Per-file counters for the byteswap + reloc-chain fixup pipeline.
-// Reset at the top of portRelocByteSwapBlob; emitted as a single
+// Reset at the top of portRelocSeedVertexTrackers; emitted as a single
 // port_log line by portStageAuditEmitLoadSummary after the reloc
 // chain walk completes. Helps identify stage files whose G_VTX /
 // G_SETTIMG targets the DL scan skipped AND the chain walk failed
@@ -898,10 +898,8 @@ static void apply_fixups(void *data, size_t file_size,
 //  Public API
 // ============================================================
 
-extern "C" void portRelocByteSwapBlob(void *data, size_t size, unsigned int file_id, unsigned int proc_flags)
+extern "C" void portRelocSeedVertexTrackers(void *data, size_t size, unsigned int file_id)
 {
-	(void)proc_flags;  // v3 archives advertise pass1+pass2 done at build; runtime
-	                   // only walks the DL stream now to seed sStructU16Fixups.
 	if (data == nullptr || size < 4)
 		return;
 
@@ -915,9 +913,10 @@ extern "C" void portRelocByteSwapBlob(void *data, size_t size, unsigned int file
 	}
 
 	// Walk the DL stream and seed sStructU16Fixups with each in-file vertex
-	// region so the lazy interpreter-time fixup path treats them as already-
-	// fixed (the bytes were transformed at extraction). Texture regions only
-	// fire the optional SSB64_TEX_FIXUP_LOG diagnostic.
+	// region so the lazy interpreter-time fixup path
+	// (portRelocFixupVertexAtRuntime) treats them as already-fixed — the
+	// bytes were transformed at extraction. Texture regions only fire the
+	// optional SSB64_TEX_FIXUP_LOG diagnostic.
 	size_t num_words = size / 4;
 	const uint32_t *words = static_cast<const uint32_t *>(data);
 
