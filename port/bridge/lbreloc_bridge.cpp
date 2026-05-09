@@ -321,18 +321,16 @@ static void portRelocEvictFileRangesInRange(void *base, size_t size)
 		sPortRelocFileRanges.end());
 }
 
+/* Fighter animation / submotion files plus SCExplainMain go through the
+ * halfswap pipeline at extraction (PROC_HALFSWAP_DONE on every v3 archive).
+ * The runtime path here only registers their loaded heap range with the
+ * AObjEvent32 walker (port_aobj_register_halfswapped_range), so the lazy
+ * un-halfswap walker knows which streams to undo when an opcode reader
+ * touches them. */
 static bool portRelocIsFighterFigatreeFile(u32 file_id)
 {
 	static const char sFighterAnimPrefix[] = "reloc_animations/FT";
 	static const char sFighterSubmotionPrefix[] = "reloc_submotions/FT";
-	/* SCExplainMain contains arrays of FTKeyEvent u16s (per-player
-	 * tutorial button inputs) and SCExplainPhase u16/u8 fields.
-	 * The u16-halfswap applied by portRelocFixupFighterFigatree is
-	 * what makes u16 pair reads produce the BE value on LE.
-	 * Without it, u16[0] and u16[1] are swapped per u32, so the
-	 * first FTKeyEvent reads from what should be the SECOND u16 of
-	 * the pair — typically 0x0000, which parses as End and kills the
-	 * tutorial's button scripting. */
 	static const char sSCExplainMainPath[] = "reloc_scene/SCExplainMain";
 
 	if (file_id >= RELOC_FILE_COUNT || gRelocFileTable[file_id] == NULL) return false;
@@ -340,32 +338,6 @@ static bool portRelocIsFighterFigatreeFile(u32 file_id)
 	return (std::strncmp(path, sFighterAnimPrefix, sizeof(sFighterAnimPrefix) - 1) == 0) ||
 	       (std::strncmp(path, sFighterSubmotionPrefix, sizeof(sFighterSubmotionPrefix) - 1) == 0) ||
 	       (std::strcmp(path, sSCExplainMainPath) == 0);
-}
-
-static void portRelocFixupFighterFigatree(void *ram_dst, size_t copy_size, const std::vector<uint8_t> &reloc_words)
-{
-	u32 *words;
-	size_t word_count;
-	size_t i;
-
-	if ((ram_dst == NULL) || (copy_size < sizeof(u32)))
-	{
-		return;
-	}
-	words = (u32*)ram_dst;
-	word_count = copy_size / sizeof(u32);
-
-	if (reloc_words.size() < word_count)
-	{
-		word_count = reloc_words.size();
-	}
-	for (i = 0; i < word_count; i++)
-	{
-		if (reloc_words[i] == 0)
-		{
-			words[i] = (words[i] << 16) | (words[i] >> 16);
-		}
-	}
 }
 
 // // // // // // // // // // // //
@@ -526,7 +498,6 @@ void lbRelocLoadAndRelocFile(u32 file_id, void *ram_dst, u32 bytes_num, s32 loc)
 {
 	auto relocFile = portLoadRelocResource(file_id);
 	bool is_fighter_figatree = portRelocIsFighterFigatreeFile(file_id);
-	std::vector<uint8_t> figatree_reloc_words;
 
 	// Gated: SSB64_LOG_LBRELOC_LOAD=1 logs every file load. Helpful when
 	// tracing which reloc files are loaded per scene.
@@ -554,10 +525,6 @@ void lbRelocLoadAndRelocFile(u32 file_id, void *ram_dst, u32 bytes_num, s32 loc)
 		spdlog::warn("lbReloc bridge: file_id {} data ({} bytes) exceeds "
 		             "buffer ({} bytes), truncating", file_id, copySize, bytes_num);
 		copySize = bytes_num;
-	}
-	if (is_fighter_figatree)
-	{
-		figatree_reloc_words.resize(copySize / sizeof(u32), 0);
 	}
 	// Invalidate fixup idempotency state that keyed on addresses inside the
 	// region we're about to overwrite. Needed because bump-reset heaps (e.g.
@@ -679,13 +646,7 @@ void lbRelocLoadAndRelocFile(u32 file_id, void *ram_dst, u32 bytes_num, s32 loc)
 		portRelocFixupTextureFromChain(ram_dst, copySize, slot_byte_off, target_byte_off);
 		u32 *slot = (u32 *)((uintptr_t)ram_dst + slot_byte_off);
 		void *target = (void *)((uintptr_t)ram_dst + target_byte_off);
-		u32 token = portRelocRegisterPointer(target);
-		if (is_fighter_figatree) {
-			uint32_t slot_word_idx = slot_byte_off / sizeof(u32);
-			if (slot_word_idx < figatree_reloc_words.size())
-				figatree_reloc_words[slot_word_idx] = 1;
-		}
-		*slot = token;
+		*slot = portRelocRegisterPointer(target);
 		if (sChainObserver != nullptr) {
 			sChainObserver(file_id, slot_byte_off, /*dep_file_id=*/-1, target_byte_off);
 		}
@@ -707,13 +668,7 @@ void lbRelocLoadAndRelocFile(u32 file_id, void *ram_dst, u32 bytes_num, s32 loc)
 		}
 		u32 *slot = (u32 *)((uintptr_t)ram_dst + slot_byte_off);
 		void *target = (void *)((uintptr_t)vaddr_extern + target_byte_off);
-		u32 token = portRelocRegisterPointer(target);
-		if (is_fighter_figatree) {
-			uint32_t slot_word_idx = slot_byte_off / sizeof(u32);
-			if (slot_word_idx < figatree_reloc_words.size())
-				figatree_reloc_words[slot_word_idx] = 1;
-		}
-		*slot = token;
+		*slot = portRelocRegisterPointer(target);
 		if (sChainObserver != nullptr) {
 			sChainObserver(file_id, slot_byte_off, (int32_t)dep_file_id, target_byte_off);
 		}
@@ -764,17 +719,12 @@ void lbRelocLoadAndRelocFile(u32 file_id, void *ram_dst, u32 bytes_num, s32 loc)
 		}
 	}
 
+	/* Heap-absolute side effect: tell the lazy AObjEvent32 walker
+	 * (port_aobj_fixup) and the FTKeyEvent reader (ftkey.c) that this region
+	 * came in with halfswap applied at extraction. The byte transform itself
+	 * is now always done by torch (PROC_HALFSWAP_DONE on every v3 archive). */
 	if (is_fighter_figatree)
 	{
-		/* Skip the byte transform when torch already applied it at extraction.
-		 * The halfswapped-range registration is heap-absolute side-effect work
-		 * that must run every load regardless of where the bytes were
-		 * transformed — the lazy AObjEvent32 walker (port_aobj_fixup) and
-		 * FTKeyEvent reader (ftkey.c) both consult it. */
-		if ((relocFile->ProcessingFlags & PROC_HALFSWAP_DONE) == 0)
-		{
-			portRelocFixupFighterFigatree(ram_dst, copySize, figatree_reloc_words);
-		}
 		port_aobj_register_halfswapped_range(ram_dst, (unsigned long)copySize);
 	}
 
