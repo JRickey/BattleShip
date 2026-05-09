@@ -47,6 +47,251 @@ cd .claude/worktrees/buildtime-reloc
 Expected: `unchanged=2132, mismatch=0, …`. If it drifts, follow the
 recovery steps in `docs/refactor_buildtime_reloc_plan.md` (wipe + re-extract).
 
+## Stage 10 follow-ups (not yet addressed)
+
+Stage 10 shipped enough machinery for end-to-end mod-override verification
+(Phase C demo: byte-level overlay confirmed), but several capabilities and
+guardrails are deferred. Decide which to tackle before Stage 11/12 — some
+are blockers for "real" modding, others are polish.
+
+### A — Pixel-buffer enumeration (highest priority for moddability)
+
+**Problem.** The current enumerator emits ~2,593 sub-resources for the
+2,132 reloc files, but only **1 vtx**, **0 tex**, and **0 tlut** entries
+(per `unzip -l BattleShip.o2r | grep "__sub"` audit on 2026-05-09). The
+`tex`/`tlut`/`vtx` paths only catch intra-DL `seg=0x0E` references, which
+are common in menus but rare in fighter/stage assets where most textures
+resolve through `Bitmap.buf` reloc tokens (heap-pointed, not statically
+in a DL stream). Net effect: the kinds we emit are **sprite struct,
+bitmap struct, mobjsub struct, FTAttributes, struct_u16/u32** — gameplay
+*config*, not visual *appearance*.
+
+A real character-model swap or stock-icon recolor needs the actual
+pixel-buffer bytes addressable as a sub-resource. Today they are not.
+
+**Implementation sketch.** Cross-reference Stage 9's flat chain entries
+with the catalog's `BITMAP` / `MOBJSUB` entries:
+
+1. For each Bitmap at byte_offset `O` in the catalog, look up the chain
+   entry whose `slot_byte_offset == O + 8` (the `Bitmap.buf` field).
+   That entry's `target_byte_offset` is where the pixel data lives in
+   the same file.
+2. Read the bitmap struct fields (already byte-fixed by struct_fixup):
+   `width_img` at offset 2, `actualHeight` at offset 12,
+   plus the parent Sprite's `bmsiz` field (4b/8b/16b/32b).
+3. Compute size = `width_img × actualHeight × bpp / 8`, rounded up to
+   word alignment.
+4. Emit a `tex_buffer/<target_offset>` (or extend the existing `tex`
+   kind) sub-resource at that target.
+5. Mirror for MObjSub's `sprites` chain target → walk through Sprite
+   table → per-Bitmap → pixel buffer.
+
+**Risks.**
+- Sub-resource emit count could grow 10–100× (every visible texture
+  becomes addressable). Watch `BattleShip.o2r` size + extract wall time.
+- Width/height fields can be zero or larger than buffer — bounds-check
+  defensively, skip emission rather than emit garbage.
+- The same target offset may be referenced by multiple bitmaps with
+  different format reads (rare); the handoff mentions this as the
+  reason for `<fmt>_<siz>` in the path scheme. Currently we collapse
+  duplicates by `(byte_offset, kind, size)`. If the conflict arises in
+  practice, expand the path to disambiguate.
+- Size-mismatch on override (mod ships a larger texture): current
+  overlay truncates silently. Acceptable for v1 if overlay logs a
+  warning when `mod_blob_size != recorded_size`.
+
+**Effort estimate:** ~1 session. Enumeration is straightforward chain
+lookup + struct read. Most time goes into bounds-checks and a verifier
+that confirms emitted byte ranges don't overlap chain slots.
+
+### B — Drift gate doesn't validate sub-resources
+
+**Problem.** `port_reloc_regen --check` only compares post-pipeline
+`Data` bytes against committed `.fixt` fixtures. It does NOT validate:
+
+- That every entry in `SubResourceHashes` resolves to a Blob the LUS
+  factory can load.
+- That each sub-resource's bytes equal `Data[byte_offset..+size]` (the
+  identity invariant the overlay path relies on for its short-circuit).
+- That `CRC64(emitted_path) == hash` recorded in the container header.
+- That no two sub-resources in the entire archive share a CRC64 hash.
+
+A future torch refactor (e.g. renaming a kind, changing the path
+delimiter) could silently break the override path while keeping the
+drift gate green.
+
+**Implementation sketch.** Extend `port_reloc_regen` with a
+`--check-subres` mode that, for each loaded `RelocFile`:
+
+1. Iterates `SubResourceHashes`.
+2. For each entry, calls `ArchiveManager::HasFile(hash)` then
+   `LoadResource` and casts to `Ship::Blob`.
+3. Asserts `memcmp(blob.Data.data(), Data + byte_offset, size) == 0`
+   (modulo the 16-byte LUS Blob trailing padding).
+4. Tracks all (file_id, hash) tuples globally; asserts no hash collisions.
+
+Add to the standard CI gate alongside `--all --check --quiet`.
+
+**Effort estimate:** ~0.5 session. Mostly harness code.
+
+### C — Mod-collision determinism
+
+**Problem.** The Stage 10 mods scanner uses
+`std::filesystem::directory_iterator` which has filesystem-dependent
+order (APFS sorts differently from ext4 from NTFS). When two mods claim
+the same hash, LUS's last-archive-wins picks the most-recently-added —
+so cross-platform mod authors can hit "works on my machine" surprises.
+
+**Fix.** Sort entries alphabetically by filename before AddArchive in
+`port/port.cpp::560`-ish. One-line change.
+
+### D — Override identity-check optimization
+
+**Problem.** `portRelocBuildOverlay` memcmps every sub-resource against
+its container slice on every reloc-file load when overrides are active,
+to detect "real override" vs. "base archive's own copy". For 100K+
+sub-resource lookups across an attract-chain run this is measurable.
+
+**Options.**
+- Store `u64 content_hash` (CRC64 of bytes) alongside `(byte_offset,
+  size, kind)` in the v3 schema. Compare hash-of-loaded-blob vs.
+  recorded; skip overlay when equal. Cuts memcmp to fixed 8-byte
+  comparison. Schema bump to v4.
+- LUS API extension: `ArchiveManager::GetArchiveForHash(hash)` →
+  `shared_ptr<Archive>`. Skip overlay when archive == base. No schema
+  change but requires LUS patch.
+- Status quo with sAnyOverridesActive short-circuit handles the common
+  no-mod case for free; optimization only matters when ≥1 mod is loaded.
+
+Defer until profiling shows it matters.
+
+### E — Container schema cohabitation when V0/V1/V2 readers are dropped
+
+**Problem.** When Stage 11 trims runtime byteswap helpers, archives
+written by V0/V1/V2 (where flags would be unset and the runtime would
+compensate) lose their fallback path. Two options:
+
+- **Keep V0/V1/V2 readers** with a slow-path that re-runs byteswap
+  helpers. Maintains compatibility with stale archives but doesn't let
+  Stage 11 fully delete the helpers — they're kept as a fallback.
+- **Drop V0/V1/V2 entirely.** Asset/torch coupling already forces
+  re-extract on every torch SHA bump, so older archives are de-facto
+  unsupported anyway. Simpler, smaller binary.
+
+Recommend **drop**, gated on a torch SHA bump that emits v3 and a
+smoke pass on a freshly-extracted archive. Document the transition in
+the Stage 11 commit message.
+
+### F — OTR path stability vs. yaml refactors
+
+**Problem.** Sub-resource paths embed the yaml-defined asset name —
+e.g. `reloc_fighters_main/MarioMain__sub/ftattributes/1064`. If someone
+renames `MarioMain` → `MarioMainV2` in `yamls/us/reloc_fighters_main.yml`,
+**all** of MarioMain's sub-resource hashes change. The container's
+recorded hash list re-computes (internally consistent), but external
+mods built against the old name break.
+
+**Mitigation options.**
+- Document the constraint in `docs/architecture.md` and
+  `tools/example_mod/README.md`: "yaml asset names are part of the mod
+  ABI; renames bump the mod compatibility version."
+- Offer a stable-id alternative: torch could optionally emit at
+  `reloc_subres/<file_id>/<kind>/<offset>` (file_id is part of the ROM
+  layout, never changes). Trade-off: less human-readable paths.
+- Or both — emit at both paths, container records both hashes. Doubles
+  hash list size but lets mods choose which surface to bind to.
+
+Document for now; revisit if a yaml refactor breaks downstream mods.
+
+### G — `__sub` suffix collision risk
+
+**Problem.** Path scheme assumes no yaml asset legitimately ends with
+`__sub`. Audit: scan `yamls/us/*.yml` for any asset name matching
+`*__sub*`. If clean, document the constraint as a torch-side check; if
+not clean, swap to a more unique sentinel like `__ssb64_subres__`.
+
+### H — Pixel-format disambiguation in tex paths
+
+**Problem.** The handoff originally specified `tex/<offset>/<fmt>_<siz>`
+because the same offset can be read at different (fmt, siz) combinations.
+Today we collapse to `tex/<offset>` bucketed by Pass2Kind. If a future
+texture is read as both 4b-CI and 8b-IA at the same offset, the dedup
+collapses both into one path → modders can't distinguish. Audit by
+checking if any current Pass2Region entries have duplicate offsets with
+different fmts.
+
+### I — Catalog drift CI gate
+
+**Problem.** `tools/generate_struct_fixup_catalog.py` mines decomp
+source for `portFixup*` call sites. If a decomp PR adds a new fixup
+without re-running the generator, the catalog stays stale and torch
+emits no sub-resources for that file — silent regression with no test
+signal.
+
+**Fix.** CI runs `generate_struct_fixup_catalog.py` and fails if the
+output differs from the committed `port/test/struct_fixup_catalog.json`.
+One-line CI gate.
+
+### J — Catch-all observability
+
+**Per-file census.** Many of the 2,132 files emit zero sub-resources
+(1,633 animation files, mostly correct since AObjEvent is deferred). A
+`tools/inspect_fixtures.py --census-subres` mode could surface
+"fighter-state files with zero sub-resources" — likely indicating the
+catalog missed a fixup site.
+
+**Hash collision check.** Probability of two sub-resource paths colliding
+is ~2⁻⁶⁴ across N=2,593 entries (negligible) but a one-time check costs
+nothing and rules out a misformatted-path bug. Fold into B above.
+
+### K — Mod-author guide
+
+`tools/example_mod/README.md` documents the demo workflow but there's no
+end-to-end "how to write a mod" doc. Probably a Stage 12 deliverable but
+worth listing — modders need to know:
+
+- Path scheme (`<container_path>__sub/<kind>/<dec_offset>`).
+- Which kinds are addressable today (the 9 listed in the plan).
+- LUS Blob format (header + u32 size + bytes).
+- CRC64 path hashing matching `libultraship/src/ship/utils/StrHash64.cpp::CRC64`.
+- Last-archive-wins resolution and how the scanner orders mods.
+
+### L — Full-container override pathway (orthogonal to sub-resources)
+
+A user during the Stage 10 closeout asked for a Mario↔Captain-Falcon
+moveset/model swap. That use case wants animation streams + character
+motion files swapped — content the Stage 10 enumerator does NOT emit
+(see follow-up A for textures, plus the Stage 7 ADR for AObjEvent
+streams). But LUS's underlying path-based last-archive-wins works
+regardless of Stage 10: a mod can override `reloc_fighters_main/CaptainMain`
+as a *whole container* and the runtime serves the mod's bytes verbatim
+through the existing `LoadResource(path_hash)` path — no Stage 10
+machinery involved.
+
+Caveats:
+
+- The override file must itself be a valid v3 reloc container — same
+  schema, same chain entries, same `processing_flags`. The simplest
+  authoring path is "copy a different existing container's bytes
+  verbatim" (e.g. mod's `CaptainMain` = base archive's `MarioMain`
+  bytes), but cross-references to other reloc files via `ExternFileIds`
+  may resolve to the wrong file_id post-swap.
+- Total size must fit in the heap allocation the game prepared. The
+  bridge truncates oversized loads (`lbRelocLoadAndRelocFile`'s
+  `copySize > bytes_num` clamp). Smaller-than-original is safe; larger
+  silently truncates.
+- Cross-container references (e.g. `CaptainMain` ↔ `CaptainMainMotion`
+  via file_id) won't auto-translate. A real swap mod needs to override
+  the whole linked set: main + motion + animation files + … . A modder
+  can list these by walking `ExternFileIds` of each container.
+
+This pathway is **already functional** today via Stage 10's mods/
+scanner — it just isn't sub-resource-overlay; it's the original
+LUS mFileToArchive resolution. Document in the mod-author guide (K)
+as the right tool when sub-resources don't reach the bytes you need.
+
+---
+
 ## Stage 11 — Runtime simplification
 
 Per the plan: now that every transformation bit (except the deliberately
