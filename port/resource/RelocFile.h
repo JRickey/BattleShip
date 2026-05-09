@@ -21,6 +21,13 @@
  * apply pass1 again. */
 constexpr uint32_t PROC_PASS1_BSWAP_DONE = 1u << 0;
 
+/* When set, torch already applied the pass2 DL-walk byte transforms (per-Vtx
+ * rotate16+BSWAP32, per-format texture/palette BSWAP32) to `Data`. The runtime
+ * still re-runs the scan to populate idempotency trackers (sStructU16Fixups
+ * for vertices) — those are absolute-address state that lives in the runtime
+ * heap, not in the file — but skips the actual byte-transform helpers. */
+constexpr uint32_t PROC_PASS2_DONE = 1u << 1;
+
 class RelocFile final : public Ship::Resource<void> {
 public:
     using Resource::Resource;

@@ -901,9 +901,14 @@ static void apply_fixup_tex_u16(uint32_t *words, size_t num_words)
 	}
 }
 
+// Splits the per-region work into byte transforms (which torch can do at
+// extraction) and tracker bookkeeping (absolute-address state that must run
+// in the heap). When PROC_PASS2_DONE is set in proc_flags the data already
+// holds the post-pass2 bytes from torch, so the helper functions are skipped
+// but the trackers still get the same entries — fixtures stay byte-identical.
 static void apply_fixups(void *data, size_t file_size,
                          const std::vector<FixupRegion> &regions,
-                         unsigned int file_id)
+                         unsigned int file_id, bool transforms_done_at_build)
 {
 	uint8_t *bytes = static_cast<uint8_t *>(data);
 
@@ -930,10 +935,13 @@ static void apply_fixups(void *data, size_t file_size,
 		switch (region.type)
 		{
 		case FIXUP_VERTEX:
-			apply_fixup_vertex(region_words, num_words);
+			if (!transforms_done_at_build)
+				apply_fixup_vertex(region_words, num_words);
 			// Per-vertex registration so the runtime lazy fixup
 			// (portRelocFixupVertexAtRuntime) skips each Vtx
 			// individually — handles overlapping sub-loads.
+			// Runs regardless of who applied the byte transform: the
+			// tracker is heap-absolute state and lives only at runtime.
 			{
 				uintptr_t base = reinterpret_cast<uintptr_t>(region_words);
 				size_t n_vtx = num_words / 4;  // 4 u32 words per Vtx
@@ -943,13 +951,15 @@ static void apply_fixups(void *data, size_t file_size,
 			}
 			break;
 		case FIXUP_TEX_BYTES:
-			apply_fixup_tex_bytes(region_words, num_words);
+			if (!transforms_done_at_build)
+				apply_fixup_tex_bytes(region_words, num_words);
 			tex_log_emit("pass2.bytes", (int)file_id,
 			             (uint32_t)start, (uint32_t)len,
 			             -1, -1, -1, region_words, "4b/8b");
 			break;
 		case FIXUP_TEX_U16:
-			apply_fixup_tex_u16(region_words, num_words);
+			if (!transforms_done_at_build)
+				apply_fixup_tex_u16(region_words, num_words);
 			tex_log_emit("pass2.u16", (int)file_id,
 			             (uint32_t)start, (uint32_t)len,
 			             -1, -1, 16, region_words, "16b/tlut");
@@ -964,6 +974,7 @@ static void apply_fixups(void *data, size_t file_size,
 
 // Mirrors RelocFile.h to avoid pulling resource headers into the bridge.
 static constexpr unsigned int kProcPass1BswapDone = 1u << 0;
+static constexpr unsigned int kProcPass2Done      = 1u << 1;
 
 extern "C" void portRelocByteSwapBlob(void *data, size_t size, unsigned int file_id, unsigned int proc_flags)
 {
@@ -973,13 +984,14 @@ extern "C" void portRelocByteSwapBlob(void *data, size_t size, unsigned int file
 	if (stage_audit_enabled()) stage_audit_reset_per_file();
 
 	const bool pass1_done_at_build = (proc_flags & kProcPass1BswapDone) != 0;
+	const bool pass2_done_at_build = (proc_flags & kProcPass2Done) != 0;
 
 	if (stage_audit_enabled() && file_id == 104) {
 		const uint8_t *p = static_cast<const uint8_t *>(data);
-		port_log("[STAGE_AUDIT_104_LOAD] pre_pass1 bytes=%02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X (build_pass1=%d)\n",
+		port_log("[STAGE_AUDIT_104_LOAD] pre_pass1 bytes=%02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X (build_pass1=%d build_pass2=%d)\n",
 		         p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7],
 		         p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15],
-		         pass1_done_at_build ? 1 : 0);
+		         pass1_done_at_build ? 1 : 0, pass2_done_at_build ? 1 : 0);
 	}
 
 	// Pass 1: blanket u32 swap. Skipped when torch already applied it at
@@ -995,7 +1007,11 @@ extern "C" void portRelocByteSwapBlob(void *data, size_t size, unsigned int file
 		         p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
 	}
 
-	// Pass 2: DL-guided fixup
+	// Pass 2: DL-guided fixup. Even when torch already applied the byte
+	// transforms (PROC_PASS2_DONE), the runtime still re-walks the DL
+	// stream and inserts each Vtx address into sStructU16Fixups so the
+	// lazy `portRelocFixupVertexAtRuntime` path stays idempotent for the
+	// same buffer. apply_fixups() guards the actual byte rewriting.
 	size_t num_words = size / 4;
 	const uint32_t *words = static_cast<const uint32_t *>(data);
 
@@ -1004,7 +1020,7 @@ extern "C" void portRelocByteSwapBlob(void *data, size_t size, unsigned int file
 
 	if (!regions.empty())
 	{
-		apply_fixups(data, size, regions, file_id);
+		apply_fixups(data, size, regions, file_id, pass2_done_at_build);
 	}
 }
 
