@@ -1,8 +1,141 @@
-# Build-time reloc refactor — Stage 6 handoff (2026-05-08, evening)
+# Build-time reloc refactor — Stage 6 handoff (2026-05-08)
 
 You are picking up the build-time reloc refactor described in
 `docs/refactor_buildtime_reloc_plan.md` at **Stage 6 (struct fixups → torch)**.
 **Read the plan first** — this handoff is the delta.
+
+## Status (post-2026-05-08 evening session)
+
+Stage 6a + 6c done. Stage 6b + 6d open. Branch HEAD:
+
+```
+<current> port/resource: StructFixupCatalog runtime + flag bits (Stage 6c)
+fe878d1   port/bridge: SSB64_FIXUP_CAPTURE catalog logger (Stage 6a)
+6704fba   docs: handoff for Stage 6 (struct fixups → torch)   (← this doc)
+5d43e46   Bump torch + complete pass2 buildtime migration (Stage 5)
+```
+
+**Stage 6a — capture wiring (committed):** every in-scope `portFixup*` helper
+emits `(family, file_id, byte_offset_in_file, extra)` once per unique tuple
+when `SSB64_FIXUP_CAPTURE=1`. On clean exit (atexit) the dedup'd set is
+written as a JSON array to `$SSB64_FIXUP_CAPTURE_FILE` (default
+`port_fixup_capture.json`). Spike: 40 sec attract chain produces 850 unique
+tuples across 57 files, exercising all six families.
+
+**Stage 6c — runtime catalog + flag bits (committed):**
+- `RelocFile.h`: `PROC_STRUCT_U16_DONE` … `PROC_FTATTRIBUTES_DONE` on bits 2..7.
+- `port/resource/StructFixupCatalog.{h,cpp}`: codegen target.
+  `portStructFixupCatalogHasEntry(file_id, byte_offset, family) → bool` does
+  binary search over a sorted u64-packed key array.
+- `tools/generate_struct_fixup_catalog.py`: reads
+  `port/test/struct_fixup_catalog.json`, emits the .cpp. Wired into the
+  existing `GenerateRelocArtifacts` custom target.
+- `port/bridge/lbreloc_bridge.cpp`: `PortRelocFileRange` now stores
+  `proc_flags`. New helper `portRelocGetProcessingFlags(file_id)`.
+- `port/bridge/lbreloc_byteswap.cpp`: each in-scope helper now consults
+  `fixup_torch_already_did_it(family, PROC_<FAMILY>_DONE, target)` AFTER its
+  tracker insertion. Skip-condition: catalog hit AND flag bit set on the file.
+  Either gate missing → run the byte transform (fail-safe).
+- `port/test/struct_fixup_catalog.json`: ships **empty**. Filling it is Stage 6b.
+
+Drift gate stays green at every commit. Empty catalog + no torch-side flag
+emission = every helper still runs its byte transform exactly as today.
+
+## What to do next
+
+### Stage 6b — populate the catalog (~30-60 min interactive)
+
+Run the game with capture enabled across the scenes that exercise every
+family:
+
+```
+cd .claude/worktrees/buildtime-reloc/build
+SSB64_FIXUP_CAPTURE=1 \
+SSB64_FIXUP_CAPTURE_FILE=$PWD/../port/test/struct_fixup_catalog.json \
+./BattleShip
+```
+
+Coverage list (in order, one boot is fine — capture state accumulates across
+scenes during a session):
+
+1. Let attract chain run for ~1 min (covers title + demo + champ-tree screens)
+2. 1P mode → Mario → stage 1 (Yoshi). Beat or quit out.
+3. Training mode → pick a fighter not yet covered (e.g. Captain Falcon,
+   Ness, Pikachu, Jigglypuff)
+4. VS mode → 4-player free-for-all on a stage not in 1P
+5. Results screen (let it auto-advance or A through it)
+6. Bonus 1 (Break the Targets) → at least one fighter
+7. Each fighter intro: pick the character on CSS, hold A briefly to see the
+   "READY" portrait+sprite — covers the per-fighter sprite/bitmap files
+
+Capture is per-process: when `BattleShip` exits cleanly (window-close, not
+SIGKILL) the JSON dumps. Multiple runs append-and-dedup cleanly if you
+concatenate the JSON arrays manually, or just do one long session.
+
+After capture: regen the codegen + drift gate to confirm clean state:
+
+```
+python3 tools/generate_struct_fixup_catalog.py
+cmake --build build --target ssb64 port_reloc_regen -j 4
+./build/port/test/port_reloc_regen --all --check --quiet   # must stay green
+```
+
+Commit the JSON + regenerated .cpp together. Drift gate stays green because
+no torch flag bits flip yet — the catalog content is dormant runtime data.
+
+### Stage 6d — family-by-family torch migration (rest of Stage 6)
+
+For each family in this order (smallest blast radius first):
+
+1. **SPRITE** (visual; ~38 attract entries, more after Stage 6b)
+2. **BITMAP** (visual; goes with SPRITE)
+3. **MOBJSUB** (matanim color CCs — Whispy class regression risk)
+4. **STRUCT_U16** (varied; includes MPGroundData stage collision)
+5. **STRUCT_U32** (BSWAP32 family; also covers RawTextureBSWAP32)
+6. **FTATTRIBUTES** (fighter physics; smallest count but most damage potential)
+
+Per family:
+
+1. Modify `torch/src/factories/ssb64/RelocFactory.cpp::RelocBinaryExporter::Export`:
+   - Read the catalog (compile-time-embedded header is cleaner than a
+     runtime JSON load; codegen a torch-side `StructFixupCatalogEntries.h`
+     from the same JSON). Group entries by `(file_id, family)`.
+   - For each entry whose family matches the migration target, apply the
+     family's byte transform to `data` at `byte_offset` (the bytes are
+     already post-pass1+pass2 at this point — see `data` after the existing
+     `ApplyPass1BswapInPlace` + `ApplyPass2InPlace` calls).
+   - For each `file_id` that had at least one applied entry, set
+     `PROC_<FAMILY>_DONE` in `processingFlags`.
+2. Commit in `torch/`. Push to `ssb64-buildtime-reloc`.
+3. In the outer worktree: `git add torch && git commit -m "Bump torch: …"`.
+4. Wipe + re-extract: `rm build/BattleShip.o2r BattleShip.o2r &&
+   cmake --build build/TorchExternal/src/TorchExternal-build --target torch -j 4 &&
+   cmake --build build --target ExtractAssets -j 4`.
+5. Run drift gate. **Expect mismatches** on the catalog-touched files for
+   this family — torch's pre-applied bytes are different from the previous
+   "no fixup at load time" bytes. The runtime helper sees the flag set, the
+   catalog hit, and skips the transform — bytes match because torch wrote
+   them, but the *fixture on disk* still has the pre-migration bytes.
+6. Regen the affected fixtures: `./build/port/test/port_reloc_regen --check
+   --regen-mismatches --quiet` (or `--all --write` if you want to nuke and
+   rewrite). **Inspect the diff** before committing — the byte changes should
+   only be in the SPRITE word ranges (etc. for the family you're migrating).
+   Anything outside that pattern is a bug, not a migration artifact.
+7. Manual sweep: attract chain → 1P stage 1 → training → VS → BTT → each
+   fighter intro. The handoff plan calls this out explicitly because struct
+   fixups touch gameplay-critical state.
+8. Commit the regenerated fixtures alongside the torch SHA bump (single
+   commit per family, easy to revert if a regression surfaces later).
+
+Roll forward family-by-family. Do not bundle multiple families per commit —
+the per-family bisect granularity is the load-bearing safety net for the
+gameplay-regression class of bugs.
+
+### Open from this session (housekeeping)
+
+- The two submodule branches `libultraship → ssb64-buildtime-reloc` and
+  `torch → ssb64-buildtime-reloc` are still local-only. Push when ready
+  for review (no commits in this session — all changes were port-side).
 
 ## Where the work lives
 
