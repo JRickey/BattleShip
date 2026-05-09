@@ -1,10 +1,99 @@
-# Build-time reloc refactor — Stage 6 handoff (2026-05-08)
+# Build-time reloc refactor — Stage 7 handoff (2026-05-09)
 
 You are picking up the build-time reloc refactor described in
-`docs/refactor_buildtime_reloc_plan.md` at **Stage 6 (struct fixups → torch)**.
+`docs/refactor_buildtime_reloc_plan.md` at **Stage 7 (halfswap +
+AObjEvent32 unhalfswap → Torch)**. Stage 6 is fully landed.
 **Read the plan first** — this handoff is the delta.
 
-## Status (post-2026-05-08 evening session)
+## Status (post-2026-05-09 session — Stage 6 done)
+
+Six per-family migrations on `agent/buildtime-reloc`:
+
+```
+dad47d6 Bump torch + regen fixtures: FTATTRIBUTES family migrated, Stage 6 complete
+3e430e7 Bump torch + regen fixtures: STRUCT_U32 family migrated to torch
+4cebb2d Bump torch + regen fixtures: STRUCT_U16 family migrated to torch
+b2d5424 Bump torch + regen fixtures: MOBJSUB family migrated to torch
+a2c2b80 Bump torch + regen fixtures: BITMAP family migrated to torch
+68c9053 Bump torch + regen fixtures: SPRITE family migrated to torch
+8427b2a port/test: populate struct fixup catalog (Stage 6b)
+9383a7d docs: handoff update for end of Stage 6a/6c session
+75aa0e2 port/resource: StructFixupCatalog runtime + flag bits (Stage 6c)
+fe878d1 port/bridge: SSB64_FIXUP_CAPTURE catalog logger (Stage 6a)
+```
+
+Catalog: 2,592 tuples, 125 files. Per-family torch SHAs in the commit
+log (`Bump torch + regen fixtures: <FAMILY> ...`). Drift gate green at
+every commit. Visual sweep verified across attract → 1P → training →
+VS (incl. Mushroom Kingdom) → Bonus 1 → fighter intros.
+
+The plan's Stage 6 architecture is exactly what shipped: torch reads
+the catalog at extraction (`StructFixupCatalogData.h` codegen,
+gitignored in torch), applies per-family transforms to the post-
+pass1+pass2 buffer, and sets `PROC_<FAMILY>_DONE` bits on
+`processing_flags`. Runtime helpers consult catalog+flag and skip the
+byte transform when both fire, while still inserting the heap-absolute
+idempotency tracker entry. Catalog miss → runtime fallback (fail-safe).
+
+The original Stage 6 status is preserved below for archive purposes.
+
+## What to do next — Stage 7 kickoff
+
+Per `docs/refactor_buildtime_reloc_plan.md` Stage 7:
+- **Halfswap**: trivial. Torch checks if file path matches
+  `reloc_animations/FT*` / `reloc_submotions/FT*` /
+  `reloc_scene/SCExplainMain*`, applies rotate16 on every non-reloc-
+  slot u32 word.
+- **AObjEvent32 unhalfswap**: less trivial. Stream entry points are
+  reachable via animation tables in fighter files. Torch walks the
+  table, follows each AObjEvent32 head, simulates the unhalfswap
+  walker, emits already-unhalfswapped bytes.
+- New flag bits: `PROC_HALFSWAP_DONE` (bit 8),
+  `PROC_AOBJEVENT32_UNHALFSWAP_DONE` (bit 9). Add to `RelocFile.h`.
+- Runtime side: `port_aobj_fixup.cpp` lazy walker stays in place
+  for any cross-file-only references that the static walk misses
+  (Stage 7 status note in the plan flags this).
+
+**Closing the lazy-fixup gap is a prerequisite (per Stage 2 status note).**
+The Stage 2 fixtures only capture state added inside `lbRelocLoadAndRelocFile`;
+the lazy `portFixupSprite/Bitmap/MObjSub` paths run AFTER load, so their
+tracker entries aren't pinned by the gate. For Stages 4-6 the byte transforms
+they applied were also lazy, so torch moving them to extraction didn't change
+load-time bytes — fixtures stayed authoritative.
+
+Stage 7 is different. The runtime AObjEvent32 unhalfswap walker is
+**called from animation reads** (lazy), but the bytes it touches
+weren't being written at load either. If torch starts pre-unhalfswapping
+those bytes, the load-time fixture WILL change for affected files —
+but the lazy path is what currently produces those bytes at runtime,
+so the fixture comparison is meaningless until either:
+- (a) the harness drives a synthetic animation walk, OR
+- (b) the harness pre-unhalfswaps the same way torch does, just for
+  fixture purposes.
+
+Decide between (a) and (b) before writing torch code, otherwise drift
+gate gives a false-green or false-red and you're flying blind.
+
+### Recommended order
+1. Halfswap first (file-path-keyed, no traversal — trivial). Bit 8.
+2. Solve the lazy-fixup gap.
+3. AObjEvent32 unhalfswap. Bit 9.
+
+### Open from this session
+- Submodule branches `libultraship → ssb64-buildtime-reloc` and
+  `torch → ssb64-buildtime-reloc` are local-only. 8 commits on torch
+  total now (Stages 4 + 5 + 6 × 6). Push when ready for review:
+  ```
+  git -C torch        push origin ssb64-buildtime-reloc
+  git -C libultraship push origin ssb64-buildtime-reloc   # no commits, harmless
+  git -C decomp       push origin port-patches-buildtime-reloc   # no commits, harmless
+  ```
+- The 13-commit `agent/buildtime-reloc` outer branch is mergeable to
+  main once Stage 7+ ship if the project wants to land Stage 6 standalone.
+
+---
+
+## Stage 6 archive (original handoff content below)
 
 Stage 6a + 6c done. Stage 6b + 6d open. Branch HEAD:
 
