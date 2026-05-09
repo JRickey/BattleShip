@@ -666,29 +666,12 @@ static int PortInitImpl(int argc, char* argv[]) {
 	// InitFileDropMgr already happened earlier — see the wizard plumbing.
 	port_log("SSB64: All subsystems initialized\n");
 
-	// Register resource factories
+	// Register resource factories. Only V3 reloc archives are supported —
+	// the runtime byteswap helpers V0/V1/V2 relied on were removed in
+	// Stage 11. Any older archive must be re-extracted with the current
+	// torch (asset/torch coupling already forces this on every torch SHA
+	// bump; older archives are de-facto unsupported).
 	auto loader = sContext->GetResourceManager()->GetResourceLoader();
-	loader->RegisterResourceFactory(
-		std::make_shared<ResourceFactoryBinaryRelocFileV0>(),
-		RESOURCE_FORMAT_BINARY,
-		"SSB64Reloc",
-		static_cast<uint32_t>(SSB64::ResourceType::SSB64Reloc),
-		0
-	);
-	loader->RegisterResourceFactory(
-		std::make_shared<ResourceFactoryBinaryRelocFileV1>(),
-		RESOURCE_FORMAT_BINARY,
-		"SSB64Reloc",
-		static_cast<uint32_t>(SSB64::ResourceType::SSB64Reloc),
-		1
-	);
-	loader->RegisterResourceFactory(
-		std::make_shared<ResourceFactoryBinaryRelocFileV2>(),
-		RESOURCE_FORMAT_BINARY,
-		"SSB64Reloc",
-		static_cast<uint32_t>(SSB64::ResourceType::SSB64Reloc),
-		2
-	);
 	loader->RegisterResourceFactory(
 		std::make_shared<ResourceFactoryBinaryRelocFileV3>(),
 		RESOURCE_FORMAT_BINARY,

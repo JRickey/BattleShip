@@ -169,24 +169,7 @@ ArchiveSession::ArchiveSession() : mImpl(std::make_unique<Impl>())
     }
 
     auto loader = mImpl->ctx->GetResourceManager()->GetResourceLoader();
-    loader->RegisterResourceFactory(
-        std::make_shared<ResourceFactoryBinaryRelocFileV0>(),
-        RESOURCE_FORMAT_BINARY,
-        "SSB64Reloc",
-        static_cast<uint32_t>(SSB64::ResourceType::SSB64Reloc),
-        0);
-    loader->RegisterResourceFactory(
-        std::make_shared<ResourceFactoryBinaryRelocFileV1>(),
-        RESOURCE_FORMAT_BINARY,
-        "SSB64Reloc",
-        static_cast<uint32_t>(SSB64::ResourceType::SSB64Reloc),
-        1);
-    loader->RegisterResourceFactory(
-        std::make_shared<ResourceFactoryBinaryRelocFileV2>(),
-        RESOURCE_FORMAT_BINARY,
-        "SSB64Reloc",
-        static_cast<uint32_t>(SSB64::ResourceType::SSB64Reloc),
-        2);
+    /* Only V3 reloc archives are supported — see port.cpp for rationale. */
     loader->RegisterResourceFactory(
         std::make_shared<ResourceFactoryBinaryRelocFileV3>(),
         RESOURCE_FORMAT_BINARY,

@@ -52,65 +52,6 @@ void ReadSubResourceList(Ship::BinaryReader& reader, std::vector<RelocSubResourc
 } // namespace
 
 std::shared_ptr<Ship::IResource>
-ResourceFactoryBinaryRelocFileV0::ReadResource(std::shared_ptr<Ship::File> file,
-                                                std::shared_ptr<Ship::ResourceInitData> initData) {
-    if (!FileHasValidFormatAndReader(file, initData)) {
-        return nullptr;
-    }
-
-    auto relocFile = std::make_shared<RelocFile>(initData);
-    auto reader = std::get<std::shared_ptr<Ship::BinaryReader>>(file->Reader);
-
-    ReadCommonPrefix(*reader, *relocFile);
-    relocFile->ProcessingFlags = 0;     // v0: torch did no transforms
-    ReadDataBlock(*reader, *relocFile);
-
-    return relocFile;
-}
-
-std::shared_ptr<Ship::IResource>
-ResourceFactoryBinaryRelocFileV1::ReadResource(std::shared_ptr<Ship::File> file,
-                                                std::shared_ptr<Ship::ResourceInitData> initData) {
-    if (!FileHasValidFormatAndReader(file, initData)) {
-        return nullptr;
-    }
-
-    auto relocFile = std::make_shared<RelocFile>(initData);
-    auto reader = std::get<std::shared_ptr<Ship::BinaryReader>>(file->Reader);
-
-    ReadCommonPrefix(*reader, *relocFile);
-    relocFile->ProcessingFlags = reader->ReadUInt32();
-    ReadDataBlock(*reader, *relocFile);
-
-    return relocFile;
-}
-
-std::shared_ptr<Ship::IResource>
-ResourceFactoryBinaryRelocFileV2::ReadResource(std::shared_ptr<Ship::File> file,
-                                                std::shared_ptr<Ship::ResourceInitData> initData) {
-    if (!FileHasValidFormatAndReader(file, initData)) {
-        return nullptr;
-    }
-
-    auto relocFile = std::make_shared<RelocFile>(initData);
-    auto reader = std::get<std::shared_ptr<Ship::BinaryReader>>(file->Reader);
-
-    ReadCommonPrefix(*reader, *relocFile);
-    relocFile->ProcessingFlags = reader->ReadUInt32();
-    ReadChainList(*reader, relocFile->InternChain, /*depFileIdSentinel=*/0xFFFF);
-    ReadChainList(*reader, relocFile->ExternChain, /*depFileIdSentinel=*/0xFFFF);
-    // Fill extern entries' DepFileId from ExternFileIds (chain-insertion order).
-    if (relocFile->ExternChain.size() == relocFile->ExternFileIds.size()) {
-        for (size_t i = 0; i < relocFile->ExternChain.size(); i++) {
-            relocFile->ExternChain[i].DepFileId = relocFile->ExternFileIds[i];
-        }
-    }
-    ReadDataBlock(*reader, *relocFile);
-
-    return relocFile;
-}
-
-std::shared_ptr<Ship::IResource>
 ResourceFactoryBinaryRelocFileV3::ReadResource(std::shared_ptr<Ship::File> file,
                                                 std::shared_ptr<Ship::ResourceInitData> initData) {
     if (!FileHasValidFormatAndReader(file, initData)) {
