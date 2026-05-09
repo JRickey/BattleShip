@@ -3,360 +3,57 @@
 You are picking up the build-time reloc refactor described in
 `docs/refactor_buildtime_reloc_plan.md` at **Stage 10 (sub-resource
 emission for moddability)** — the first stage that delivers the
-moddability goal that motivated the whole refactor.
+user-visible mod path that motivated the whole refactor.
 
-Stages 7, 8, 9 are closed:
+**Read the plan first** — this handoff is the delta on top of it.
 
-- Stage 7 — halfswap shipped (`PROC_HALFSWAP_DONE` bit 8); AObjEvent32
-  unhalfswap explicitly skipped (ADR
-  `docs/decision_aobjevent32_runtime_walker_2026-05-09.md`).
-- Stage 8 — 4c sprite codec + post-decode deswizzle stay runtime-side
-  (ADR `docs/decision_4c_sprite_codec_runtime_2026-05-09.md`).
-- Stage 9 — chain-flatten landed: torch pre-walks intern + extern
-  reloc chains and emits a `(slot_byte_off, target_byte_off)[]`
-  sidecar per file. Runtime iterates the sidecar instead of walking
-  the bit-packed encoded chain. `PROC_CHAIN_FLATTENED` is bit 10;
-  container bumped to v2; `ResourceFactoryBinaryRelocFileV2`
-  registered alongside V0/V1. Drift gate green 2132/2132.
-
-Stages 1–6 are fully landed.
-**Read the plan first** — this handoff is the delta.
-
-## Status (post-2026-05-09 session — Stages 7, 8, 9 closed)
+## Status entering this session
 
 Branch HEAD on `agent/buildtime-reloc`:
 
 ```
-<HEAD>  Bump torch + flatten reloc chains at extraction (Stage 9)
+b70585b docs: close Stage 9 — chain-flatten landed, pivot handoff to Stage 10
+fd6da52 Bump torch + flatten reloc chains at extraction (Stage 9)
 f4c1d26 docs: close Stage 8 — 4c sprite codec stays runtime-side (ADR)
 2d948f3 docs: close Stage 7 — AObjEvent32 unhalfswap stays runtime-side (ADR)
 6ac8a09 Bump torch + gate halfswap on PROC_HALFSWAP_DONE (Stage 7-HALFSWAP)
-05c1b9d docs: handoff update — Stage 6 done, Stage 7 kickoff notes
 …
 ```
 
-### Stage 7 closeout summary (carried forward)
+Submodule pointers:
 
-Stage 7-Halfswap shipped clean (`6ac8a09` outer, torch `bfa2034` on
-`ssb64-buildtime-reloc`):
+- `decomp` → `port-patches-buildtime-reloc` (no commits this session;
+  no commits across all of Stages 1–9 actually — the refactor is
+  port- and torch-side).
+- `libultraship` → `ssb64-buildtime-reloc` @ `5b87696f` (Stage 1
+  patch only; no commits since).
+- `torch` → `ssb64-buildtime-reloc` @ `c37c2e3` (Stage 9 chain-flatten
+  emitter; total 10 commits on the branch — Stage 4 + Stage 5 + Stage
+  6 ×6 + Stage 7 halfswap + Stage 9).
 
-- **Drift gate stayed green at 2132/2132 with NO fixture regen** —
-  unlike Stage 6's lazy fixups, halfswap runs inside
-  `lbRelocLoadAndRelocFile` so its post-transform bytes were already
-  captured in load-time fixtures. Same shape as Stage 4 (Pass 1
-  BSWAP32).
-- Torch detects `reloc_animations/FT*` / `reloc_submotions/FT*` /
-  `reloc_scene/SCExplainMain` from the OTR path (== `entryName` at
-  the binary-exporter call site), walks both intern + extern reloc
-  chains in the post-pass1+pass2+struct buffer to build the chain-slot
-  mask, applies `rotate16` to every non-chain u32 word, sets bit 8.
-- Runtime gate: `lbreloc_bridge.cpp` skips
-  `portRelocFixupFighterFigatree` when `PROC_HALFSWAP_DONE` is set;
-  `port_aobj_register_halfswapped_range` still runs every load (the
-  lazy AObjEvent32 walker + ftkey FTKeyEvent reader consume that
-  registry — heap-absolute side-effect, can't migrate to build time).
+Stages 1–9 are landed. The bit map of `processing_flags`:
 
-Stage 7-AObjEvent32 is **deliberately skipped**, not deferred. The
-runtime walker in `port/port_aobj_fixup.{h,cpp}` stays. `processing_flags`
-bit 9 is reserved-unused — bit 10 keeps its original assignment as
-`PROC_CHAIN_FLATTENED` (Stage 9). Full reasoning in
-`docs/decision_aobjevent32_runtime_walker_2026-05-09.md`.
+| bit  | name                          | stage     | status                   |
+|------|-------------------------------|-----------|--------------------------|
+| 0    | `PROC_PASS1_BSWAP_DONE`       | 4         | done                     |
+| 1    | `PROC_PASS2_DONE`             | 5         | done                     |
+| 2    | `PROC_STRUCT_U16_DONE`        | 6d        | done                     |
+| 3    | `PROC_STRUCT_U32_DONE`        | 6d        | done                     |
+| 4    | `PROC_SPRITE_DONE`            | 6d        | done                     |
+| 5    | `PROC_BITMAP_DONE`            | 6d        | done                     |
+| 6    | `PROC_MOBJSUB_DONE`           | 6d        | done                     |
+| 7    | `PROC_FTATTRIBUTES_DONE`      | 6d        | done                     |
+| 8    | `PROC_HALFSWAP_DONE`          | 7         | done                     |
+| 9    | (reserved-unused)             | —         | AObjEvent ADR carve-out  |
+| 10   | `PROC_CHAIN_FLATTENED`        | 9         | done                     |
+| 11   | `PROC_SUBRESOURCES_EMITTED`   | **10**    | **this stage**           |
 
-### Stage 8 closeout summary (this session)
+The two stage-7 / stage-8 ADRs document the carve-outs that close out
+those stages partial-but-deliberate. Read them before second-guessing
+why the runtime walker / 4c codec are still in place:
 
-Stage 8 — the 4c sprite decompression decision — closed as a
-documentation-only stage. **No code change, no submodule bump, no
-`processing_flags` bit, no fixture regen.** Decision: keep
-`lbCommonDecodeSpriteBitmapsSiz4b` (decomp) and
-`portDeswizzleDecodedSprite4c` (port bridge) on the runtime side
-permanently. Full ADR: `docs/decision_4c_sprite_codec_runtime_2026-05-09.md`.
-
-The plan's non-goals already listed "Decompressing 4c sprites at build
-time" as out of scope; this ADR formalizes the rationale. Triggers that
-would re-open the decision are spelled out in the ADR's "What would
-change this decision" section: 4c-aware authoring tools, demonstrated
-hot-path cost, or a 4c-specific bug class hard to reproduce in fixture
-testing.
-
-The plan and Stage 11 (runtime simplification) wording have been updated
-to reflect that `lbreloc_byteswap.cpp` retains a documented residual
-(~150 LOC of heap-absolute trackers + 4c deswizzle + chain registration)
-post-refactor rather than shrinking to a "thin wrapper" as the plan
-originally claimed.
-
-### Stage 9 closeout summary (this session)
-
-Stage 9 — chain-flatten — landed in commit `fd6da52` (outer worktree)
-with torch SHA bump to `c37c2e3` on `ssb64-buildtime-reloc`. Drift
-gate green at 2132/2132 unchanged after torch v2 + asset re-extract;
-headless 12s boot smoke clean.
-
-What shipped:
-
-- **Container format v2** (additive sidecar over v1, before the data
-  block): `u32 num_intern; {u32 slot, u32 target}[]; u32 num_extern;
-  {u32 slot, u32 target}[]`. See `port/resource/RelocFileFactory.h`
-  for the full layout. Extern entries inherit `dep_file_id` from
-  `ExternFileIds[i]` in chain-insertion order (existing convention).
-- **`PROC_CHAIN_FLATTENED` = bit 10** in `processing_flags`. Bit 9
-  stays reserved-unused per the Stage 7 closeout.
-- **`ResourceFactoryBinaryRelocFileV2`** registered alongside V0 and
-  V1 in both `port/port.cpp` and `port/test/reloc_harness.cpp`.
-- **Runtime gate** in `port/bridge/lbreloc_bridge.cpp`: per-entry side
-  effects (texture-from-chain fixup, pointer registration, slot
-  overwrite, figatree halfswap-mask update, observer callback)
-  refactored into shared `applyInternEntry` / `applyExternEntry`
-  lambdas. Encoded walker and flat-list iterator both call them, so
-  the v1→v2 transition is byte-identical at the token-table level.
-- **Torch emitter**: `BuildChainEntries` walker added to
-  `torch/src/factories/ssb64/RelocFactory.cpp`, called after
-  pass1+pass2+struct+halfswap. The encoded chain bytes remain intact
-  in `data` so v2 archives can fall back to the runtime's encoded
-  walker if `PROC_CHAIN_FLATTENED` ever gets cleared (defensive).
-
-## What to do next — Stage 10 (sub-resource emission for moddability)
-
-Per `docs/refactor_buildtime_reloc_plan.md` Stage 10. This is the
-first stage that delivers the user-visible moddability goal that
-motivated the refactor. Shape:
-
-1. Torch emits per-sub-asset resources alongside each reloc container:
-   - `reloc/<id>/vtx/<offset>` per Vtx run discovered by Pass 2
-   - `reloc/<id>/tex/<offset>/<fmt>_<siz>` per texture image
-   - `reloc/<id>/tlut/<offset>` per palette
-   - `reloc/<id>/dl/<offset>` per top-level DL
-   - `reloc/<id>/anim/<offset>` per AObjEvent32 head
-   - `reloc/<id>/sprite/<offset>` per Sprite/Bitmap pair
-   - `reloc/<id>/struct/<offset>/<type>` per fixed-up struct
-2. Each container references its sub-resources by CRC64 hash in its
-   header (mirrors `DisplayListFactory.cpp:260-318`).
-3. Runtime overlays sub-resource bytes into the container blob if any
-   are overridden (e.g. by a `mods/foo.o2r` loaded after
-   `BattleShip.o2r`) before the chain-iterate step. Token registration
-   stays the same; the chain points into the now-overlaid bytes.
-4. `processing_flags` bit 11 = `PROC_SUBRESOURCES_EMITTED`.
-
-Drift-gate behaviour: the container's bytes shouldn't change (the
-sub-resources are emitted in addition to, not in place of, the
-container blob). Expect 2132/2132 green. The new functional test is
-that an override mod actually swaps a sub-asset.
-
-Stage 10 is also the first stage where the test gate alone isn't
-sufficient — the moddability path is exercised only through
-`mods/*.o2r`, which the harness doesn't load. Plan one canned
-override test (replace one Mario stock-sprite color, confirm it
-renders) in addition to the drift gate.
-
-After Stage 10: Stages 11–13 (runtime simplification, mod-loader
-plumbing, Battle-ShipYard removal) are mostly cleanup.
-
-## Open submodule branches (push when ready for review)
-
-```
-git -C torch        push origin ssb64-buildtime-reloc   # 9 commits (8 from Stage 4-6 + halfswap)
-git -C libultraship push origin ssb64-buildtime-reloc   # no commits, harmless
-git -C decomp       push origin port-patches-buildtime-reloc   # no commits, harmless
-```
-
-The `agent/buildtime-reloc` outer branch is mergeable to main if the
-project wants to land Stages 1–7 standalone.
-
----
-
-## Original Stage 6 status (archive)
-
-Six per-family migrations on `agent/buildtime-reloc`:
-
-```
-dad47d6 Bump torch + regen fixtures: FTATTRIBUTES family migrated, Stage 6 complete
-3e430e7 Bump torch + regen fixtures: STRUCT_U32 family migrated to torch
-4cebb2d Bump torch + regen fixtures: STRUCT_U16 family migrated to torch
-b2d5424 Bump torch + regen fixtures: MOBJSUB family migrated to torch
-a2c2b80 Bump torch + regen fixtures: BITMAP family migrated to torch
-68c9053 Bump torch + regen fixtures: SPRITE family migrated to torch
-8427b2a port/test: populate struct fixup catalog (Stage 6b)
-9383a7d docs: handoff update for end of Stage 6a/6c session
-75aa0e2 port/resource: StructFixupCatalog runtime + flag bits (Stage 6c)
-fe878d1 port/bridge: SSB64_FIXUP_CAPTURE catalog logger (Stage 6a)
-```
-
-Catalog: 2,592 tuples, 125 files. Per-family torch SHAs in the commit
-log (`Bump torch + regen fixtures: <FAMILY> ...`). Drift gate green at
-every commit. Visual sweep verified across attract → 1P → training →
-VS (incl. Mushroom Kingdom) → Bonus 1 → fighter intros.
-
-The plan's Stage 6 architecture is exactly what shipped: torch reads
-the catalog at extraction (`StructFixupCatalogData.h` codegen,
-gitignored in torch), applies per-family transforms to the post-
-pass1+pass2 buffer, and sets `PROC_<FAMILY>_DONE` bits on
-`processing_flags`. Runtime helpers consult catalog+flag and skip the
-byte transform when both fire, while still inserting the heap-absolute
-idempotency tracker entry. Catalog miss → runtime fallback (fail-safe).
-
-The original Stage 6 status is preserved below for archive purposes.
-
----
-
-## Stage 6 archive (original handoff content below)
-
-Stage 6a + 6c done. Stage 6b + 6d open. Branch HEAD:
-
-```
-<current> port/resource: StructFixupCatalog runtime + flag bits (Stage 6c)
-fe878d1   port/bridge: SSB64_FIXUP_CAPTURE catalog logger (Stage 6a)
-6704fba   docs: handoff for Stage 6 (struct fixups → torch)   (← this doc)
-5d43e46   Bump torch + complete pass2 buildtime migration (Stage 5)
-```
-
-**Stage 6a — capture wiring (committed):** every in-scope `portFixup*` helper
-emits `(family, file_id, byte_offset_in_file, extra)` once per unique tuple
-when `SSB64_FIXUP_CAPTURE=1`. On clean exit (atexit) the dedup'd set is
-written as a JSON array to `$SSB64_FIXUP_CAPTURE_FILE` (default
-`port_fixup_capture.json`). Spike: 40 sec attract chain produces 850 unique
-tuples across 57 files, exercising all six families.
-
-**Stage 6c — runtime catalog + flag bits (committed):**
-- `RelocFile.h`: `PROC_STRUCT_U16_DONE` … `PROC_FTATTRIBUTES_DONE` on bits 2..7.
-- `port/resource/StructFixupCatalog.{h,cpp}`: codegen target.
-  `portStructFixupCatalogHasEntry(file_id, byte_offset, family) → bool` does
-  binary search over a sorted u64-packed key array.
-- `tools/generate_struct_fixup_catalog.py`: reads
-  `port/test/struct_fixup_catalog.json`, emits the .cpp. Wired into the
-  existing `GenerateRelocArtifacts` custom target.
-- `port/bridge/lbreloc_bridge.cpp`: `PortRelocFileRange` now stores
-  `proc_flags`. New helper `portRelocGetProcessingFlags(file_id)`.
-- `port/bridge/lbreloc_byteswap.cpp`: each in-scope helper now consults
-  `fixup_torch_already_did_it(family, PROC_<FAMILY>_DONE, target)` AFTER its
-  tracker insertion. Skip-condition: catalog hit AND flag bit set on the file.
-  Either gate missing → run the byte transform (fail-safe).
-- `port/test/struct_fixup_catalog.json`: ships **empty**. Filling it is Stage 6b.
-
-Drift gate stays green at every commit. Empty catalog + no torch-side flag
-emission = every helper still runs its byte transform exactly as today.
-
-## What to do next
-
-### Stage 6b — populate the catalog (~30-60 min interactive)
-
-Run the game with capture enabled across the scenes that exercise every
-family:
-
-```
-cd .claude/worktrees/buildtime-reloc/build
-SSB64_FIXUP_CAPTURE=1 \
-SSB64_FIXUP_CAPTURE_FILE=$PWD/../port/test/struct_fixup_catalog.json \
-./BattleShip
-```
-
-Coverage list (in order, one boot is fine — capture state accumulates across
-scenes during a session):
-
-1. Let attract chain run for ~1 min (covers title + demo + champ-tree screens)
-2. 1P mode → Mario → stage 1 (Yoshi). Beat or quit out.
-3. Training mode → pick a fighter not yet covered (e.g. Captain Falcon,
-   Ness, Pikachu, Jigglypuff)
-4. VS mode → 4-player free-for-all on a stage not in 1P
-5. Results screen (let it auto-advance or A through it)
-6. Bonus 1 (Break the Targets) → at least one fighter
-7. Each fighter intro: pick the character on CSS, hold A briefly to see the
-   "READY" portrait+sprite — covers the per-fighter sprite/bitmap files
-
-Capture is per-process: when `BattleShip` exits cleanly (window-close, not
-SIGKILL) the JSON dumps. Multiple runs append-and-dedup cleanly if you
-concatenate the JSON arrays manually, or just do one long session.
-
-After capture: regen the codegen + drift gate to confirm clean state:
-
-```
-python3 tools/generate_struct_fixup_catalog.py
-cmake --build build --target ssb64 port_reloc_regen -j 4
-./build/port/test/port_reloc_regen --all --check --quiet   # must stay green
-```
-
-Commit the JSON + regenerated .cpp together. Drift gate stays green because
-no torch flag bits flip yet — the catalog content is dormant runtime data.
-
-### Stage 6d — family-by-family torch migration (rest of Stage 6)
-
-For each family in this order (smallest blast radius first):
-
-1. **SPRITE** (visual; ~38 attract entries, more after Stage 6b)
-2. **BITMAP** (visual; goes with SPRITE)
-3. **MOBJSUB** (matanim color CCs — Whispy class regression risk)
-4. **STRUCT_U16** (varied; includes MPGroundData stage collision)
-5. **STRUCT_U32** (BSWAP32 family; also covers RawTextureBSWAP32)
-6. **FTATTRIBUTES** (fighter physics; smallest count but most damage potential)
-
-Per family:
-
-1. Modify `torch/src/factories/ssb64/RelocFactory.cpp::RelocBinaryExporter::Export`:
-   - Read the catalog (compile-time-embedded header is cleaner than a
-     runtime JSON load; codegen a torch-side `StructFixupCatalogEntries.h`
-     from the same JSON). Group entries by `(file_id, family)`.
-   - For each entry whose family matches the migration target, apply the
-     family's byte transform to `data` at `byte_offset` (the bytes are
-     already post-pass1+pass2 at this point — see `data` after the existing
-     `ApplyPass1BswapInPlace` + `ApplyPass2InPlace` calls).
-   - For each `file_id` that had at least one applied entry, set
-     `PROC_<FAMILY>_DONE` in `processingFlags`.
-2. Commit in `torch/`. Push to `ssb64-buildtime-reloc`.
-3. In the outer worktree: `git add torch && git commit -m "Bump torch: …"`.
-4. Wipe + re-extract: `rm build/BattleShip.o2r BattleShip.o2r &&
-   cmake --build build/TorchExternal/src/TorchExternal-build --target torch -j 4 &&
-   cmake --build build --target ExtractAssets -j 4`.
-5. Run drift gate. **Expect mismatches** on the catalog-touched files for
-   this family — torch's pre-applied bytes are different from the previous
-   "no fixup at load time" bytes. The runtime helper sees the flag set, the
-   catalog hit, and skips the transform — bytes match because torch wrote
-   them, but the *fixture on disk* still has the pre-migration bytes.
-6. Regen the affected fixtures: `./build/port/test/port_reloc_regen --check
-   --regen-mismatches --quiet` (or `--all --write` if you want to nuke and
-   rewrite). **Inspect the diff** before committing — the byte changes should
-   only be in the SPRITE word ranges (etc. for the family you're migrating).
-   Anything outside that pattern is a bug, not a migration artifact.
-7. Manual sweep: attract chain → 1P stage 1 → training → VS → BTT → each
-   fighter intro. The handoff plan calls this out explicitly because struct
-   fixups touch gameplay-critical state.
-8. Commit the regenerated fixtures alongside the torch SHA bump (single
-   commit per family, easy to revert if a regression surfaces later).
-
-Roll forward family-by-family. Do not bundle multiple families per commit —
-the per-family bisect granularity is the load-bearing safety net for the
-gameplay-regression class of bugs.
-
-### Open from this session (housekeeping)
-
-- The two submodule branches `libultraship → ssb64-buildtime-reloc` and
-  `torch → ssb64-buildtime-reloc` are still local-only. Push when ready
-  for review (no commits in this session — all changes were port-side).
-
-## Where the work lives
-
-- **Outer worktree**: `.claude/worktrees/buildtime-reloc` on branch
-  `agent/buildtime-reloc`. The main tree is left undisturbed.
-- **Submodules**:
-  - `decomp` → `port-patches-buildtime-reloc` (clean, no commits yet)
-  - `libultraship` → `ssb64-buildtime-reloc` @ `5b87696f` (Stage 1 patch)
-  - `torch` → `ssb64-buildtime-reloc` @ `78a2984` (Stages 4 + 5)
-
-`./scripts/new-worktree.sh` doesn't apply — the worktree exists. Just `cd`.
-
-## State at HEAD
-
-```
-5d43e46 Bump torch + complete pass2 buildtime migration (Stage 5)
-4da6a42 port/bridge: split pass2 byte transforms from tracker bookkeeping
-99fd326 Bump torch + plumb v1 reloc resource: pass1 BSWAP32 → torch (Stage 4)
-8b167d4 port/bridge: skip pass1 BSWAP32 when ProcessingFlags advertises it
-1a52dc4 port/resource: ProcessingFlags + RelocFile v1 factory
-2083aa6 docs: handoff doc for the next session   (← prior handoff, superseded)
-64cda95 port/test: commit ground-truth fixtures for all 2,132 reloc files
-…
-```
-
-Stages 1–5 are committed and the drift gate is green. Stages 4 + 5 lifted Pass 1
-(blanket BSWAP32) and Pass 2 (DL-walk per-Vtx + per-format texture fixups)
-into `torch/src/factories/ssb64/RelocFactory.cpp`.
+- `docs/decision_aobjevent32_runtime_walker_2026-05-09.md`
+- `docs/decision_4c_sprite_codec_runtime_2026-05-09.md`
 
 ## Sanity check first
 
@@ -365,261 +62,285 @@ cd .claude/worktrees/buildtime-reloc
 ./build/port/test/port_reloc_regen --all --check --quiet
 ```
 
-Expected: `unchanged=2132, mismatch=0, …`. If it drifted, the o2r is from a
-different torch SHA — `cmake --build build --target ExtractAssets` after wiping
-`build/BattleShip.o2r`.
+Expected: `unchanged=2132, mismatch=0, …`. If it drifts:
 
-## The contract you inherit (read carefully)
+- Stale `BattleShip.o2r` from a different torch SHA — wipe + re-extract:
+  ```
+  rm build/BattleShip.o2r BattleShip.o2r
+  cmake --build build/TorchExternal/src/TorchExternal-build --target torch -j 4
+  cmake --build build --target ExtractAssets -j 4
+  ./build/port/test/port_reloc_regen --all --check --quiet
+  ```
+- The `port_reloc_regen` binary is gated on `-DSSB64_BUILD_TESTS=ON`.
+  If `cmake` says "no rule to make target": `cmake -B build
+  -DSSB64_BUILD_TESTS=ON` then build the target.
 
-`RelocFile::ProcessingFlags` (in the v1 RELO container header) is a `u32`
-bitmask advertising which transforms torch already applied:
+## What Stage 10 has to deliver
 
-| bit | name                        | who owns                     |
-|-----|-----------------------------|------------------------------|
-| 0   | `PROC_PASS1_BSWAP_DONE`     | Stage 4 (done)               |
-| 1   | `PROC_PASS2_DONE`           | Stage 5 (done)               |
-| 2–7 | reserved struct-fixup families | **Stage 6 (you)**         |
-| 8–9 | reserved halfswap/AObjEvent | Stage 7                      |
-| 10  | reserved chain-flatten      | Stage 9                      |
-| 11  | reserved sub-resource emit  | Stage 10                     |
+Per the plan (`docs/refactor_buildtime_reloc_plan.md` Stage 10):
 
-The runtime (`portRelocByteSwapBlob`, `portFixupStruct*` helpers) reads the
-flags and skips its own byte transforms when the matching bit is set.
+> For each reloc file, torch emits sub-resources alongside the container:
+>
+> - `reloc/<id>/vtx/<offset>` per Vtx run discovered by Pass 2
+> - `reloc/<id>/tex/<offset>/<fmt>_<siz>` per texture image
+> - `reloc/<id>/tlut/<offset>` per palette
+> - `reloc/<id>/dl/<offset>` per top-level DL
+> - `reloc/<id>/anim/<offset>` per AObjEvent32 head
+> - `reloc/<id>/sprite/<offset>` per Sprite/Bitmap pair
+> - `reloc/<id>/struct/<offset>/<type>` per fixed-up struct
+>
+> Containers store sub-resource hashes in their header so the runtime
+> can ask the resource manager whether any are overridden — and if so,
+> overlay the sub-resource bytes into the container blob *before*
+> chain-walking.
+>
+> `processing_flags` bit 11 = `PROC_SUBRESOURCES_EMITTED`.
 
-### Stage 5 invariant — Stage 6 will hit this hard
+The *user-visible* outcome is that a `mods/<thing>.o2r` shipped after
+`BattleShip.o2r` overrides individual sub-assets (e.g. swap one Mario
+stock-sprite color) without touching the rest of the container.
 
-Stage 5 surfaced an issue Stage 6 will hit on every helper: **the byte
-transform half of a fixup migrates to torch, but tracker bookkeeping does
-NOT.** `sStructU16Fixups` (and its siblings `sTexFixupWords`,
-`sDeswizzle4cFixups` in `lbreloc_byteswap.cpp`) are heap-absolute idempotency
-state, keyed by `(uintptr_t) &fixed_address`. Lazy paths
-(`portRelocFixupVertexAtRuntime`, `portRelocFixupTextureAtRuntime`,
-sprite/MObjSub helpers) consult them to skip already-fixed addresses.
+Stage 12 wires the `mods/` directory scan into `Ship::Context` init.
+Stage 10 just emits the sub-resources and gates the container-blob
+overlay step on the flag bit. The override path itself rides on
+libultraship's existing `mFileToArchive` last-archive-wins resolution
+— no LUS API changes needed (that's the plan's claim; verify it
+holds when Stage 12 lands).
 
-Stage 5's pattern (`apply_fixups` in `lbreloc_byteswap.cpp:870` area):
+## What already exists you can build on
+
+### Torch sub-asset enumerators that already work
+
+- **Vtx, texture-bytes, texture-palettes**: `Pass2Region` records
+  produced by `ScanDisplayLists` in
+  `torch/src/factories/ssb64/RelocFactory.cpp:98..201`. Each region
+  has `(offset, size, kind ∈ {Vertex, TexBytes, TexU16})`. This is
+  the foundation — Pass 2 already walks every top-level DL and
+  emits these for byte-fixup purposes; Stage 10 reuses the same
+  walk to emit sub-resources.
+- **Top-level DLs**: implicit in the same scan — `ScanDisplayLists`
+  starts from each in-DL `G_DL` target. The scan tracks DL entry
+  points; sub-resource emission needs to enumerate them
+  deterministically (e.g. by entry-into-walk order) so re-extraction
+  produces stable hashes.
+- **Sprites, Bitmaps, MObjSubs, FTAttributes, StructU16/U32**: all
+  enumerated by `port/test/struct_fixup_catalog.json` (Stage 6's
+  catalog). Each entry is `(file_id, byte_offset, family)`. Torch
+  already reads this catalog at extract via
+  `tools/generate_struct_fixup_catalog.py` →
+  `StructFixupCatalogData.h` → `ApplyStructFixupsInPlace`. Stage 10
+  walks the same catalog to know which struct sub-resources to emit.
+- **Reloc chain entries**: Stage 9's flat list. Useful for
+  validating that emitted sub-asset offsets do or don't appear as
+  chain targets (informs override-overlay timing relative to chain
+  iteration).
+
+### What does NOT have an enumerator today
+
+- **AObjEvent32 anim heads**. The runtime walker
+  (`port/port_aobj_fixup.{h,cpp}`) discovers them lazily via
+  `gcParseDObjAnimJoint` / `gcParseMObjMatAnimJoint`. There is no
+  static enumerator. The Stage 7 ADR
+  (`decision_aobjevent32_runtime_walker_2026-05-09.md`) explicitly
+  says authoring tools don't round-trip through AObjEvent32 streams,
+  which means anim sub-assets aren't load-bearing for the
+  moddability goal anyway. **Recommendation: defer anim sub-asset
+  emission** the same way Stage 7-AObjEvent32 was deferred. Either
+  emit a stub set of anim resources keyed off whatever heads the
+  chain walk happens to register, or skip anim sub-assets entirely
+  for Stage 10 and revisit if a future modding feature actually
+  needs per-animation override.
+
+### LUS sub-resource pattern reference
+
+`torch/src/factories/DisplayListFactory.cpp:255..318` is the canonical
+shape for emitting an OTR sub-resource and splicing a hash reference
+into a parent stream:
 
 ```cpp
-case FIXUP_VERTEX:
-    if (!transforms_done_at_build)
-        apply_fixup_vertex(region_words, num_words);   // ← byte transform
-    // tracker insertion runs unconditionally — heap-absolute, can't move
-    for (size_t v = 0; v < n_vtx; v++)
-        sStructU16Fixups.insert(base + v * 16);
-    break;
+uint64_t hash = CRC64(path.c_str());
+N64Gfx value = gsSPVertexOTR(diff, nvtx, didx);
+writer.Write(value.words.w0);
+writer.Write(value.words.w1);
+w0 = hash >> 32;
+w1 = hash & 0xFFFFFFFF;
 ```
 
-The fixtures pin tracker contents — `port_reloc_check` will fail if you skip
-the insertions. The drift gate enforces the invariant for free.
+The hash is `CRC64(path)`; the path is constructed deterministically
+from the asset's identity (file_id + offset + kind for Stage 10's
+purposes). Mirror that pattern when emitting sub-resources from
+`RelocBinaryExporter::Export`.
 
-For Stage 6, every `portFixupStructU16/U32/Sprite/Bitmap/MObjSub/FTAttributes`
-helper has the same shape:
+The runtime resolves the hash via `mFileToArchive`
+(`libultraship/src/ship/resource/archive/ArchiveManager.cpp`); a
+`mods/foo.o2r` loaded after `BattleShip.o2r` claims any matching
+hashes, so `LoadResource(hash)` returns the override. This is exactly
+the plan's "no API changes needed" argument — verify against
+`ArchiveManager::AddArchive` and `mFileToArchive` to confirm.
 
-```c
-void portFixupStructU16(void *base, unsigned int byte_offset, unsigned int num_words) {
-    uintptr_t key = (uintptr_t)base + byte_offset;
-    if (sStructU16Fixups.count(key)) return;            // 1. already-fixed?
-    sStructU16Fixups.insert(key);                       // 2. record
-    /* … byte transform body … */                       // 3. transform
-}
-```
+## Suggested implementation shape
 
-Stage 6's migration: **step 3 → torch, steps 1 + 2 → still in runtime.**
+This is one suggested shape, not a binding plan. Think first; the
+plan and prior session-7 / session-8 / session-9 closeouts are all
+your context.
 
-## Eight helpers in scope
+### Phase A — torch sub-asset producer (~1 session)
 
-Defined in `port/bridge/lbreloc_byteswap.cpp`:
+1. In `torch/src/factories/ssb64/RelocFactory.cpp`, add a sub-asset
+   enumerator that consumes (a) `Pass2Region` records and (b) catalog
+   entries grouped by `file_id`. Group output by `(kind, byte_offset)`.
+2. Decide the path scheme. The plan says `reloc/<id>/<kind>/<offset>`
+   plus `<fmt>_<siz>` for tex. The id is `mFileId`, kind is one of
+   `vtx`, `tex`, `tlut`, `dl`, `sprite`, `struct`, etc., offset is
+   the byte offset into the post-pass1+pass2+struct+halfswap buffer.
+   Tex variants need `<fmt>_<siz>` because the same offset can be
+   read at different formats (rare but real).
+3. Emit each sub-resource as a standard LUS `Blob`-style binary
+   resource: header + raw bytes for the region. Use the existing
+   `WriteHeader(writer, Torch::ResourceType::Blob, 0)` pattern.
+   Hash the path with `CRC64`.
+4. Container header gains a sub-resource hash list before the data
+   block (still in v2 layout, OR bump to v3 — see "Risks" below):
+   ```
+   u32 num_subresource_hashes
+   { u64 hash, u32 byte_offset, u32 size, u8 kind }[]
+   ```
+5. Set `PROC_SUBRESOURCES_EMITTED` (bit 11) when the list is
+   non-empty.
 
-```
-portFixupStructU16        line 1031
-portFixupStructU32        line 1050
-portFixupRawTextureBSWAP32  line 1109   ← niche; called from chain helper
-portFixupSprite           line 1710
-portFixupBitmap           line 1758
-portFixupBitmapArray      line 1783
-portFixupSpriteBitmapData line 1817   ← post-decode 4c; LEAVE RUNTIME-SIDE (Stage 8)
-portFixupMObjSub          line 2055
-portFixupFTAttributes     line 2148
-```
+### Phase B — runtime overlay (~1 session)
 
-99 call sites across `decomp/src/**/*.c`:
+1. `port/resource/RelocFile.h` — add the sub-resource hash list to
+   the struct.
+2. `port/resource/RelocFileFactory.cpp` — V3 reader (or V2 extension
+   if you went that route) reads the list.
+3. `port/bridge/lbreloc_bridge.cpp` — *before* the existing
+   `memcpy(ram_dst, relocFile->Data.data(), copySize)` (line ~479),
+   build a mutable copy of `relocFile->Data`, walk the sub-resource
+   hash list, ask `Ship::Context::GetResourceManager()->LoadResource(hash)`
+   for each. If a sub-resource resolves to bytes that *differ* from
+   the corresponding region in the current container, overlay the
+   override bytes at `byte_offset` (size bytes) into the mutable
+   copy. Then memcpy that copy.
+4. The chain iterator (Stage 9 flat list) walks over the overlaid
+   bytes — pointer registration still works because the chain slot
+   offsets and target offsets are static and unchanged by overrides.
 
-```
-$ grep -rln 'portFixup\(StructU16\|StructU32\|Sprite\|Bitmap\|MObjSub\|FTAttributes\)\b' \
-    decomp/src --include='*.c' | wc -l
-```
+### Phase C — canned override test (~0.5 session)
 
-## Catalog approach — pick one
+The drift gate covers byte-identicality of the container itself —
+*not* the override path. Build one canned mod:
+- Take a Mario stock-sprite tex sub-resource.
+- Hand-roll an alternate `.o2r` containing only that sub-resource
+  with one color swapped.
+- Drop in `build/mods/example.o2r`.
+- Boot, navigate to the screen rendering the sprite, confirm the
+  color swap.
 
-The plan calls for static-analysis mining. **Reconsider.** Most call sites
-look like `portFixupStructU16(wp->weapon_vars.smog.attr, 0x10, 6)` — `base`
-is a runtime pointer assembled through dereferences whose target file_id is
-not visible from source. Static analysis would need data-flow + type-to-file
-mapping; runtime capture is a one-liner.
+This proves the overlay path end-to-end. Stage 12 will productize
+the `mods/` directory scan; Phase C just exercises it via a manual
+load.
 
-### Option A — runtime capture (recommended)
+## Risks specific to Stage 10
 
-1. Add a one-shot logger inside each `portFixup*` helper that emits
-   `(file_id, base_offset_in_file, byte_offset, num_words, family)` to a
-   side file when `SSB64_FIXUP_CAPTURE=1`. Use the existing
-   `portRelocFindFileIdAndBase(base, &file_base)` to recover file_id +
-   address-relative-to-file-base.
-2. Boot the game and run attract chain + 1P stage 1 + training + VS results
-   + BTT + each fighter intro. Each `unique` tuple becomes a catalog row.
-3. Dedup, commit `port/test/struct_fixup_catalog.json` (or `.bin` for size).
+1. **Hash stability across rebuilds.** Sub-resource paths must be a
+   pure function of file identity. Anything depending on
+   non-deterministic enumeration order (hash-map iteration, parallel
+   walk) will break override mods on the next torch SHA. Verify by
+   running the extractor twice and diffing the emitted hash list per
+   container.
+2. **Container schema vs sub-resource schema cohabitation.** v2
+   (chain-flatten) and v3 (sub-resources) want both sets of fields.
+   Cleanest: bump container to v3 with sub-resource hashes appended
+   after the chain-flatten sidecar. v2 fall-through means runtime
+   pre-Stage-10 fixtures keep loading. Worst path: try to retrofit
+   Stage 10 fields into v2 conditionally — error-prone.
+3. **Overlay-vs-chain-iterator timing.** The Stage 9 chain iterator
+   runs against `ram_dst` after `memcpy`. Override overlays MUST
+   happen between `memcpy` and the chain walk; otherwise the chain
+   slots / fixup offsets in `ram_dst` reflect the original bytes
+   while the data they point at has been overlaid. Both edges of the
+   sandwich (slot encoding in chain entries, target bytes at chain
+   targets) are at static offsets, so timing the overlay in between
+   is fine — but document the constraint with a clear comment.
+4. **Texture-cache eviction**. `portTextureCacheDeleteRange` in
+   `lbreloc_bridge.cpp` runs against `ram_dst`. If override bytes
+   are at a different physical heap address than the original (they
+   shouldn't be — same `ram_dst` slot — but verify), Fast3D's
+   texture cache could serve stale uploads. Test the override path
+   on a texture that's *already cached* before the override fires
+   (e.g. menu sprite that pre-loads).
+5. **Empty-override case must be a no-op.** `mods/` empty or
+   override hash mismatches every container = exact same bytes.
+   Drift gate stays green by construction. Worth a sanity assert in
+   the overlay loop ("if no overlay applied, skip the mutable-copy
+   allocation entirely").
+6. **Sub-resource emission cost.** ~2,132 files × ~10–100
+   sub-resources each = potentially hundreds of thousands of new
+   resources in `BattleShip.o2r`. Watch the archive size and the
+   asset-extract wall time. If it gets unwieldy, gate emission on
+   a per-file-kind allowlist (e.g. emit struct/sprite/tex but skip
+   per-Vtx-run). The plan has the maximalist list; trim if needed.
 
-**Coverage caveat**: any code path not exercised during capture is missing
-from the catalog → runtime fallback fires → drift gate stays green. The
-migration is fail-safe; an incomplete catalog just means torch can't skip
-those calls. Not a blocker.
-
-### Option B — static analysis
-
-Per the plan. Workable but more brittle; you'll rediscover the data-flow
-issue on call sites like `lb/lbcommon.c:1071`.
-
-## Migration shape (per family)
-
-For each family bit (2..7):
-
-1. Torch reads the catalog and applies the family's byte transform to the
-   relevant offsets in the post-pass1+pass2 buffer.
-2. Torch sets `PROC_<FAMILY>_DONE` in `processing_flags`.
-3. Bump torch SHA, re-extract o2r, rerun drift gate. Should stay green —
-   the runtime helper sees the bit, skips the transform body, but still
-   does the tracker insertion + idempotency check. Bytes match (torch did
-   them), trackers match (runtime updated them).
-
-Per-family rollout means you can bisect the regression to one family if
-something breaks.
-
-## Decomp side — the hard part
-
-The bridge needs to know "did torch already fix this `(file_id, byte_offset)`?"
-when `portFixupStructU16` is called. Current sketch:
-
-```c
-extern "C" void portFixupStructU16(void *base, unsigned int byte_offset, unsigned int num_words) {
-    uintptr_t key = (uintptr_t)base + byte_offset;
-    if (sStructU16Fixups.count(key)) return;
-    sStructU16Fixups.insert(key);
-
-    uintptr_t file_base;
-    int file_id = portRelocFindFileIdAndBase(base, &file_base);
-    bool torch_did_it = (file_id >= 0)
-        && portStructFixupCatalog::HasEntry(file_id,
-                                            (uintptr_t)base + byte_offset - file_base,
-                                            kFamilyStructU16);
-    if (torch_did_it && portRelocFileHasFlag(file_id, PROC_STRUCT_U16_DONE))
-        return;   // bytes already correct, tracker already inserted
-
-    /* … existing byte transform body … */
-}
-```
-
-Generate the catalog as a runtime lookup (`port/resource/StructFixupCatalog.{h,cpp}`)
-alongside the existing `RelocFileTable.cpp` codegen.
-
-## Manual playthrough is critical here (not optional)
-
-Pass 1+2 are pure deterministic byte functions; the drift gate covers them
-end-to-end. Struct fixups touch gameplay-critical state:
-
-- `FTAttributes`: fighter physics, throw frame data
-- `MPGroundData`: stage collision (memory: Sector Z, Mushroom Kingdom)
-- `MObjSub`: matanim color command overlays (memory: Whispy canopy)
-- `Sprite`/`Bitmap`: menu artwork, HUD
-
-A wrong byte order in any of these is a gameplay regression that doesn't
-crash. **Sweep at each family rollout**: attract chain → 1P stage 1 →
-training mode → VS → BTT → each character intro.
-
-## File map (Stage 6 additions)
+## File map (planned for Stage 10)
 
 ```
-tools/capture_struct_fixups.py         NEW: aggregate runtime capture
-                                            (or mine_struct_fixups.py for Option B)
-port/test/struct_fixup_catalog.json    NEW: committed catalog
-port/resource/StructFixupCatalog.{h,cpp}   NEW: runtime lookup
-torch/src/factories/ssb64/RelocFactory.cpp   MODIFY: apply catalog entries
-port/bridge/lbreloc_byteswap.cpp       MODIFY: each portFixupStruct* helper
-                                                consults the catalog
-port/resource/RelocFile.h              MODIFY: add PROC_STRUCT_*_DONE bits
+torch/src/factories/ssb64/RelocFactory.cpp     MODIFY: emit sub-resources
+torch/src/factories/ssb64/RelocFactory.h       MODIFY: surface hash-list type
+port/resource/RelocFile.h                      MODIFY: SubResourceHashes vector +
+                                                       PROC_SUBRESOURCES_EMITTED
+port/resource/RelocFileFactory.{h,cpp}         MODIFY: V3 reader (or extend V2)
+port/port.cpp                                  MODIFY: register V3 factory
+port/bridge/lbreloc_bridge.cpp                 MODIFY: overlay step before memcpy
+port/test/reloc_harness.cpp                    MODIFY: register V3 factory
+
+# Phase C (override test)
+tools/example_mod/                             NEW:    canned mod showing the
+                                                       override pathway
 ```
 
-## Gotchas
+## Workflow reminders
 
-1. **Don't migrate `portFixupSpriteBitmapData`**. It's the post-decode 4c
-   sprite path; the data isn't in the file's static layout (heap-allocated
-   by the runtime decoder). Plan's Stage 8 explicitly keeps the 4c codec
-   on the runtime side. Catalog-mining will naturally skip these (the
-   `base` doesn't resolve to a file via `portRelocFindFileIdAndBase`).
+Mirror the Stage 9 commit pattern:
 
-2. **`portFixupSprite` bundles a texture-cache eviction.** It calls
-   `portTextureCacheDeleteRange` to invalidate Fast3D's upload cache
-   when the underlying bytes change. That eviction is heap-absolute
-   side-effect work — keep it in the runtime even when torch does the
-   byte transform. Same shape as Stage 5's tracker insertion.
+1. Edit + commit in `torch/`. Push to `ssb64-buildtime-reloc` only at
+   review time.
+2. Build + extract:
+   ```
+   rm build/BattleShip.o2r BattleShip.o2r
+   cmake --build build/TorchExternal/src/TorchExternal-build --target torch -j 4
+   cmake --build build --target ExtractAssets -j 4
+   ```
+3. Drift gate:
+   ```
+   cmake --build build --target port_reloc_regen -j 4
+   ./build/port/test/port_reloc_regen --all --check --quiet
+   ```
+4. Outer commit: `git add torch port/... && git commit -m "Bump
+   torch + emit reloc sub-resources (Stage 10 Phase A/B/C)"`.
 
-3. **`portFixupMObjSub` operates on chain-targeted data.** Reachable via
-   `chain_fixup_*` from `relocIntern`/`relocExtern`, not the static DL
-   stream pass2 walks. Capture-from-runtime (Option A) handles this for
-   free; static analysis would need to follow the chain encoding too.
+Build parallelism cap: **`-j 4`** on the M1 16 GB machine
+(`MEMORY.md` → repo CLAUDE.md).
 
-4. **Heap-reuse evicts trackers** (per `portRelocEvictFileRangesInRange`
-   in `lbreloc_bridge.cpp`). When a fresh load lands in a reused address
-   range, the bytes come from the new file (torch-fixed) and trackers are
-   empty for those addresses. The next decomp call to `portFixupStructU16`
-   sees `count(key)==0`, inserts the tracker, and (if the catalog says
-   torch did it) skips the transform. All correct. Don't break this
-   chain by short-circuiting before the tracker insertion.
-
-5. **The catalog is keyed per-file, not heap-absolute.** Catalog stores
-   `(file_id, byte_offset_in_file, family)`. The bridge translates
-   `(base, file_id, file_base)` → `byte_offset_in_file = (uintptr_t)base
-   + byte_offset - file_base` before lookup. If `portRelocFindFileIdAndBase`
-   returns "not in any file", catalog miss → fall through to transform.
-
-## Open from Stages 4-5 (housekeeping, do once when ready)
-
-The submodule branches are local. Push when ready for review:
+## Open submodule branches (push when ready for review)
 
 ```
-git -C torch        push origin ssb64-buildtime-reloc
-git -C libultraship push origin ssb64-buildtime-reloc
-git -C decomp       push origin port-patches-buildtime-reloc   # no commits yet but harmless
+git -C torch        push origin ssb64-buildtime-reloc   # 10 commits (Stages 4–7 + 9)
+git -C libultraship push origin ssb64-buildtime-reloc   # 1 commit (Stage 1)
+git -C decomp       push origin port-patches-buildtime-reloc   # 0 commits, harmless
 ```
 
-## What to do FIRST in the next session
+The `agent/buildtime-reloc` outer branch is mergeable to main today
+if the project wants to land Stages 1–9 standalone (the user-visible
+mod path lands at Stage 10–12; the build-time refactor's correctness
+benefits land throughout 4–9).
 
-1. Run the sanity check (top of this doc).
-2. Read `port/bridge/lbreloc_byteswap.cpp:1031..1090` (the two simplest
-   helpers, `portFixupStructU16` and `portFixupStructU32`) to internalize
-   the "tracker key + idempotency check + transform" shape.
-3. Decide capture strategy (Option A recommended). Spike a one-shot
-   capture for a single helper:
-   - Add a stderr log in `portFixupStructU16` keyed off
-     `getenv("SSB64_FIXUP_CAPTURE")`.
-   - Run `./build/BattleShip` through attract chain.
-   - Aggregate, sanity-check the output shape.
-4. Once the capture format is locked, generate catalog + commit, then
-   proceed to family-by-family rollout.
+## Earlier-stage details
 
-Total Stage 6 estimate: 2–3 sessions. Catalog format + capture pipeline is
-the load-bearing decision; once locked, the rest is mechanical with the
-drift gate as the safety net.
-
-## Quick command reference (Stage 6)
-
-```
-# Sanity
-./build/port/test/port_reloc_regen --all --check --quiet
-
-# After torch change
-rm build/BattleShip.o2r BattleShip.o2r
-cmake --build build/TorchExternal/src/TorchExternal-build --target torch -j 4
-cmake --build build --target ExtractAssets -j 4
-./build/port/test/port_reloc_regen --all --check --quiet      # must stay green
-
-# Manual sweep
-cd build && ./BattleShip
-```
+The per-stage closeout lives in commit messages on
+`agent/buildtime-reloc` — `git log --oneline` for the index, full
+bodies for substantive context. Stage 6 in particular shipped as 6
+per-family commits (`Bump torch + regen fixtures: <FAMILY> migrated
+to torch (Stage 6d-<FAMILY>)`) plus `port/test/struct_fixup_catalog.json`
+(2,592 tuples, 125 files). The two ADRs above own the Stage 7 and
+Stage 8 carve-outs.
