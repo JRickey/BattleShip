@@ -1,24 +1,33 @@
-# Build-time reloc refactor — Stage 8 handoff (2026-05-09, Stage 7 closed)
+# Build-time reloc refactor — Stage 9 handoff (2026-05-09, Stages 7 + 8 closed)
 
 You are picking up the build-time reloc refactor described in
-`docs/refactor_buildtime_reloc_plan.md` at **Stage 8 (4c sprite
-decompression decision)**. Stage 7 is closed (halfswap done +
-AObjEvent32 unhalfswap explicitly skipped — see ADR
-`docs/decision_aobjevent32_runtime_walker_2026-05-09.md`). Stages 1–6
-are fully landed.
+`docs/refactor_buildtime_reloc_plan.md` at **Stage 9 (chain-flatten —
+the first material code change in the back half)**. Stages 7 and 8 are
+closed:
+
+- Stage 7 — halfswap shipped, AObjEvent32 unhalfswap explicitly skipped
+  (ADR `docs/decision_aobjevent32_runtime_walker_2026-05-09.md`).
+- Stage 8 — 4c sprite codec + post-decode deswizzle stay runtime-side
+  (ADR `docs/decision_4c_sprite_codec_runtime_2026-05-09.md`). No code
+  change, no `processing_flags` bit allocated, no fixture regen.
+
+Stages 1–6 are fully landed.
 **Read the plan first** — this handoff is the delta.
 
-## Status (post-2026-05-09 session — Stage 7 closed)
+## Status (post-2026-05-09 session — Stages 7 + 8 closed)
 
 Branch HEAD on `agent/buildtime-reloc`:
 
 ```
-<HEAD>  docs: close Stage 7 — AObjEvent32 unhalfswap stays runtime-side (ADR)
+<HEAD>  docs: close Stage 8 — 4c sprite codec stays runtime-side (ADR)
+2d948f3 docs: close Stage 7 — AObjEvent32 unhalfswap stays runtime-side (ADR)
 6ac8a09 Bump torch + gate halfswap on PROC_HALFSWAP_DONE (Stage 7-HALFSWAP)
 05c1b9d docs: handoff update — Stage 6 done, Stage 7 kickoff notes
 dad47d6 Bump torch + regen fixtures: FTATTRIBUTES family migrated, Stage 6 complete
 …
 ```
+
+### Stage 7 closeout summary (carried forward)
 
 Stage 7-Halfswap shipped clean (`6ac8a09` outer, torch `bfa2034` on
 `ssb64-buildtime-reloc`):
@@ -38,32 +47,61 @@ Stage 7-Halfswap shipped clean (`6ac8a09` outer, torch `bfa2034` on
   `port_aobj_register_halfswapped_range` still runs every load (the
   lazy AObjEvent32 walker + ftkey FTKeyEvent reader consume that
   registry — heap-absolute side-effect, can't migrate to build time).
-- Smoke test only on the manual sweep — full attract→1P→VS→BTT→fighter
-  intros sweep deferred to user. Boot test (12s headless) clean,
-  no crashes, no errors in `BattleShip.log`.
 
 Stage 7-AObjEvent32 is **deliberately skipped**, not deferred. The
 runtime walker in `port/port_aobj_fixup.{h,cpp}` stays. `processing_flags`
 bit 9 is reserved-unused — bit 10 keeps its original assignment as
 `PROC_CHAIN_FLATTENED` (Stage 9). Full reasoning in
-`docs/decision_aobjevent32_runtime_walker_2026-05-09.md`. The TL;DR:
-the runtime walker has to stay anyway for cross-file-reachable streams,
-modders don't author AObjEvent32 streams, the migration is high cost
-on a regression-sensitive path with marginal benefit.
+`docs/decision_aobjevent32_runtime_walker_2026-05-09.md`.
 
-## What to do next — Stage 8
+### Stage 8 closeout summary (this session)
 
-Per `docs/refactor_buildtime_reloc_plan.md` Stage 8: 4c sprite
-decompression decision. Plan recommends **Option A** (keep at runtime)
-with a `docs/bugs/` writeup explaining why. The decision shape mirrors
-this session's Stage 7-AObjEvent32 closeout — assess cost vs benefit
-for moving the codec to build time, document the call, move on. No
-new code expected.
+Stage 8 — the 4c sprite decompression decision — closed as a
+documentation-only stage. **No code change, no submodule bump, no
+`processing_flags` bit, no fixture regen.** Decision: keep
+`lbCommonDecodeSpriteBitmapsSiz4b` (decomp) and
+`portDeswizzleDecodedSprite4c` (port bridge) on the runtime side
+permanently. Full ADR: `docs/decision_4c_sprite_codec_runtime_2026-05-09.md`.
 
-After Stage 8: Stage 9 (chain-flatten) is the first material code
-change in the back half of the refactor. Stage 9 onward is also where
-sub-resource emission for moddability (Stage 10) becomes the focal
-point.
+The plan's non-goals already listed "Decompressing 4c sprites at build
+time" as out of scope; this ADR formalizes the rationale. Triggers that
+would re-open the decision are spelled out in the ADR's "What would
+change this decision" section: 4c-aware authoring tools, demonstrated
+hot-path cost, or a 4c-specific bug class hard to reproduce in fixture
+testing.
+
+The plan and Stage 11 (runtime simplification) wording have been updated
+to reflect that `lbreloc_byteswap.cpp` retains a documented residual
+(~150 LOC of heap-absolute trackers + 4c deswizzle + chain registration)
+post-refactor rather than shrinking to a "thin wrapper" as the plan
+originally claimed.
+
+## What to do next — Stage 9 (chain-flatten)
+
+Per `docs/refactor_buildtime_reloc_plan.md` Stage 9. This is the first
+material code change in the back half of the refactor. The shape:
+
+1. Torch reads `relocInternOffset` and `relocExternOffset` from each
+   reloc table entry, walks the bit-packed chain to the end, and emits
+   a flat sidecar list:
+   `(slot_byte_offset, target_byte_offset, is_external, target_file_id)[]`.
+2. Runtime drops the chain-walking code in `lbreloc_bridge.cpp`
+   (`relocInternRel` + `relocExternRel` parser) and just iterates the
+   flat list, calling `PORT_REGISTER` (or equivalent) per entry.
+3. Allocate `processing_flags` bit 10 = `PROC_CHAIN_FLATTENED`. v0/v1
+   archives without the bit fall through to the existing chain walker.
+
+Drift-gate behaviour expected: chain-target lists captured in Stage 2
+fixtures should be byte-identical regardless of whether they came from
+the encoded chain or the flattened sidecar — the per-file unit tests
+verify this directly. **Expect drift gate to stay green with no
+fixture regen.** Same shape as Stages 4 + 7-Halfswap (transformations
+that already ran inside `lbRelocLoadAndRelocFile` at fixture-capture
+time).
+
+After Stage 9: Stage 10 (sub-resource emission for moddability) is the
+focal point — the first stage that actually delivers the moddability
+goal that motivated the whole refactor.
 
 ## Open submodule branches (push when ready for review)
 

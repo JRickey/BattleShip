@@ -437,21 +437,25 @@ is no renumbering, just a documented hole at bit 9.
 
 ---
 
-### Stage 8 — 4c sprite decompression decision (~0.5 session)
+### Stage 8 — 4c sprite decompression decision (~0.5 session, DONE 2026-05-09)
 
 - 4c sprites need post-decode deswizzle. Decompression itself is in
   `lbCommonDecodeSpriteBitmapsSiz4b` and runs at runtime.
-- **Option A**: keep decompression at runtime, keep deswizzle at runtime
-  (status quo). No torch change.
-- **Option B**: decompress at build, write decoded bytes + already-
-  deswizzled. Requires the 4c codec in torch and a flag on the asset to
-  signal "already decoded."
-- **Recommendation**: Option A. The deswizzle is small, the codec is
-  large, and runtime decompression has no correctness issues today.
-  Document in `docs/bugs/` why we chose to leave this on the runtime side.
+- **Option A** (chosen): keep decompression at runtime, keep deswizzle at
+  runtime (status quo). No torch change, no `processing_flags` bit
+  allocated. ADR: `docs/decision_4c_sprite_codec_runtime_2026-05-09.md`.
+- **Option B** (rejected): decompress at build, write decoded bytes
+  already-deswizzled. Rejected because the decoder writes into runtime-
+  heap `bitmap->buf` (not file-static layout), the 4c→4b transition
+  doubles texel-data size and changes the on-disk `Sprite::bmsiz` field,
+  modders don't author 4c, and the runtime path has zero measurable
+  cost.
 
-**Verification**: confirm 4c decode path still works; spot-check
-sprites that historically used 4c (compressed character animations).
+**Closeout**: documentation only — no commits, no fixture regen, no
+flag-bit allocation. Stage 11 (runtime simplification) inherits a
+documented carve-out: `lbreloc_byteswap.cpp` cannot fully shrink to
+"chain registration wrapper" because the 4c deswizzle helper +
+heap-absolute trackers stay.
 
 ---
 
@@ -512,7 +516,11 @@ bit 9, see Stage 7) is set on every file:
   hypothetical pre-build-time-fixup archives).
 - Tests stay green.
 - Code shrinks meaningfully — `port/bridge/lbreloc_byteswap.cpp`
-  shrinks from ~1500 LOC to a thin wrapper around chain registration.
+  shrinks from ~1500 LOC to ~150 LOC of heap-absolute trackers
+  (`sStructU16Fixups` etc.), 4c post-decode deswizzle
+  (`portDeswizzleDecodedSprite4c`, kept per Stage 8 closeout —
+  `docs/decision_4c_sprite_codec_runtime_2026-05-09.md`), and chain
+  registration glue.
 - `port/port_aobj_fixup.{h,cpp}` stays in place — the AObjEvent32
   unhalfswap walker is permanently runtime-side per the Stage 7
   closeout decision (`docs/decision_aobjevent32_runtime_walker_2026-05-09.md`).
