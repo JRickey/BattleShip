@@ -459,21 +459,36 @@ heap-absolute trackers stay.
 
 ---
 
-### Stage 9 — Pre-compute chain offsets in Torch (~1 session)
+### Stage 9 — Pre-compute chain offsets in Torch (~1 session, DONE 2026-05-09)
 
 Instead of the runtime walking the encoded reloc chain (which requires
 parsing a bit-packed list at load time), torch emits a flat sidecar:
-`(slot_byte_offset, target_byte_offset, is_external, target_file_id)[]`.
+`(slot_byte_offset, target_byte_offset)[]` per chain (intern / extern
+split). Extern entries inherit `dep_file_id` from
+`ExternFileIds[i]` in chain-insertion order (existing runtime
+convention).
 
-- Torch reads `relocInternOffset` and `relocExternOffset` from the table
-  entry, walks each chain to the end, emits the flat list.
-- Runtime drops the chain-walking code in `lbreloc_bridge.cpp` and just
-  iterates the flat list, registering each target as a token.
+- Torch reads `relocInternOffset` and `relocExternOffset` from the
+  table entry, walks each chain to the end on the
+  post-pass1+pass2+struct+halfswap buffer, emits the flat list.
+- Runtime drops the chain-walking code path in `lbreloc_bridge.cpp` —
+  the two encoded `while (cur != 0xFFFF)` loops are replaced by a
+  flat-list iterator gated on `PROC_CHAIN_FLATTENED`. Per-entry side
+  effects (texture-from-chain fixup, pointer registration, slot
+  overwrite, figatree halfswap-mask update, observer callback) are
+  factored into `applyInternEntry` / `applyExternEntry` lambdas that
+  both paths call, ensuring byte-identical token-table state across
+  the v1→v2 transition.
+- Container format bumped to v2 (additive sidecar before the data
+  block); `ResourceFactoryBinaryRelocFileV2` registered alongside V0
+  and V1.
 - `processing_flags` bit 10 = `PROC_CHAIN_FLATTENED`.
 
-**Verification**: `ctest` green; chain-walk unit-tests in Stage 3 already
-verify per-file chain target lists are byte-identical regardless of
-whether they came from the encoded chain or the flattened sidecar.
+**Closeout commits**: `c37c2e3` (torch on `ssb64-buildtime-reloc`),
+`fd6da52` (outer worktree).
+
+**Verification**: drift gate stayed green at 2132/2132 unchanged after
+torch v2 + asset re-extract. Headless 12s boot smoke clean.
 
 ---
 

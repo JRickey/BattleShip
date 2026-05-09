@@ -1,29 +1,37 @@
-# Build-time reloc refactor — Stage 9 handoff (2026-05-09, Stages 7 + 8 closed)
+# Build-time reloc refactor — Stage 10 handoff (2026-05-09, Stages 7–9 closed)
 
 You are picking up the build-time reloc refactor described in
-`docs/refactor_buildtime_reloc_plan.md` at **Stage 9 (chain-flatten —
-the first material code change in the back half)**. Stages 7 and 8 are
-closed:
+`docs/refactor_buildtime_reloc_plan.md` at **Stage 10 (sub-resource
+emission for moddability)** — the first stage that delivers the
+moddability goal that motivated the whole refactor.
 
-- Stage 7 — halfswap shipped, AObjEvent32 unhalfswap explicitly skipped
-  (ADR `docs/decision_aobjevent32_runtime_walker_2026-05-09.md`).
+Stages 7, 8, 9 are closed:
+
+- Stage 7 — halfswap shipped (`PROC_HALFSWAP_DONE` bit 8); AObjEvent32
+  unhalfswap explicitly skipped (ADR
+  `docs/decision_aobjevent32_runtime_walker_2026-05-09.md`).
 - Stage 8 — 4c sprite codec + post-decode deswizzle stay runtime-side
-  (ADR `docs/decision_4c_sprite_codec_runtime_2026-05-09.md`). No code
-  change, no `processing_flags` bit allocated, no fixture regen.
+  (ADR `docs/decision_4c_sprite_codec_runtime_2026-05-09.md`).
+- Stage 9 — chain-flatten landed: torch pre-walks intern + extern
+  reloc chains and emits a `(slot_byte_off, target_byte_off)[]`
+  sidecar per file. Runtime iterates the sidecar instead of walking
+  the bit-packed encoded chain. `PROC_CHAIN_FLATTENED` is bit 10;
+  container bumped to v2; `ResourceFactoryBinaryRelocFileV2`
+  registered alongside V0/V1. Drift gate green 2132/2132.
 
 Stages 1–6 are fully landed.
 **Read the plan first** — this handoff is the delta.
 
-## Status (post-2026-05-09 session — Stages 7 + 8 closed)
+## Status (post-2026-05-09 session — Stages 7, 8, 9 closed)
 
 Branch HEAD on `agent/buildtime-reloc`:
 
 ```
-<HEAD>  docs: close Stage 8 — 4c sprite codec stays runtime-side (ADR)
+<HEAD>  Bump torch + flatten reloc chains at extraction (Stage 9)
+f4c1d26 docs: close Stage 8 — 4c sprite codec stays runtime-side (ADR)
 2d948f3 docs: close Stage 7 — AObjEvent32 unhalfswap stays runtime-side (ADR)
 6ac8a09 Bump torch + gate halfswap on PROC_HALFSWAP_DONE (Stage 7-HALFSWAP)
 05c1b9d docs: handoff update — Stage 6 done, Stage 7 kickoff notes
-dad47d6 Bump torch + regen fixtures: FTATTRIBUTES family migrated, Stage 6 complete
 …
 ```
 
@@ -76,32 +84,71 @@ to reflect that `lbreloc_byteswap.cpp` retains a documented residual
 post-refactor rather than shrinking to a "thin wrapper" as the plan
 originally claimed.
 
-## What to do next — Stage 9 (chain-flatten)
+### Stage 9 closeout summary (this session)
 
-Per `docs/refactor_buildtime_reloc_plan.md` Stage 9. This is the first
-material code change in the back half of the refactor. The shape:
+Stage 9 — chain-flatten — landed in commit `fd6da52` (outer worktree)
+with torch SHA bump to `c37c2e3` on `ssb64-buildtime-reloc`. Drift
+gate green at 2132/2132 unchanged after torch v2 + asset re-extract;
+headless 12s boot smoke clean.
 
-1. Torch reads `relocInternOffset` and `relocExternOffset` from each
-   reloc table entry, walks the bit-packed chain to the end, and emits
-   a flat sidecar list:
-   `(slot_byte_offset, target_byte_offset, is_external, target_file_id)[]`.
-2. Runtime drops the chain-walking code in `lbreloc_bridge.cpp`
-   (`relocInternRel` + `relocExternRel` parser) and just iterates the
-   flat list, calling `PORT_REGISTER` (or equivalent) per entry.
-3. Allocate `processing_flags` bit 10 = `PROC_CHAIN_FLATTENED`. v0/v1
-   archives without the bit fall through to the existing chain walker.
+What shipped:
 
-Drift-gate behaviour expected: chain-target lists captured in Stage 2
-fixtures should be byte-identical regardless of whether they came from
-the encoded chain or the flattened sidecar — the per-file unit tests
-verify this directly. **Expect drift gate to stay green with no
-fixture regen.** Same shape as Stages 4 + 7-Halfswap (transformations
-that already ran inside `lbRelocLoadAndRelocFile` at fixture-capture
-time).
+- **Container format v2** (additive sidecar over v1, before the data
+  block): `u32 num_intern; {u32 slot, u32 target}[]; u32 num_extern;
+  {u32 slot, u32 target}[]`. See `port/resource/RelocFileFactory.h`
+  for the full layout. Extern entries inherit `dep_file_id` from
+  `ExternFileIds[i]` in chain-insertion order (existing convention).
+- **`PROC_CHAIN_FLATTENED` = bit 10** in `processing_flags`. Bit 9
+  stays reserved-unused per the Stage 7 closeout.
+- **`ResourceFactoryBinaryRelocFileV2`** registered alongside V0 and
+  V1 in both `port/port.cpp` and `port/test/reloc_harness.cpp`.
+- **Runtime gate** in `port/bridge/lbreloc_bridge.cpp`: per-entry side
+  effects (texture-from-chain fixup, pointer registration, slot
+  overwrite, figatree halfswap-mask update, observer callback)
+  refactored into shared `applyInternEntry` / `applyExternEntry`
+  lambdas. Encoded walker and flat-list iterator both call them, so
+  the v1→v2 transition is byte-identical at the token-table level.
+- **Torch emitter**: `BuildChainEntries` walker added to
+  `torch/src/factories/ssb64/RelocFactory.cpp`, called after
+  pass1+pass2+struct+halfswap. The encoded chain bytes remain intact
+  in `data` so v2 archives can fall back to the runtime's encoded
+  walker if `PROC_CHAIN_FLATTENED` ever gets cleared (defensive).
 
-After Stage 9: Stage 10 (sub-resource emission for moddability) is the
-focal point — the first stage that actually delivers the moddability
-goal that motivated the whole refactor.
+## What to do next — Stage 10 (sub-resource emission for moddability)
+
+Per `docs/refactor_buildtime_reloc_plan.md` Stage 10. This is the
+first stage that delivers the user-visible moddability goal that
+motivated the refactor. Shape:
+
+1. Torch emits per-sub-asset resources alongside each reloc container:
+   - `reloc/<id>/vtx/<offset>` per Vtx run discovered by Pass 2
+   - `reloc/<id>/tex/<offset>/<fmt>_<siz>` per texture image
+   - `reloc/<id>/tlut/<offset>` per palette
+   - `reloc/<id>/dl/<offset>` per top-level DL
+   - `reloc/<id>/anim/<offset>` per AObjEvent32 head
+   - `reloc/<id>/sprite/<offset>` per Sprite/Bitmap pair
+   - `reloc/<id>/struct/<offset>/<type>` per fixed-up struct
+2. Each container references its sub-resources by CRC64 hash in its
+   header (mirrors `DisplayListFactory.cpp:260-318`).
+3. Runtime overlays sub-resource bytes into the container blob if any
+   are overridden (e.g. by a `mods/foo.o2r` loaded after
+   `BattleShip.o2r`) before the chain-iterate step. Token registration
+   stays the same; the chain points into the now-overlaid bytes.
+4. `processing_flags` bit 11 = `PROC_SUBRESOURCES_EMITTED`.
+
+Drift-gate behaviour: the container's bytes shouldn't change (the
+sub-resources are emitted in addition to, not in place of, the
+container blob). Expect 2132/2132 green. The new functional test is
+that an override mod actually swaps a sub-asset.
+
+Stage 10 is also the first stage where the test gate alone isn't
+sufficient — the moddability path is exercised only through
+`mods/*.o2r`, which the harness doesn't load. Plan one canned
+override test (replace one Mario stock-sprite color, confirm it
+renders) in addition to the drift gate.
+
+After Stage 10: Stages 11–13 (runtime simplification, mod-loader
+plumbing, Battle-ShipYard removal) are mostly cleanup.
 
 ## Open submodule branches (push when ready for review)
 
