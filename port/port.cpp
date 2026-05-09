@@ -7,6 +7,7 @@
 #include <libultraship/controller/controldeck/ControlDeck.h>
 #include <fast/Fast3dWindow.h>
 #include <ship/resource/File.h>
+#include <algorithm>
 #include <string>
 #include <vector>
 #include <cstdio>
@@ -610,13 +611,26 @@ static int PortInitImpl(int argc, char* argv[]) {
 			std::error_code modsEc;
 			if (std::filesystem::exists(modsDir, modsEc)
 			    && std::filesystem::is_directory(modsDir, modsEc)) {
-				size_t modCount = 0;
+				// Collect candidate paths first so we can register them in a
+				// stable order. directory_iterator's traversal order is
+				// filesystem-dependent (APFS / ext4 / NTFS each differ), and
+				// LUS's last-archive-wins resolution is sensitive to load
+				// order: when two mods claim the same hash, the later one
+				// wins. Sorting by full path makes mod-collision behavior
+				// deterministic across hosts.
+				std::vector<std::filesystem::path> modPaths;
 				for (const auto& entry : std::filesystem::directory_iterator(modsDir, modsEc)) {
 					if (modsEc) break;
 					if (!entry.is_regular_file()) continue;
 					const auto ext = entry.path().extension().string();
 					if (ext != ".o2r" && ext != ".otr") continue;
-					const std::string modPath = entry.path().string();
+					modPaths.push_back(entry.path());
+				}
+				std::sort(modPaths.begin(), modPaths.end());
+
+				size_t modCount = 0;
+				for (const auto& path : modPaths) {
+					const std::string modPath = path.string();
 					if (am->AddArchive(modPath)) {
 						port_log("SSB64: mod archive registered -> %s\n", modPath.c_str());
 						modCount++;
