@@ -148,7 +148,11 @@ ArchiveSession::ArchiveSession() : mImpl(std::make_unique<Impl>())
     /* O2rArchive::LoadFile(hash) calls Ship::Context::GetInstance()->...,
      * so the bare ResourceManager path is not viable. We construct a minimal
      * Ship::Context with only Configuration + ConsoleVariables + Resource
-     * Manager initialized — Window/Audio/ControlDeck stay null. */
+     * Manager initialized — Window/Audio/ControlDeck stay null.
+     *
+     * The config filename gets wrapped by Ship::Context::GetPathRelativeToAppDirectory
+     * inside InitConfiguration; the resulting "<app_dir>/port_reloc_tests.cfg.json"
+     * lands in the build directory (cwd) when the test runs, which is gitignored. */
     mImpl->ctx = Ship::Context::CreateUninitializedInstance(
         "ssb64-port-reloc-tests", "ssb64-port-reloc-tests",
         /*configFilePath=*/"port_reloc_tests.cfg.json");

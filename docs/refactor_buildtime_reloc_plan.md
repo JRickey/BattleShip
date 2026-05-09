@@ -238,6 +238,46 @@ in a deterministic environment, and snapshot the result for comparison.
 - `port_reloc_tests` (next stage) loads each one and asserts the runtime
   pipeline still produces it.
 
+#### Stage 2 — Status note (2026-05-08, end of session)
+
+Stage 2 landed with these deviations from the plan above:
+
+- **Fixture sections** match the plan's intent but not its exact bytes-per-
+  field. Tracker entries are stored as `(u32 byte_offset, u8 family, u8[3] pad)` —
+  the plan's `(u32 offset, u32 size, u8 kind)` triple was aspirational; the
+  byteswap layer only retains a single address per insertion, with no size or
+  4c-deswizzle kind beyond `family`. The post-decode 4c-deswizzle list collapses
+  into `family=2` of the tracker section. Body integrity uses CRC64 (libultraship's
+  StrHash64 — already linked) instead of SHA256.
+- **No subagent fan-out for fixture generation.** The C++ harness already
+  amortizes the archive open across all 2,132 file IDs in a single process
+  (3.6 s wall, 22 MB total disk). The fan-out moved to a four-agent QA pass
+  on the *generated* fixtures: animations (1,633), submotions+fighters+stages
+  (308), menus+movies+scene+others (160), plus a cross-cutting integrity scan.
+  All four reported clean. See `tools/inspect_fixtures.py` for the per-file
+  anomaly checks the QA pass ran.
+- **Lazy-fixup gap (known limitation).** The harness drives `lbRelocLoadAndRelocFile`
+  to completion and snapshots the resulting state. It does NOT run the game
+  loop afterwards, so the fixtures do NOT capture state added by the lazy
+  runtime fixup paths:
+    * `portRelocFixupVertexAtRuntime` — fires from `gfx_vtx_handler_f3dex2` during render.
+    * `portRelocFixupTextureAtRuntime` — fires from `GfxDpLoadBlock`/`LoadTile`/`LoadTlut`.
+    * `portFixupSprite`/`Bitmap`/`SpriteBitmapData` — fire from decomp game code (`lbCommonMakeSObjForGObj` etc.) when sprites are drawn.
+    * `port_aobj_event32_unhalfswap_stream` — fires from `gcParseDObjAnimJoint`/`gcParseMObjMatAnimJoint` when an animation is read.
+
+  The fixtures are still load-time-faithful: every fixup that fires from
+  inside `lbRelocLoadAndRelocFile` (Pass 1, Pass 2, chain walk including
+  `portRelocFixupTextureFromChain`, halfswap registration) lands in the
+  snapshot. **This is sufficient for Stages 4–6** (Pass 1 → Torch, Pass 2 →
+  Torch, struct fixups → Torch), since each of those moves load-time work to
+  build time. **Stage 7 (AObjEvent32 unhalfswap → Torch) needs the gap closed
+  before landing**, since the lazy un-halfswap walker is exactly the migration
+  target. Two options for closing it: (a) extend the harness to drive a
+  headless attract-chain run and snapshot tracker state at scene-end (matches
+  the original plan's "full attract chain run" mitigation), or (b) add a
+  synthetic DL-walker that fires the lazy fixups without rendering. Decision
+  deferred to the start of Stage 7.
+
 ---
 
 ### Stage 3 — Generate per-file unit tests (subagent fan-out, ~1 session)
