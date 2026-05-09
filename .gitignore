@@ -24,6 +24,9 @@ AGENTS.md
 BattleShip.cfg.json
 CONTROLS.md
 
+# port_reloc_tests Ship::Context teardown drops a config wherever it ran.
+port_reloc_tests.cfg.json
+
 # ROM and assets (user-provided, never committed)
 *.z64
 *.n64
