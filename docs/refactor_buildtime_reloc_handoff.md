@@ -1,34 +1,38 @@
-# Build-time reloc refactor — Stage 7 handoff (2026-05-09, post-halfswap)
+# Build-time reloc refactor — Stage 8 handoff (2026-05-09, Stage 7 closed)
 
 You are picking up the build-time reloc refactor described in
-`docs/refactor_buildtime_reloc_plan.md` at **Stage 7 (AObjEvent32
-unhalfswap → Torch)**. Halfswap (the easier half of Stage 7) landed
-2026-05-09. Stage 6 is fully landed.
+`docs/refactor_buildtime_reloc_plan.md` at **Stage 8 (4c sprite
+decompression decision)**. Stage 7 is closed (halfswap done +
+AObjEvent32 unhalfswap explicitly skipped — see ADR
+`docs/decision_aobjevent32_runtime_walker_2026-05-09.md`). Stages 1–6
+are fully landed.
 **Read the plan first** — this handoff is the delta.
 
-## Status (post-2026-05-09 session — Stage 7-Halfswap done)
+## Status (post-2026-05-09 session — Stage 7 closed)
 
 Branch HEAD on `agent/buildtime-reloc`:
 
 ```
+<HEAD>  docs: close Stage 7 — AObjEvent32 unhalfswap stays runtime-side (ADR)
 6ac8a09 Bump torch + gate halfswap on PROC_HALFSWAP_DONE (Stage 7-HALFSWAP)
 05c1b9d docs: handoff update — Stage 6 done, Stage 7 kickoff notes
 dad47d6 Bump torch + regen fixtures: FTATTRIBUTES family migrated, Stage 6 complete
 …
 ```
 
-Stage 7-Halfswap (1 outer commit `6ac8a09` + 1 torch commit `bfa2034` on
-`ssb64-buildtime-reloc`) was a clean migration:
+Stage 7-Halfswap shipped clean (`6ac8a09` outer, torch `bfa2034` on
+`ssb64-buildtime-reloc`):
 
-- **Drift gate stayed green at 2132/2132 with NO fixture regen** — unlike
-  Stage 6's lazy fixups, halfswap runs inside `lbRelocLoadAndRelocFile`
-  so its post-transform bytes were already captured in load-time
-  fixtures. Same shape as Stage 4 (Pass 1 BSWAP32).
+- **Drift gate stayed green at 2132/2132 with NO fixture regen** —
+  unlike Stage 6's lazy fixups, halfswap runs inside
+  `lbRelocLoadAndRelocFile` so its post-transform bytes were already
+  captured in load-time fixtures. Same shape as Stage 4 (Pass 1
+  BSWAP32).
 - Torch detects `reloc_animations/FT*` / `reloc_submotions/FT*` /
-  `reloc_scene/SCExplainMain` from the OTR path (== `entryName` at the
-  binary-exporter call site), walks both intern + extern reloc chains
-  in the post-pass1+pass2+struct buffer to build the chain-slot mask,
-  applies `rotate16` to every non-chain u32 word, sets bit 8.
+  `reloc_scene/SCExplainMain` from the OTR path (== `entryName` at
+  the binary-exporter call site), walks both intern + extern reloc
+  chains in the post-pass1+pass2+struct buffer to build the chain-slot
+  mask, applies `rotate16` to every non-chain u32 word, sets bit 8.
 - Runtime gate: `lbreloc_bridge.cpp` skips
   `portRelocFixupFighterFigatree` when `PROC_HALFSWAP_DONE` is set;
   `port_aobj_register_halfswapped_range` still runs every load (the
@@ -38,113 +42,39 @@ Stage 7-Halfswap (1 outer commit `6ac8a09` + 1 torch commit `bfa2034` on
   intros sweep deferred to user. Boot test (12s headless) clean,
   no crashes, no errors in `BattleShip.log`.
 
-## What to do next — Stage 7-AObjEvent32
+Stage 7-AObjEvent32 is **deliberately skipped**, not deferred. The
+runtime walker in `port/port_aobj_fixup.{h,cpp}` stays. `processing_flags`
+bit 9 is reserved-unused — bit 10 keeps its original assignment as
+`PROC_CHAIN_FLATTENED` (Stage 9). Full reasoning in
+`docs/decision_aobjevent32_runtime_walker_2026-05-09.md`. The TL;DR:
+the runtime walker has to stay anyway for cross-file-reachable streams,
+modders don't author AObjEvent32 streams, the migration is high cost
+on a regression-sensitive path with marginal benefit.
 
-The hard half of Stage 7 is still open. The runtime AObjEvent32
-unhalfswap walker (`port/port_aobj_fixup.{h,cpp}`, ~354 LOC) fires
-lazily on first read of each stream from `gcParseDObjAnimJoint` /
-`gcParseMObjMatAnimJoint`. Migration target: torch walks every
-fighter animation table, follows each AObjEvent32 head, simulates the
-walker, emits pre-un-halfswapped bytes. Bit 9 (`PROC_AOBJEVENT32_UNHALFSWAP_DONE`).
+## What to do next — Stage 8
 
-### The lazy-fixup gap (must solve first)
+Per `docs/refactor_buildtime_reloc_plan.md` Stage 8: 4c sprite
+decompression decision. Plan recommends **Option A** (keep at runtime)
+with a `docs/bugs/` writeup explaining why. The decision shape mirrors
+this session's Stage 7-AObjEvent32 closeout — assess cost vs benefit
+for moving the codec to build time, document the call, move on. No
+new code expected.
 
-Currently:
-- Load-time fixture: AObjEvent32 stream words in HALFSWAPPED state
-  (because halfswap touches everything; un-halfswap is lazy).
-- Runtime: memcpy → halfswap (or skip via flag) → at first animation
-  read, lazy walker un-halfswaps stream words in place on the heap.
-- `snap.data` from harness = post-load = HALFSWAPPED. Lazy walker's
-  effects never make it into the snapshot.
-
-After Stage 7-AObjEvent32 ships (without solving the gap):
-- File on disk: AObjEvent32 stream words in UN-halfswapped state.
-- Runtime: memcpy + skip halfswap + skip lazy walker (flag) → final
-  bytes match what torch wrote: UN-halfswapped.
-- Drift gate compares new pipeline output to OLD fixture (still
-  halfswapped). Mismatch → regen. New fixture = new pipeline output.
-  But we have no INDEPENDENT verifier that torch's un-halfswap matches
-  what the runtime walker would have done. False-green possible.
-
-The fix: regen fixtures BEFORE the torch change, in such a way that
-they capture the un-halfswapped bytes the runtime walker WOULD produce.
-Then the post-torch drift gate becomes a meaningful check.
-
-#### Option (a) — synthetic walk in the harness (recommended)
-
-After `lbRelocLoadAndRelocFile` returns, the harness:
-1. Walks the figatree structure inside the loaded file's bytes to
-   enumerate every AObjEvent32 stream head pointer.
-2. Calls the production runtime walker `port_aobj_event32_unhalfswap_stream`
-   on each head — the same code path the game would use, so by
-   construction the un-halfswapped output is exactly what the runtime
-   produces.
-3. Snapshots `ram_dst` after step 2 → fixture has un-halfswapped bytes.
-
-Trade-off: needs a stream-head enumerator (parse fighter animation
-tables → DObj/MObj joint trees → AObjEvent32 heads). That logic doesn't
-exist standalone — only in the decomp parsers, which use file-loaded
-pointer tokens. The harness can read tokens via `portRelocTryResolvePointer`
-since pointer registration runs at load time.
-
-This is the SAME enumeration logic torch needs for its own un-halfswap
-pass. Sharing this between harness and torch is desirable — write it
-once in C++, link both against it. (Tip: this enumerator is the actual
-load-bearing complexity of Stage 7-AObjEvent32, not the walker port.)
-
-#### Option (b) — harness re-implements the walker
-
-Less safe; you'd be writing a parallel implementation that the drift
-gate then verifies against the production walker. Defeats the point of
-the gate (the gate would only catch torch bugs that ALSO appear in the
-harness re-impl). Avoid.
-
-#### Option (c) — skip Stage 7-AObjEvent32 entirely
-
-The runtime walker is correct, fast (one-shot per stream, cached after
-first call via `sUnswappedHeads`), and load-bearing. Migrating it has
-marginal benefit:
-- Sub-asset moddability (Stage 10) doesn't depend on it.
-- Modders don't author AObjEvent32 streams directly.
-- The runtime cost is tiny.
-
-Pros of (c): saves 1–2 sessions of risky work (Master Hand class
-regression sensitivity per `project_aobjevent32_halfswap.md` memory).
-Cons of (c): philosophical mismatch with "all deterministic byte
-transforms at build time"; bit 9 stays reserved.
-
-**Recommend skipping (option c)** unless a concrete benefit emerges.
-Document in `docs/bugs/` and move on to Stage 8.
-
-### If pressing on with Stage 7-AObjEvent32 (option a)
-
-1. Implement stream-head enumerator in C++ (callable from both harness
-   and torch). Inputs: file bytes, file_id, registered halfswap range.
-   Output: list of byte offsets within file pointing to AObjEvent32
-   stream heads. Walks fighter `ftData` table → motion entries →
-   DObj/MObj joint trees → animation pointers.
-2. Update harness to call enumerator → fire production walker on each
-   head → re-snapshot `ram_dst`. Regen fixtures. Drift gate green.
-3. Port walker to torch C++ (mirror `port_aobj_fixup.cpp`'s scan +
-   apply two-phase logic). Apply at extraction. Set bit 9.
-4. Runtime gate: `gcParseDObjAnimJoint`/`gcParseMObjMatAnimJoint`
-   `#ifdef PORT` walker calls become no-ops if the file's
-   ProcessingFlags has bit 9 set.
-5. Bump torch, re-extract. Drift gate verifies torch matches harness's
-   walker output. Manual sweep covers Master Hand specifically.
-
-Two sessions worst-case; one if the enumerator is straightforward.
+After Stage 8: Stage 9 (chain-flatten) is the first material code
+change in the back half of the refactor. Stage 9 onward is also where
+sub-resource emission for moddability (Stage 10) becomes the focal
+point.
 
 ## Open submodule branches (push when ready for review)
 
 ```
-git -C torch        push origin ssb64-buildtime-reloc   # 9 commits now (8 + halfswap)
+git -C torch        push origin ssb64-buildtime-reloc   # 9 commits (8 from Stage 4-6 + halfswap)
 git -C libultraship push origin ssb64-buildtime-reloc   # no commits, harmless
 git -C decomp       push origin port-patches-buildtime-reloc   # no commits, harmless
 ```
 
-The 14-commit `agent/buildtime-reloc` outer branch is mergeable to main
-if the project wants to land Stage 6 + Stage 7-Halfswap standalone.
+The `agent/buildtime-reloc` outer branch is mergeable to main if the
+project wants to land Stages 1–7 standalone.
 
 ---
 

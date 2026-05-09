@@ -397,27 +397,43 @@ clear + VS results screen between each sub-step.
 
 ---
 
-### Stage 7 — Migrate halfswap + AObjEvent32 unhalfswap to Torch (~1 session)
+### Stage 7 — Migrate halfswap to Torch (~1 session, DONE 2026-05-09)
 
 - **Halfswap**: trivial — torch checks if file path matches
   `reloc_animations/FT*` / `reloc_submotions/FT*` /
   `reloc_scene/SCExplainMain*`, applies the rotate16 on every non-reloc-slot
   u32 word.
-- **AObjEvent32 unhalfswap**: less trivial — runtime currently does this
-  lazily because stream entry points aren't always statically known. But
-  for fighter animations they ARE: every fighter animation file has a
-  known top-level animation table indexed by animation ID. Torch walks
-  that table at build time, follows each AObjEvent32 head, simulates the
-  unhalfswap walker, and emits already-unhalfswapped bytes.
-- Edge case: streams reachable only through cross-file references. Audit
-  these via the Stage 2 fixtures — if any animation stream is only
-  reachable through external chain, document and keep its lazy fixup.
-  (Likely 0 cases, but verify.)
-- `processing_flags` bits 8–9 = `PROC_HALFSWAP_DONE`,
-  `PROC_AOBJEVENT32_UNHALFSWAP_DONE`.
+- `processing_flags` bit 8 = `PROC_HALFSWAP_DONE`.
 
-**Verification**: `ctest` green; manual fighter intro for every character
-(historically sensitive to AObjEvent32 corruption).
+**Verification**: `ctest` green at 2132/2132 with no fixture regen
+(halfswap runs inside `lbRelocLoadAndRelocFile`, so post-transform bytes
+were already captured at fixture time — same shape as Stage 4 Pass 1);
+manual fighter intro for every character (historically sensitive to
+AObjEvent32 corruption).
+
+**Closeout commits**: `bfa2034` (torch on `ssb64-buildtime-reloc`),
+`6ac8a09` (outer worktree), `c777990` (handoff).
+
+#### AObjEvent32 unhalfswap — explicitly skipped (option c)
+
+Originally specified as the second half of Stage 7. Decision:
+**do not migrate**. The lazy walker in `port/port_aobj_fixup.{h,cpp}`
+stays on the runtime side permanently. Rationale captured in
+`docs/decision_aobjevent32_runtime_walker_2026-05-09.md`. Summary:
+- The runtime walker has to stay anyway for cross-file-reachable
+  streams (per the original status note for this stage), so a torch
+  port would be a second implementation of identical logic.
+- Modders don't author AObjEvent32 streams — Stage 10 sub-asset
+  moddability does not depend on this migration.
+- Migration cost is concentrated on a load-bearing path with known
+  regression sensitivity (`MEMORY.md` →
+  `project_aobjevent32_halfswap.md`); benefit is marginal.
+
+`processing_flags` bit 9 (would have been
+`PROC_AOBJEVENT32_UNHALFSWAP_DONE`) is **reserved-unused**. Future
+flag bits keep their original assignments — bit 10 is
+`PROC_CHAIN_FLATTENED`, bit 11 is `PROC_SUBRESOURCES_EMITTED`. There
+is no renumbering, just a documented hole at bit 9.
 
 ---
 
@@ -488,15 +504,18 @@ Mario animation Vtx blob and confirm it renders).
 
 ### Stage 11 — Runtime simplification (~0.5 session)
 
-After every `processing_flags` bit is set on every file:
+After every `processing_flags` bit (except the intentionally-unused
+bit 9, see Stage 7) is set on every file:
 
-- Delete the now-unused runtime byteswap / struct-fixup / halfswap /
-  unhalfswap implementations (or guard them under a debug-only fallback
-  for hypothetical pre-build-time-fixup archives).
+- Delete the now-unused runtime byteswap / struct-fixup / halfswap
+  implementations (or guard them under a debug-only fallback for
+  hypothetical pre-build-time-fixup archives).
 - Tests stay green.
-- Code shrinks meaningfully — `port/bridge/lbreloc_byteswap.cpp` shrinks
-  from ~1500 LOC to a thin wrapper around chain registration; the
-  `port_aobj_fixup` family becomes empty.
+- Code shrinks meaningfully — `port/bridge/lbreloc_byteswap.cpp`
+  shrinks from ~1500 LOC to a thin wrapper around chain registration.
+- `port/port_aobj_fixup.{h,cpp}` stays in place — the AObjEvent32
+  unhalfswap walker is permanently runtime-side per the Stage 7
+  closeout decision (`docs/decision_aobjevent32_runtime_walker_2026-05-09.md`).
 
 **Verification**: full game attract + 1P + VS + BTT + training mode.
 
