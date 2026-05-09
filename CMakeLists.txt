@@ -135,11 +135,12 @@ add_custom_target(GenerateRelocArtifacts
         ${CMAKE_CURRENT_SOURCE_DIR}/include/reloc_data.h
         ${CMAKE_CURRENT_SOURCE_DIR}/port/resource/RelocFileTable.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/port/resource/StructFixupCatalog.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/torch/src/factories/ssb64/StructFixupCatalogData.h
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_reloc_stubs.py
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_reloc_table.py
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_struct_fixup_catalog.py
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Generating reloc headers, RelocFileTable.cpp, and StructFixupCatalog.cpp"
+    COMMENT "Generating reloc headers, RelocFileTable.cpp, StructFixupCatalog.cpp, and torch StructFixupCatalogData.h"
 )
 
 add_custom_target(GenerateCreditsAssets
@@ -155,6 +156,12 @@ add_custom_target(GenerateCreditsAssets
 add_custom_target(PrepareBuildInputs
     DEPENDS GenerateRelocArtifacts GenerateCreditsAssets
 )
+
+# Torch needs StructFixupCatalogData.h (a GenerateRelocArtifacts byproduct)
+# to compile RelocFactory.cpp. We define this dependency here, not on the
+# ExternalProject_Add itself, because that early reference fires before
+# GenerateRelocArtifacts has been declared.
+add_dependencies(TorchExternal GenerateRelocArtifacts)
 
 add_custom_target(ExtractAssetHeaders
     DEPENDS PrepareBuildInputs

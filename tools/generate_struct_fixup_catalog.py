@@ -23,8 +23,9 @@ import os
 import sys
 from pathlib import Path
 
-INPUT  = Path("port/test/struct_fixup_catalog.json")
-OUTPUT = Path("port/resource/StructFixupCatalog.cpp")
+INPUT          = Path("port/test/struct_fixup_catalog.json")
+OUTPUT_RUNTIME = Path("port/resource/StructFixupCatalog.cpp")
+OUTPUT_TORCH   = Path("torch/src/factories/ssb64/StructFixupCatalogData.h")
 
 FAMILY_NAMES = {
     2: "STRUCT_U16",
@@ -143,11 +144,105 @@ def main() -> None:
     lines.append("}")
     lines.append("")
 
-    OUTPUT.write_text("\n".join(lines), encoding="utf-8")
+    OUTPUT_RUNTIME.write_text("\n".join(lines), encoding="utf-8")
     summary = ", ".join(f"{FAMILY_NAMES[f]}={n}" for f, n in sorted(family_counts.items()) if n)
     if not summary:
         summary = "empty"
-    print(f"Generated {OUTPUT} ({len(sorted_tuples)} entries: {summary})")
+    print(f"Generated {OUTPUT_RUNTIME} ({len(sorted_tuples)} entries: {summary})")
+
+    # ----- Torch-side header (extraction-time consumer) ---------------------
+    #
+    # Same source data, different access pattern: torch's RelocBinaryExporter
+    # iterates entries for the file it is currently exporting and applies the
+    # corresponding family transform. We embed the catalog directly so torch
+    # has zero IO at extraction time.
+    #
+    # Sort key here is (file_id, family, byte_offset) — different from the
+    # runtime sort. This lets torch find a file's slice with one binary search
+    # by file_id and then iterate its entries (which are still grouped by
+    # family within that slice).
+    by_file = sorted(seen.values(), key=lambda t: (t[1], t[0], t[2]))
+
+    # Precompute (file_id → (start_idx, end_idx)) for O(log N) per-file lookup.
+    file_index: list[tuple[int, int, int]] = []  # (file_id, start, end)
+    if by_file:
+        cur_fid = by_file[0][1]
+        cur_start = 0
+        for i, (_, fid, _, _) in enumerate(by_file):
+            if fid != cur_fid:
+                file_index.append((cur_fid, cur_start, i))
+                cur_fid = fid
+                cur_start = i
+        file_index.append((cur_fid, cur_start, len(by_file)))
+
+    h: list[str] = []
+    h.append("/**")
+    h.append(" * StructFixupCatalogData.h - Auto-generated portFixup* catalog for torch.")
+    h.append(" *")
+    h.append(" * Source: <port>/port/test/struct_fixup_catalog.json")
+    h.append(" * Generator: <port>/tools/generate_struct_fixup_catalog.py")
+    h.append(" * DO NOT EDIT BY HAND.")
+    h.append(" *")
+    h.append(" * Sorted by (file_id, family, byte_offset). RelocBinaryExporter looks up")
+    h.append(" * a file's contiguous slice via FindFileSlice, then iterates its entries.")
+    h.append(" */")
+    h.append("")
+    h.append("#pragma once")
+    h.append("")
+    h.append("#include <cstddef>")
+    h.append("#include <cstdint>")
+    h.append("#include <utility>")
+    h.append("")
+    h.append("namespace SSB64 {")
+    h.append("namespace StructFixupCatalog {")
+    h.append("")
+    h.append("// Family bit numbers — match PROC_<FAMILY>_DONE in port/resource/RelocFile.h.")
+    h.append("enum Family : uint8_t {")
+    for fam, name in sorted(FAMILY_NAMES.items()):
+        h.append(f"    {name:<14} = {fam},")
+    h.append("};")
+    h.append("")
+    h.append("struct Entry {")
+    h.append("    uint8_t  family;")
+    h.append("    uint16_t file_id;")
+    h.append("    uint32_t byte_offset;")
+    h.append("    uint32_t extra;        // num_words for STRUCT_U16/U32; 0 for fixed-size structs")
+    h.append("};")
+    h.append("")
+    h.append(f"inline constexpr Entry kEntries[] = {{")
+    if by_file:
+        for fam, fid, off, extra in by_file:
+            h.append(f"    {{{fam:>2}, {fid:>5}, {off:>8}, {extra:>4}}},")
+    else:
+        h.append("    /* empty catalog */")
+    h.append("};")
+    h.append("")
+    h.append(f"inline constexpr size_t kEntryCount = {len(by_file)};")
+    h.append("static_assert(sizeof(kEntries) / sizeof(kEntries[0]) == kEntryCount,")
+    h.append('              \"kEntries length must match kEntryCount\");')
+    h.append("")
+    h.append("// Returns [first, last) of catalog entries for the given file_id (sorted by")
+    h.append("// family, then byte_offset). Empty range = no entries for this file.")
+    h.append("inline std::pair<const Entry*, const Entry*> EntriesForFile(uint16_t file_id) {")
+    h.append("    // Binary search over the sorted-by-file_id table; entries belong to one")
+    h.append("    // contiguous run per file.")
+    h.append("    size_t lo = 0, hi = kEntryCount;")
+    h.append("    while (lo < hi) {")
+    h.append("        const size_t mid = (lo + hi) / 2;")
+    h.append("        if (kEntries[mid].file_id < file_id) lo = mid + 1;")
+    h.append("        else                                 hi = mid;")
+    h.append("    }")
+    h.append("    const size_t first = lo;")
+    h.append("    while (lo < kEntryCount && kEntries[lo].file_id == file_id) ++lo;")
+    h.append("    return { kEntries + first, kEntries + lo };")
+    h.append("}")
+    h.append("")
+    h.append("}  // namespace StructFixupCatalog")
+    h.append("}  // namespace SSB64")
+    h.append("")
+
+    OUTPUT_TORCH.write_text("\n".join(h), encoding="utf-8")
+    print(f"Generated {OUTPUT_TORCH} ({len(by_file)} entries, {len(file_index)} files indexed)")
 
 
 if __name__ == "__main__":
