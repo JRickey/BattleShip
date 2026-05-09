@@ -20,7 +20,6 @@
 #include "bridge/lbreloc_bridge_testing.h"
 #include "resource/RelocPointerTable.h"
 #include "resource/RelocFileTable.h"
-#include "resource/StructFixupCatalog.h"
 
 #include <ship/utils/binarytools/endianness.h>
 #include <spdlog/spdlog.h>
@@ -38,18 +37,8 @@
 extern "C" void port_log(const char *fmt, ...);
 extern "C" int  portRelocFindContainingFile(const void *ptr, uintptr_t *out_base, size_t *out_size);
 extern "C" int  portRelocFindFileIdAndBase(const void *ptr, uintptr_t *out_base);
-extern "C" uint32_t portRelocGetProcessingFlags(int file_id);
 extern "C" bool portRelocDescribePointer(const void *ptr, uintptr_t *out_base, size_t *out_size,
                                           unsigned int *out_file_id, const char **out_path);
-
-// PROC_<FAMILY>_DONE bit values; mirrors RelocFile.h to avoid pulling
-// resource headers into helpers that only need the bit positions.
-static constexpr uint32_t kProcStructU16Done     = 1u << 2;
-static constexpr uint32_t kProcStructU32Done     = 1u << 3;
-static constexpr uint32_t kProcSpriteDone        = 1u << 4;
-static constexpr uint32_t kProcBitmapDone        = 1u << 5;
-static constexpr uint32_t kProcMobjsubDone       = 1u << 6;
-static constexpr uint32_t kProcFtAttributesDone  = 1u << 7;
 
 // ============================================================
 //  Stage audit (SSB64_STAGE_AUDIT=1)
@@ -1011,28 +1000,6 @@ static inline void capture_emit(uint8_t family, const void *target, uint32_t ext
 	}
 }
 
-// Returns true iff (a) `target` lives inside a currently-loaded reloc file,
-// (b) that file's RelocFile::ProcessingFlags carries the matching
-// PROC_<FAMILY>_DONE bit, AND (c) the StructFixupCatalog has an entry for
-// (file_id, byte_offset_in_file, family). When all three hold the byte
-// transform body in the caller is skipped — torch already wrote those bytes
-// into the file at extraction time. Tracker insertion (sStructU16Fixups)
-// still runs so the lazy-fixup paths stay idempotent across heap reuse.
-static inline bool fixup_torch_already_did_it(uint8_t family, uint32_t proc_flag_bit, const void *target)
-{
-	if (target == nullptr)
-		return false;
-	uintptr_t file_base = 0;
-	int file_id = portRelocFindFileIdAndBase(target, &file_base);
-	if (file_id < 0)
-		return false;
-	if ((portRelocGetProcessingFlags(file_id) & proc_flag_bit) == 0)
-		return false;
-	uintptr_t addr = reinterpret_cast<uintptr_t>(target);
-	uint32_t byte_offset = static_cast<uint32_t>(addr - file_base);
-	return portStructFixupCatalogHasEntry(file_id, byte_offset, family);
-}
-
 static void fixup_capture_dump()
 {
 	const char *path = std::getenv("SSB64_FIXUP_CAPTURE_FILE");
@@ -1067,8 +1034,15 @@ static void fixup_capture_dump()
 }
 
 // ============================================================
-//  Struct u16 fixup — rotate16 for u16 fields in ROM structs
+//  Struct fixup tracker registration
 // ============================================================
+//
+// Each portFixupStruct* helper used to apply rotate16/BSWAP32 to its target
+// region. On v3 archives torch did the byte transforms at extraction; only
+// the heap-absolute idempotency tracker (sStructU16Fixups) matters at
+// runtime, so the runtime helpers collapse to "mark this address fixed."
+// capture_emit stays for the SSB64_FIXUP_CAPTURE diagnostic — zero overhead
+// when the env var is unset.
 
 extern "C" void portFixupStructU16(void *base, unsigned int byte_offset, unsigned int num_words)
 {
@@ -1076,46 +1050,16 @@ extern "C" void portFixupStructU16(void *base, unsigned int byte_offset, unsigne
 		return;
 	uint8_t *target = static_cast<uint8_t *>(base) + byte_offset;
 	capture_emit(fixup_family::STRUCT_U16, target, num_words);
-
-	uintptr_t key = reinterpret_cast<uintptr_t>(target);
-	if (sStructU16Fixups.count(key))
-		return;
-	sStructU16Fixups.insert(key);
-
-	if (fixup_torch_already_did_it(fixup_family::STRUCT_U16, kProcStructU16Done, target))
-		return;
-
-	uint32_t *words = reinterpret_cast<uint32_t *>(target);
-	for (unsigned int i = 0; i < num_words; i++)
-	{
-		words[i] = (words[i] << 16) | (words[i] >> 16);
-	}
+	sStructU16Fixups.insert(reinterpret_cast<uintptr_t>(target));
 }
 
-// Undo the blanket pass1 u32 byteswap for a single-u8-inside-a-u32 field.
-// After pass1, a BE ROM u8 at struct offset N lives at native offset (N|3);
-// reversing the containing u32 word puts the u8 back at offset N where the
-// C struct definition expects to read it.  Idempotent via sStructU16Fixups.
 extern "C" void portFixupStructU32(void *base, unsigned int byte_offset, unsigned int num_words)
 {
 	if (base == nullptr)
 		return;
 	uint8_t *target = static_cast<uint8_t *>(base) + byte_offset;
 	capture_emit(fixup_family::STRUCT_U32, target, num_words);
-
-	uintptr_t key = reinterpret_cast<uintptr_t>(target);
-	if (sStructU16Fixups.count(key))
-		return;
-	sStructU16Fixups.insert(key);
-
-	if (fixup_torch_already_did_it(fixup_family::STRUCT_U32, kProcStructU32Done, target))
-		return;
-
-	uint32_t *words = reinterpret_cast<uint32_t *>(target);
-	for (unsigned int i = 0; i < num_words; i++)
-	{
-		words[i] = BSWAP32(words[i]);
-	}
+	sStructU16Fixups.insert(reinterpret_cast<uintptr_t>(target));
 }
 
 extern "C" void portResetStructFixups(void)
@@ -1158,35 +1102,16 @@ extern "C" void portEvictStructFixupsInRange(const void *begin, size_t size)
 		sProtectedStructRanges.end());
 }
 
-// For raw texel blobs loaded via a runtime-built SETTIMG (where pass2's
-// DL scan never saw the SETTIMG inside a stored display list) — apply
-// BSWAP32 again to restore N64 BE byte order that pass1 destroyed.
-// Tracked by base so repeat calls on the same blob are no-ops.
+// Catalog-keyed runtime hook for raw texel blobs (shape-shares the STRUCT_U32
+// family). Body is a tracker insert only on v3 archives — torch applied the
+// BSWAP at extraction.
 extern "C" void portFixupRawTextureBSWAP32(void *base, size_t bytes)
 {
 	if (base == nullptr || bytes == 0)
 		return;
-
-	// Same byte-transform shape as portFixupStructU32 (BSWAP32 over a word
-	// range), so it shares the STRUCT_U32 catalog family.
 	size_t num_words = bytes / 4;
 	capture_emit(fixup_family::STRUCT_U32, base, static_cast<uint32_t>(num_words));
-
-	uintptr_t key = reinterpret_cast<uintptr_t>(base);
-	if (sStructU16Fixups.count(key))
-		return;
-	sStructU16Fixups.insert(key);
-
-	if (fixup_torch_already_did_it(fixup_family::STRUCT_U32, kProcStructU32Done, base))
-		return;
-
-	// Round down to full u32s — pass1 only touched 4-byte-aligned words,
-	// so any trailing tail bytes were never swapped and shouldn't be now.
-	uint32_t *words = static_cast<uint32_t *>(base);
-	for (size_t i = 0; i < num_words; i++)
-	{
-		words[i] = BSWAP32(words[i]);
-	}
+	sStructU16Fixups.insert(reinterpret_cast<uintptr_t>(base));
 }
 
 // ============================================================
@@ -1739,118 +1664,20 @@ extern "C" void portRelocFixupVertexAtRuntime(const void *addr, unsigned int num
 //
 // Each function is idempotent: tracked by the same sStructU16Fixups set.
 
-static void fixup_rotate16(uint32_t *word)
-{
-	*word = (*word << 16) | (*word >> 16);
-}
-
-static void fixup_bswap32(uint32_t *word)
-{
-	*word = BSWAP32(*word);
-}
-
-// Fixup for a u32 word laid out as [u16 a][u8 b][u8 c] in original BE memory.
-// Pass1's blanket BSWAP32 leaves the bytes as [c, b, a_lo, a_hi] which makes
-// a_lo/a_hi appear in the wrong slots: reading `u16 a` from offset 0 yields
-// (b << 8) | c, and reading `u8 b`/`u8 c` from offsets 2/3 yields a_lo/a_hi.
-// Neither rotate16 nor a second bswap32 produces the correct LE layout for
-// all three fields simultaneously, so we permute the bytes directly.
-static void fixup_u16_u8u8(uint32_t *word)
-{
-	uint8_t *p = reinterpret_cast<uint8_t *>(word);
-	uint8_t b0 = p[0];
-	uint8_t b1 = p[1];
-	uint8_t b2 = p[2];
-	uint8_t b3 = p[3];
-	// Have (post-pass1): [c, b, a_lo, a_hi] = [b0, b1, b2, b3]
-	// Want (LE struct):  [a_lo, a_hi, b, c] = [b2, b3, b1, b0]
-	p[0] = b2;
-	p[1] = b3;
-	p[2] = b1;
-	p[3] = b0;
-}
-
 extern "C" void portFixupSprite(void *sprite)
 {
 	if (sprite == NULL)
 		return;
-
 	capture_emit(fixup_family::SPRITE, sprite, 0);
-
-	uintptr_t key = reinterpret_cast<uintptr_t>(sprite);
-	if (sStructU16Fixups.count(key))
-		return;
-	sStructU16Fixups.insert(key);
-
-	if (fixup_torch_already_did_it(fixup_family::SPRITE, kProcSpriteDone, sprite))
-		return;
-
-	uint32_t *w = static_cast<uint32_t *>(sprite);
-
-	// Sprite layout (17 words = 68 bytes):
-	//  Word  Offset  Fields                   Fixup
-	//  0     0x00    s16 x, s16 y             rotate16
-	//  1     0x04    s16 width, s16 height    rotate16
-	//  2     0x08    f32 scalex               (ok)
-	//  3     0x0C    f32 scaley               (ok)
-	//  4     0x10    s16 expx, s16 expy       rotate16
-	//  5     0x14    u16 attr, s16 zdepth     rotate16
-	//  6     0x18    u8 r,g,b,a               bswap32
-	//  7     0x1C    s16 startTLUT, s16 nTLUT rotate16
-	//  8     0x20    u32 LUT (token)          (ok)
-	//  9     0x24    s16 istart, s16 istep    rotate16
-	//  10    0x28    s16 nbitmaps, s16 ndisplist rotate16
-	//  11    0x2C    s16 bmheight, s16 bmHreal rotate16
-	//  12    0x30    u8 bmfmt, u8 bmsiz, pad  bswap32
-	//  13    0x34    u32 bitmap (token)        (ok)
-	//  14    0x38    u32 rsp_dl (token)        (ok)
-	//  15    0x3C    u32 rsp_dl_next (token)   (ok)
-	//  16    0x40    s16 frac_s, s16 frac_t   rotate16
-
-	fixup_rotate16(&w[0]);   // x, y
-	fixup_rotate16(&w[1]);   // width, height
-	// w[2], w[3]: f32 scalex, scaley — ok
-	fixup_rotate16(&w[4]);   // expx, expy
-	fixup_rotate16(&w[5]);   // attr, zdepth
-	fixup_bswap32(&w[6]);    // rgba
-	fixup_rotate16(&w[7]);   // startTLUT, nTLUT
-	// w[8]: u32 LUT — ok
-	fixup_rotate16(&w[9]);   // istart, istep
-	fixup_rotate16(&w[10]);  // nbitmaps, ndisplist
-	fixup_rotate16(&w[11]);  // bmheight, bmHreal
-	fixup_bswap32(&w[12]);   // bmfmt, bmsiz, pad
-	// w[13..15]: u32 tokens — ok
-	fixup_rotate16(&w[16]);  // frac_s, frac_t
+	sStructU16Fixups.insert(reinterpret_cast<uintptr_t>(sprite));
 }
 
 extern "C" void portFixupBitmap(void *bitmap)
 {
 	if (bitmap == NULL)
 		return;
-
 	capture_emit(fixup_family::BITMAP, bitmap, 0);
-
-	uintptr_t key = reinterpret_cast<uintptr_t>(bitmap);
-	if (sStructU16Fixups.count(key))
-		return;
-	sStructU16Fixups.insert(key);
-
-	if (fixup_torch_already_did_it(fixup_family::BITMAP, kProcBitmapDone, bitmap))
-		return;
-
-	uint32_t *w = static_cast<uint32_t *>(bitmap);
-
-	// Bitmap layout (4 words = 16 bytes):
-	//  Word  Offset  Fields                        Fixup
-	//  0     0x00    s16 width, s16 width_img      rotate16
-	//  1     0x04    s16 s, s16 t                  rotate16
-	//  2     0x08    u32 buf (token)               (ok)
-	//  3     0x0C    s16 actualHeight, s16 LUToffset rotate16
-
-	fixup_rotate16(&w[0]);
-	fixup_rotate16(&w[1]);
-	// w[2]: u32 buf — ok
-	fixup_rotate16(&w[3]);
+	sStructU16Fixups.insert(reinterpret_cast<uintptr_t>(bitmap));
 }
 
 extern "C" void portFixupBitmapArray(void *bitmaps, unsigned int count)
@@ -2129,57 +1956,8 @@ extern "C" void portFixupMObjSub(void *mobjsub)
 {
 	if (mobjsub == NULL)
 		return;
-
 	capture_emit(fixup_family::MOBJSUB, mobjsub, 0);
-
-	uintptr_t key = reinterpret_cast<uintptr_t>(mobjsub);
-	if (sStructU16Fixups.count(key))
-		return;
-	sStructU16Fixups.insert(key);
-
-	if (fixup_torch_already_did_it(fixup_family::MOBJSUB, kProcMobjsubDone, mobjsub))
-		return;
-
-	uint32_t *w = static_cast<uint32_t *>(mobjsub);
-
-	// MObjSub layout (30 words = 0x78 bytes):
-	//  Word  Offset  Fields                           Fixup
-	//  0     0x00    u16 pad00, u8 fmt, u8 siz        bswap32 (mixed u16+u8)
-	//  1     0x04    u32 sprites (token)               (ok)
-	//  2     0x08    u16 unk08, u16 unk0A              rotate16
-	//  3     0x0C    u16 unk0C, u16 unk0E              rotate16
-	//  4     0x10    s32 unk10                          (ok)
-	//  5-10  0x14    f32 trau..unk28                    (ok)
-	//  11    0x2C    u32 palettes (token)               (ok)
-	//  12    0x30    u16 flags, u8 block_fmt, u8 block_siz  bswap32
-	//  13    0x34    u16 block_dxt, u16 unk36           rotate16
-	//  14    0x38    u16 unk38, u16 unk3A               rotate16
-	//  15-18 0x3C    f32 scrollu..unk48                 (ok)
-	//  19    0x4C    u32 unk4C                          (ok)
-	//  20    0x50    SYColorPack primcolor (u8 rgba)    bswap32
-	//  21    0x54    u8 prim_l, u8 prim_m, u8[2] pad   bswap32
-	//  22    0x58    SYColorPack envcolor               bswap32
-	//  23    0x5C    SYColorPack blendcolor             bswap32
-	//  24    0x60    SYColorPack light1color            bswap32
-	//  25    0x64    SYColorPack light2color            bswap32
-	//  26-29 0x68    s32 unk68..unk74                   (ok)
-
-	fixup_bswap32(&w[0]);    // pad00 + fmt + siz (pad16 unused, u8 fields ok)
-	// w[1]: sprites token — ok
-	fixup_rotate16(&w[2]);   // unk08, unk0A
-	fixup_rotate16(&w[3]);   // unk0C, unk0E
-	// w[4..11]: s32/f32/u32 — ok
-	fixup_u16_u8u8(&w[12]);  // u16 flags + u8 block_fmt + u8 block_siz
-	fixup_rotate16(&w[13]);  // block_dxt, unk36
-	fixup_rotate16(&w[14]);  // unk38, unk3A
-	// w[15..19]: f32/u32 — ok
-	fixup_bswap32(&w[20]);   // primcolor
-	fixup_bswap32(&w[21]);   // prim_l, prim_m, pad
-	fixup_bswap32(&w[22]);   // envcolor
-	fixup_bswap32(&w[23]);   // blendcolor
-	fixup_bswap32(&w[24]);   // light1color
-	fixup_bswap32(&w[25]);   // light2color
-	// w[26..29]: s32 — ok
+	sStructU16Fixups.insert(reinterpret_cast<uintptr_t>(mobjsub));
 }
 
 extern "C" void *portFixupFTTexturePartContainer(void *container)
@@ -2227,47 +2005,6 @@ extern "C" void portFixupFTAttributes(void *attr)
 {
 	if (attr == NULL)
 		return;
-
 	capture_emit(fixup_family::FTATTRIBUTES, attr, 0);
-
-	uintptr_t key = reinterpret_cast<uintptr_t>(attr);
-	if (sStructU16Fixups.count(key))
-		return;
-	sStructU16Fixups.insert(key);
-
-	if (fixup_torch_already_did_it(fixup_family::FTATTRIBUTES, kProcFtAttributesDone, attr))
-		return;
-
-	uint32_t *w = static_cast<uint32_t *>(attr);
-
-	// FTAttributes layout (0x348 bytes = 210 words):
-	// Words 0x00..0x2C: f32/s32 physics fields — ok
-	// Words 0x27..0x2B: MPObjectColl (4 f32) + Vec2f (2 f32) — ok
-	//
-	//  Word  Offset  Fields                               Fixup
-	//  0x2D  0x0B4   u16 dead_fgm_ids[0], [1]            rotate16
-	//  0x2E  0x0B8   u16 deadup_sfx, u16 damage_sfx      rotate16
-	//  0x2F  0x0BC   u16 smash_sfx[0], smash_sfx[1]      rotate16
-	//  0x30  0x0C0   u16 smash_sfx[2], pad                rotate16
-	// Words 0x31..0x38: FTItemPickup (8 f32) — ok
-	//  0x39  0x0E4   u16 itemthrow_vel_scale, damage_scale rotate16
-	//  0x3A  0x0E8   u16 heavyget_sfx, pad                rotate16
-	// Word 0x3B: f32 halo_size — ok
-	//  0x3C  0x0F0   SYColorRGBA shade_color[0]           bswap32
-	//  0x3D  0x0F4   SYColorRGBA shade_color[1]           bswap32
-	//  0x3E  0x0F8   SYColorRGBA shade_color[2]           bswap32
-	//  0x3F  0x0FC   SYColorRGBA fog_color                bswap32
-	// Word 0x40: is_have_* bitfields — handled by #if IS_BIG_ENDIAN in FTAttributes decl
-	// Words 0x41..end: DamageCollDescs (s32/f32), pointers (u32 tokens) — ok
-
-	fixup_rotate16(&w[0x2D]);  // dead_fgm_ids[0], [1]
-	fixup_rotate16(&w[0x2E]);  // deadup_sfx, damage_sfx
-	fixup_rotate16(&w[0x2F]);  // smash_sfx[0], smash_sfx[1]
-	fixup_rotate16(&w[0x30]);  // smash_sfx[2], pad
-	fixup_rotate16(&w[0x39]);  // itemthrow_vel_scale, itemthrow_damage_scale
-	fixup_rotate16(&w[0x3A]);  // heavyget_sfx, pad
-	fixup_bswap32(&w[0x3C]);   // shade_color[0] rgba
-	fixup_bswap32(&w[0x3D]);   // shade_color[1] rgba
-	fixup_bswap32(&w[0x3E]);   // shade_color[2] rgba
-	fixup_bswap32(&w[0x3F]);   // fog_color rgba
+	sStructU16Fixups.insert(reinterpret_cast<uintptr_t>(attr));
 }
