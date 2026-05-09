@@ -28,6 +28,21 @@ constexpr uint32_t PROC_PASS1_BSWAP_DONE = 1u << 0;
  * heap, not in the file — but skips the actual byte-transform helpers. */
 constexpr uint32_t PROC_PASS2_DONE = 1u << 1;
 
+/* When the matching bit is set, torch already applied the corresponding
+ * portFixup* family's byte transform. The runtime helper still records the
+ * call in its idempotency tracker (sStructU16Fixups, heap-absolute state)
+ * but skips the byte-transform body iff (a) this flag is set AND
+ * (b) the StructFixupCatalog has a matching (file_id, byte_offset_in_file)
+ * entry for the family. The catalog gate exists so a future torch SHA that
+ * dropped a tuple does not silently corrupt data — without a catalog hit the
+ * runtime falls back to the transform regardless of the flag. */
+constexpr uint32_t PROC_STRUCT_U16_DONE     = 1u << 2;
+constexpr uint32_t PROC_STRUCT_U32_DONE     = 1u << 3;  // also covers portFixupRawTextureBSWAP32
+constexpr uint32_t PROC_SPRITE_DONE         = 1u << 4;
+constexpr uint32_t PROC_BITMAP_DONE         = 1u << 5;
+constexpr uint32_t PROC_MOBJSUB_DONE        = 1u << 6;
+constexpr uint32_t PROC_FTATTRIBUTES_DONE   = 1u << 7;
+
 class RelocFile final : public Ship::Resource<void> {
 public:
     using Resource::Resource;

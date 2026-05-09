@@ -119,6 +119,7 @@ struct PortRelocFileRange
 	size_t size;
 	u32 file_id;
 	const char *path;
+	uint32_t proc_flags;   // RelocFile::ProcessingFlags at load time
 };
 
 static std::vector<PortRelocFileRange> sPortRelocFileRanges;
@@ -526,7 +527,7 @@ void lbRelocLoadAndRelocFile(u32 file_id, void *ram_dst, u32 bytes_num, s32 loc)
 		lbRelocAddStatusBufferFile(file_id, ram_dst);
 	}
 
-	sPortRelocFileRanges.push_back({ reinterpret_cast<uintptr_t>(ram_dst), copySize, file_id, gRelocFileTable[file_id] });
+	sPortRelocFileRanges.push_back({ reinterpret_cast<uintptr_t>(ram_dst), copySize, file_id, gRelocFileTable[file_id], (uint32_t)relocFile->ProcessingFlags });
 
 	// --- Internal pointer relocation (token-based) ---
 	//
@@ -914,6 +915,23 @@ extern "C" int portRelocFindFileIdAndBase(const void *ptr, uintptr_t *out_base)
 		}
 	}
 	return -1;
+}
+
+/* C-callable helper: read RelocFile::ProcessingFlags for a currently-loaded
+ * file. Returns 0 (no torch transforms applied) if the file is not loaded.
+ * Used by the portFixup* helpers to skip the byte-transform body when
+ * (a) the file's PROC_<family>_DONE bit is set AND (b) the catalog has a
+ * matching entry — see portStructFixupCatalogHasEntry. */
+extern "C" uint32_t portRelocGetProcessingFlags(int file_id)
+{
+	if (file_id < 0)
+		return 0;
+	for (const auto &range : sPortRelocFileRanges)
+	{
+		if ((int)range.file_id == file_id)
+			return range.proc_flags;
+	}
+	return 0;
 }
 
 void *portRelocResolveArrayEntry(const void *array_ptr, unsigned int index)

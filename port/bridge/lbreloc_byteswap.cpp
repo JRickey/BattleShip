@@ -20,6 +20,7 @@
 #include "bridge/lbreloc_bridge_testing.h"
 #include "resource/RelocPointerTable.h"
 #include "resource/RelocFileTable.h"
+#include "resource/StructFixupCatalog.h"
 
 #include <ship/utils/binarytools/endianness.h>
 #include <spdlog/spdlog.h>
@@ -37,8 +38,18 @@
 extern "C" void port_log(const char *fmt, ...);
 extern "C" int  portRelocFindContainingFile(const void *ptr, uintptr_t *out_base, size_t *out_size);
 extern "C" int  portRelocFindFileIdAndBase(const void *ptr, uintptr_t *out_base);
+extern "C" uint32_t portRelocGetProcessingFlags(int file_id);
 extern "C" bool portRelocDescribePointer(const void *ptr, uintptr_t *out_base, size_t *out_size,
                                           unsigned int *out_file_id, const char **out_path);
+
+// PROC_<FAMILY>_DONE bit values; mirrors RelocFile.h to avoid pulling
+// resource headers into helpers that only need the bit positions.
+static constexpr uint32_t kProcStructU16Done     = 1u << 2;
+static constexpr uint32_t kProcStructU32Done     = 1u << 3;
+static constexpr uint32_t kProcSpriteDone        = 1u << 4;
+static constexpr uint32_t kProcBitmapDone        = 1u << 5;
+static constexpr uint32_t kProcMobjsubDone       = 1u << 6;
+static constexpr uint32_t kProcFtAttributesDone  = 1u << 7;
 
 // ============================================================
 //  Stage audit (SSB64_STAGE_AUDIT=1)
@@ -1094,6 +1105,28 @@ static inline void capture_emit(uint8_t family, const void *target, uint32_t ext
 	}
 }
 
+// Returns true iff (a) `target` lives inside a currently-loaded reloc file,
+// (b) that file's RelocFile::ProcessingFlags carries the matching
+// PROC_<FAMILY>_DONE bit, AND (c) the StructFixupCatalog has an entry for
+// (file_id, byte_offset_in_file, family). When all three hold the byte
+// transform body in the caller is skipped — torch already wrote those bytes
+// into the file at extraction time. Tracker insertion (sStructU16Fixups)
+// still runs so the lazy-fixup paths stay idempotent across heap reuse.
+static inline bool fixup_torch_already_did_it(uint8_t family, uint32_t proc_flag_bit, const void *target)
+{
+	if (target == nullptr)
+		return false;
+	uintptr_t file_base = 0;
+	int file_id = portRelocFindFileIdAndBase(target, &file_base);
+	if (file_id < 0)
+		return false;
+	if ((portRelocGetProcessingFlags(file_id) & proc_flag_bit) == 0)
+		return false;
+	uintptr_t addr = reinterpret_cast<uintptr_t>(target);
+	uint32_t byte_offset = static_cast<uint32_t>(addr - file_base);
+	return portStructFixupCatalogHasEntry(file_id, byte_offset, family);
+}
+
 static void fixup_capture_dump()
 {
 	const char *path = std::getenv("SSB64_FIXUP_CAPTURE_FILE");
@@ -1143,6 +1176,9 @@ extern "C" void portFixupStructU16(void *base, unsigned int byte_offset, unsigne
 		return;
 	sStructU16Fixups.insert(key);
 
+	if (fixup_torch_already_did_it(fixup_family::STRUCT_U16, kProcStructU16Done, target))
+		return;
+
 	uint32_t *words = reinterpret_cast<uint32_t *>(target);
 	for (unsigned int i = 0; i < num_words; i++)
 	{
@@ -1165,6 +1201,9 @@ extern "C" void portFixupStructU32(void *base, unsigned int byte_offset, unsigne
 	if (sStructU16Fixups.count(key))
 		return;
 	sStructU16Fixups.insert(key);
+
+	if (fixup_torch_already_did_it(fixup_family::STRUCT_U32, kProcStructU32Done, target))
+		return;
 
 	uint32_t *words = reinterpret_cast<uint32_t *>(target);
 	for (unsigned int i = 0; i < num_words; i++)
@@ -1231,6 +1270,9 @@ extern "C" void portFixupRawTextureBSWAP32(void *base, size_t bytes)
 	if (sStructU16Fixups.count(key))
 		return;
 	sStructU16Fixups.insert(key);
+
+	if (fixup_torch_already_did_it(fixup_family::STRUCT_U32, kProcStructU32Done, base))
+		return;
 
 	// Round down to full u32s — pass1 only touched 4-byte-aligned words,
 	// so any trailing tail bytes were never swapped and shouldn't be now.
@@ -1834,6 +1876,9 @@ extern "C" void portFixupSprite(void *sprite)
 		return;
 	sStructU16Fixups.insert(key);
 
+	if (fixup_torch_already_did_it(fixup_family::SPRITE, kProcSpriteDone, sprite))
+		return;
+
 	uint32_t *w = static_cast<uint32_t *>(sprite);
 
 	// Sprite layout (17 words = 68 bytes):
@@ -1883,6 +1928,9 @@ extern "C" void portFixupBitmap(void *bitmap)
 	if (sStructU16Fixups.count(key))
 		return;
 	sStructU16Fixups.insert(key);
+
+	if (fixup_torch_already_did_it(fixup_family::BITMAP, kProcBitmapDone, bitmap))
+		return;
 
 	uint32_t *w = static_cast<uint32_t *>(bitmap);
 
@@ -2183,6 +2231,9 @@ extern "C" void portFixupMObjSub(void *mobjsub)
 		return;
 	sStructU16Fixups.insert(key);
 
+	if (fixup_torch_already_did_it(fixup_family::MOBJSUB, kProcMobjsubDone, mobjsub))
+		return;
+
 	uint32_t *w = static_cast<uint32_t *>(mobjsub);
 
 	// MObjSub layout (30 words = 0x78 bytes):
@@ -2277,6 +2328,9 @@ extern "C" void portFixupFTAttributes(void *attr)
 	if (sStructU16Fixups.count(key))
 		return;
 	sStructU16Fixups.insert(key);
+
+	if (fixup_torch_already_did_it(fixup_family::FTATTRIBUTES, kProcFtAttributesDone, attr))
+		return;
 
 	uint32_t *w = static_cast<uint32_t *>(attr);
 

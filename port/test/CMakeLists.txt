@@ -36,6 +36,7 @@ set(PORT_TEST_PRODUCTION_SOURCES
     ${CMAKE_SOURCE_DIR}/port/resource/RelocFileFactory.cpp
     ${CMAKE_SOURCE_DIR}/port/resource/RelocFileTable.cpp
     ${CMAKE_SOURCE_DIR}/port/resource/RelocPointerTable.cpp
+    ${CMAKE_SOURCE_DIR}/port/resource/StructFixupCatalog.cpp
 )
 
 set(PORT_TEST_HARNESS_SOURCES

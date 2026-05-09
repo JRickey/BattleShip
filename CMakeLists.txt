@@ -134,10 +134,12 @@ add_custom_target(GenerateRelocArtifacts
     BYPRODUCTS
         ${CMAKE_CURRENT_SOURCE_DIR}/include/reloc_data.h
         ${CMAKE_CURRENT_SOURCE_DIR}/port/resource/RelocFileTable.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/port/resource/StructFixupCatalog.cpp
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_reloc_stubs.py
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_reloc_table.py
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_struct_fixup_catalog.py
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Generating reloc headers and RelocFileTable.cpp"
+    COMMENT "Generating reloc headers, RelocFileTable.cpp, and StructFixupCatalog.cpp"
 )
 
 add_custom_target(GenerateCreditsAssets
