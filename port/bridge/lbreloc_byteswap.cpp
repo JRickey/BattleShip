@@ -696,23 +696,14 @@ struct FixupRegion
 };
 
 // ============================================================
-//  Pass 1: Blanket u32 swap
+//  Pass 2: DL-guided tracker registration
 // ============================================================
-
-static void pass1_swap_u32(void *data, size_t size)
-{
-	uint32_t *words = static_cast<uint32_t *>(data);
-	size_t count = size / 4;
-
-	for (size_t i = 0; i < count; i++)
-	{
-		words[i] = BSWAP32(words[i]);
-	}
-}
-
-// ============================================================
-//  Pass 2: DL-guided fixup scan
-// ============================================================
+//
+// On v3 archives torch already applied pass1 BSWAP32 + pass2 byte transforms
+// (PROC_PASS1_BSWAP_DONE | PROC_PASS2_DONE). The runtime DL walk that lives
+// here exists purely to seed sStructU16Fixups with each in-file vertex
+// region, so the lazy interpreter-time fixup path
+// (portRelocFixupVertexAtRuntime) sees already-fixed addresses and skips.
 
 static void scan_display_lists(const uint32_t *words, size_t num_words,
                                size_t file_size, std::vector<FixupRegion> &regions)
@@ -856,70 +847,16 @@ static void scan_display_lists(const uint32_t *words, size_t num_words,
 }
 
 // ============================================================
-//  Fixup application
+//  Tracker registration from pass2 regions
 // ============================================================
-
-// Rotate each u32 word by 16 bits: converts u32-swapped u16 pairs
-// to correctly u16-swapped data.
-// After u32 swap, BE bytes [A B C D] became [D C B A].
-// rotate16 produces [B A D C] which is correct u16 LE for (AB, CD).
-static inline uint32_t rotate16(uint32_t w)
-{
-	return (w << 16) | (w >> 16);
-}
-
-static void apply_fixup_vertex(uint32_t *words, size_t num_words)
-{
-	// Vtx is 4 u32 words (16 bytes):
-	//   Word 0: s16 ob[0] | s16 ob[1]   -> rotate16
-	//   Word 1: s16 ob[2] | u16 flag     -> rotate16
-	//   Word 2: s16 tc[0] | s16 tc[1]    -> rotate16
-	//   Word 3: u8 cn[0-3]               -> bswap32 (restore byte order)
-	for (size_t i = 0; i + 3 < num_words; i += 4)
-	{
-		words[i + 0] = rotate16(words[i + 0]);
-		words[i + 1] = rotate16(words[i + 1]);
-		words[i + 2] = rotate16(words[i + 2]);
-		words[i + 3] = BSWAP32(words[i + 3]);
-	}
-}
-
-static void apply_fixup_tex_bytes(uint32_t *words, size_t num_words)
-{
-	// 4bpp/8bpp texture data: byte-granular pixels.
-	// u32 swap reversed byte order within each 4-byte group.
-	// Undo by swapping back to original byte order.
-	for (size_t i = 0; i < num_words; i++)
-	{
-		words[i] = BSWAP32(words[i]);
-	}
-}
-
-static void apply_fixup_tex_u16(uint32_t *words, size_t num_words)
-{
-	// 16bpp texture/palette data: u16 pixel values stored in N64 BE byte order.
-	// Pass1 BSWAP32 reversed the byte order within each u32; Fast3D's
-	// ImportTextureRgba16 reads texels as `(addr[0] << 8) | addr[1]` (BE u16),
-	// so we must restore the original BE byte layout.  BSWAP32 undoes pass1.
-	//
-	// Earlier this used rotate16 which only swapped the two 16-bit halves —
-	// that's correct for `[s16][s16]` vertex pair fields but wrong for a stream
-	// of BE-read u16 texels.  Most non-sprite RGBA16 textures (room walls, etc.)
-	// surfaced as all-near-black pixels until this was switched to BSWAP32.
-	for (size_t i = 0; i < num_words; i++)
-	{
-		words[i] = BSWAP32(words[i]);
-	}
-}
-
-// Splits the per-region work into byte transforms (which torch can do at
-// extraction) and tracker bookkeeping (absolute-address state that must run
-// in the heap). When PROC_PASS2_DONE is set in proc_flags the data already
-// holds the post-pass2 bytes from torch, so the helper functions are skipped
-// but the trackers still get the same entries — fixtures stay byte-identical.
+//
+// Walks the regions emitted by scan_display_lists. For vertex regions, marks
+// each Vtx address in sStructU16Fixups so the lazy interpreter-time fixup
+// path treats them as already-fixed. For texture regions, fires the optional
+// SSB64_TEX_FIXUP_LOG diagnostic (no byte-transform side effect on v3).
 static void apply_fixups(void *data, size_t file_size,
                          const std::vector<FixupRegion> &regions,
-                         unsigned int file_id, bool transforms_done_at_build)
+                         unsigned int file_id)
 {
 	uint8_t *bytes = static_cast<uint8_t *>(data);
 
@@ -946,31 +883,20 @@ static void apply_fixups(void *data, size_t file_size,
 		switch (region.type)
 		{
 		case FIXUP_VERTEX:
-			if (!transforms_done_at_build)
-				apply_fixup_vertex(region_words, num_words);
-			// Per-vertex registration so the runtime lazy fixup
-			// (portRelocFixupVertexAtRuntime) skips each Vtx
-			// individually — handles overlapping sub-loads.
-			// Runs regardless of who applied the byte transform: the
-			// tracker is heap-absolute state and lives only at runtime.
-			{
-				uintptr_t base = reinterpret_cast<uintptr_t>(region_words);
-				size_t n_vtx = num_words / 4;  // 4 u32 words per Vtx
-				for (size_t v = 0; v < n_vtx; v++) {
-					sStructU16Fixups.insert(base + v * 16);
-				}
+		{
+			uintptr_t base = reinterpret_cast<uintptr_t>(region_words);
+			size_t n_vtx = num_words / 4;  // 4 u32 words per Vtx
+			for (size_t v = 0; v < n_vtx; v++) {
+				sStructU16Fixups.insert(base + v * 16);
 			}
 			break;
+		}
 		case FIXUP_TEX_BYTES:
-			if (!transforms_done_at_build)
-				apply_fixup_tex_bytes(region_words, num_words);
 			tex_log_emit("pass2.bytes", (int)file_id,
 			             (uint32_t)start, (uint32_t)len,
 			             -1, -1, -1, region_words, "4b/8b");
 			break;
 		case FIXUP_TEX_U16:
-			if (!transforms_done_at_build)
-				apply_fixup_tex_u16(region_words, num_words);
 			tex_log_emit("pass2.u16", (int)file_id,
 			             (uint32_t)start, (uint32_t)len,
 			             -1, -1, 16, region_words, "16b/tlut");
@@ -983,46 +909,26 @@ static void apply_fixups(void *data, size_t file_size,
 //  Public API
 // ============================================================
 
-// Mirrors RelocFile.h to avoid pulling resource headers into the bridge.
-static constexpr unsigned int kProcPass1BswapDone = 1u << 0;
-static constexpr unsigned int kProcPass2Done      = 1u << 1;
-
 extern "C" void portRelocByteSwapBlob(void *data, size_t size, unsigned int file_id, unsigned int proc_flags)
 {
+	(void)proc_flags;  // v3 archives advertise pass1+pass2 done at build; runtime
+	                   // only walks the DL stream now to seed sStructU16Fixups.
 	if (data == nullptr || size < 4)
 		return;
 
 	if (stage_audit_enabled()) stage_audit_reset_per_file();
 
-	const bool pass1_done_at_build = (proc_flags & kProcPass1BswapDone) != 0;
-	const bool pass2_done_at_build = (proc_flags & kProcPass2Done) != 0;
-
 	if (stage_audit_enabled() && file_id == 104) {
 		const uint8_t *p = static_cast<const uint8_t *>(data);
-		port_log("[STAGE_AUDIT_104_LOAD] pre_pass1 bytes=%02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X (build_pass1=%d build_pass2=%d)\n",
-		         p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7],
-		         p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15],
-		         pass1_done_at_build ? 1 : 0, pass2_done_at_build ? 1 : 0);
-	}
-
-	// Pass 1: blanket u32 swap. Skipped when torch already applied it at
-	// extraction (resource version 1+; PROC_PASS1_BSWAP_DONE in the header).
-	if (!pass1_done_at_build) {
-		pass1_swap_u32(data, size);
-	}
-
-	if (stage_audit_enabled() && file_id == 104) {
-		const uint8_t *p = static_cast<const uint8_t *>(data);
-		port_log("[STAGE_AUDIT_104_LOAD] post_pass1 bytes=%02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X\n",
+		port_log("[STAGE_AUDIT_104_LOAD] bytes=%02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X\n",
 		         p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7],
 		         p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
 	}
 
-	// Pass 2: DL-guided fixup. Even when torch already applied the byte
-	// transforms (PROC_PASS2_DONE), the runtime still re-walks the DL
-	// stream and inserts each Vtx address into sStructU16Fixups so the
-	// lazy `portRelocFixupVertexAtRuntime` path stays idempotent for the
-	// same buffer. apply_fixups() guards the actual byte rewriting.
+	// Walk the DL stream and seed sStructU16Fixups with each in-file vertex
+	// region so the lazy interpreter-time fixup path treats them as already-
+	// fixed (the bytes were transformed at extraction). Texture regions only
+	// fire the optional SSB64_TEX_FIXUP_LOG diagnostic.
 	size_t num_words = size / 4;
 	const uint32_t *words = static_cast<const uint32_t *>(data);
 
@@ -1031,7 +937,7 @@ extern "C" void portRelocByteSwapBlob(void *data, size_t size, unsigned int file
 
 	if (!regions.empty())
 	{
-		apply_fixups(data, size, regions, file_id, pass2_done_at_build);
+		apply_fixups(data, size, regions, file_id);
 	}
 }
 
