@@ -580,47 +580,95 @@ mod loaded.
 
 ---
 
-### Stage 11 — Runtime simplification (~0.5 session, DONE 2026-05-09)
+### Stage 11 — Runtime simplification (~0.5 session, DONE 2026-05-09; Phase 2 reverted)
 
-After every `processing_flags` bit (except the intentionally-unused
-bit 9, see Stage 7) is set on every file:
+After every *whole-file* `processing_flags` bit (pass1/pass2/halfswap)
+is unconditionally set on every v3 file, plus the chain-flatten and
+sub-resources-emitted bits, those runtime helpers are dead code along
+the hot path. Stage 11 trims them and drops support for older archive
+versions.
 
-- Delete the now-unused runtime byteswap / struct-fixup / halfswap
-  implementations (or guard them under a debug-only fallback for
-  hypothetical pre-build-time-fixup archives).
-- Tests stay green.
-- `port/port_aobj_fixup.{h,cpp}` stays in place — the AObjEvent32
-  unhalfswap walker is permanently runtime-side per the Stage 7
-  closeout decision (`docs/decision_aobjevent32_runtime_walker_2026-05-09.md`).
+**Stage 11 ships in 4 phased commits + 1 reverted phase + 1 docs commit on
+`agent/buildtime-reloc`:**
 
-**Closeout commits** (5 phased on `agent/buildtime-reloc`):
-`671eb43` (Phase 1, pass1/pass2 helpers), `36c131a` (Phase 2, struct
-fixup byte-transform bodies), `4b77fe4` (Phase 3, halfswap helper +
-figatree_reloc_words tracking), `ed056d7` (Phase 4, rename
-portRelocByteSwapBlob → portRelocSeedVertexTrackers + drop proc_flags
-parameter), `ba3098d` (Phase 5, follow-up E — drop V0/V1/V2 reloc-file
-readers).
+- `671eb43` — Phase 1: pass1/pass2 byte-transform helpers gone.
+  pass1_swap_u32 + the apply_fixup_{vertex,tex_bytes,tex_u16}
+  byte-transform helpers deleted. Vertex tracker registration in the
+  pass2 walk survives — required so the lazy interpreter-time fixup
+  (portRelocFixupVertexAtRuntime) treats already-fixed bytes as
+  already-fixed.
+- `36c131a` — Phase 2: struct fixup byte-transform bodies gone.
+  **REVERTED in `b28352b` (2026-05-09)** — see "Phase 2 carve-out"
+  below.
+- `4b77fe4` — Phase 3: halfswap helper gone.
+  portRelocFixupFighterFigatree + figatree_reloc_words tracking
+  deleted. port_aobj_register_halfswapped_range still fires per
+  Stage 7 ADR.
+- `ed056d7` — Phase 4: rename portRelocByteSwapBlob →
+  portRelocSeedVertexTrackers, drop proc_flags param. Honest naming
+  for what the function actually does post-Phase-1.
+- `ba3098d` — Phase 5 (follow-up E): drop V0/V1/V2 reloc-file
+  readers. Only the v3 reader is registered.
+- `b28352b` — Phase 2 revert.
 
-**Outcome correction**: the original "~150 LOC" target for
-`lbreloc_byteswap.cpp` was optimistic. Post-Stage-11 size is ~2000 LOC
-(from 2367). Deleted: pass1_swap_u32, scan-time apply_fixup_*, the
-fixup_torch_already_did_it gate + kProc<Family>Done constants, and
-the byte-transform bodies of every portFixupStruct* / portFixupSprite
-/ portFixupBitmap / portFixupMObjSub / portFixupFTAttributes /
-portFixupRawTextureBSWAP32 helper. Survives: every tracker plus the
-chain-walk fixup (chain_fixup_settimg/vertex), runtime lazy fixup
-(portRelocFixupVertex/TextureAtRuntime), portFixupSpriteBitmapData
-(non-4c bitmap pixel-data BSWAP + TMEM deswizzle — torch's
-EmitChainPixelBuffers emits sub-resources but does not pre-transform
-the bytes), portDeswizzleDecodedSprite4c (Stage 8 ADR), and ~550 LOC
-of env-gated diagnostics. Pushing more of those into torch is a
-future-work decision; Stage 11 dropped only what was provably dead
-on v3.
+`port/port_aobj_fixup.{h,cpp}` stays in place per Stage 7 ADR.
 
-**Verification**: drift gate stays green at 2,132 / 4,048 unchanged
-through every phase commit. Full attract + 1P + VS + BTT + training
-mode smoke pending — the gate is the load-bearing automated check;
-manual sweep is recommended before merging to `main`.
+**Outcome correction**: the "~150 LOC" target for
+`lbreloc_byteswap.cpp` was optimistic. Post-Stage-11 size is ~2280 LOC
+(from 2367). Phases 1, 3, 4 deleted ~85 LOC of pass1 / scan-time
+apply_fixup_* / halfswap helpers. Phase 5 dropped ~75 LOC of
+V0/V1/V2 readers + their factory classes elsewhere. Survives in the
+file: every tracker, chain-walk fixup (chain_fixup_settimg/vertex),
+runtime lazy fixup (portRelocFixupVertex/TextureAtRuntime),
+portFixupSpriteBitmapData (non-4c bitmap pixel-data BSWAP + TMEM
+deswizzle — torch's EmitChainPixelBuffers emits sub-resources but
+does not pre-transform the bytes), portDeswizzleDecodedSprite4c
+(Stage 8 ADR), the per-family struct fixup helpers
+(post-revert — see below), and ~550 LOC of env-gated diagnostics.
+
+#### Phase 2 carve-out (struct fixups stay at runtime)
+
+Phase 2 was reverted (`b28352b`) after a visual smoke test on the
+freshly-built binary surfaced sprite regressions: Link's sword hit
+effect corrupted, 1P stage-clear results screen showing only stray
+numbers, "GAME SET" title-card missing letters. Diagnosis: the
+`port/test/struct_fixup_catalog.json` covers only 125 of 2,132 reloc
+files (e.g. `reloc_scene/SC1PStageClear1` and `SC1PStageClear3` are
+absent). Pre-Phase-2 the runtime helpers used a catalog-aware
+short-circuit (`fixup_torch_already_did_it`) and **fell through to a
+runtime byte-transform fallback** when the catalog had no entry for a
+given offset. Phase 2 deleted that fallback on the premise "torch did
+it on every v3 file" — true only for pass1/pass2/halfswap, not for
+the per-family struct fixups, which torch only emits for catalog
+entries (`torch/src/factories/ssb64/RelocFactory.cpp::ApplyStructFixupsInPlace`).
+
+The drift gate was useless here: the harness only runs
+`lbRelocLoadAndRelocFile`. portFixupSprite/Bitmap/etc. are called
+later from decomp source code (e.g. `lbCommonMakeSObjForGObj`). The
+fixtures snapshot pre-portFixup* bytes, so Phase 2 stayed green
+through five phases despite breaking real rendering.
+
+**Decision**: revert Phase 2. Reframe the catalog as a build-time
+optimization (skip the runtime body when torch already did it),
+**not a correctness contract**. Disk struct bytes are post-pass1 in
+files torch hasn't catalogued; the runtime helpers transform them at
+first access exactly as before. Modders authoring sprite/bitmap/etc.
+sub-resource overrides supply post-pass1 bytes — one consistent
+format across all files.
+
+For Phase 2 to be safely deletable, the catalog needs to be 100%
+complete via static analysis of decomp source, **not runtime
+capture** (which depends on which scenes the captor visited). That
+is filed as follow-up M and is a real project — addresses come from
+PORT_RESOLVE of dynamically-loaded reloc tokens, so the analyzer
+must trace data flows, not just match call-site grep patterns. Until
+then, the runtime fallback is the source of truth.
+
+**Verification**: drift gate stayed green at 2,132 / 4,048 unchanged
+through every phase commit (including the revert). Visual smoke test
+on the post-revert binary confirms the three regression cases above
+render correctly. The drift gate alone is insufficient for this
+stage — visual smoke is required before merging.
 
 ---
 

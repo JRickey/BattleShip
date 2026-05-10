@@ -16,8 +16,16 @@ Backlog:  docs/refactor_buildtime_reloc_followups.md  ← D, F-L still open
 
 Stages 1–11 plus follow-ups A (pixel-buffer enumeration), B (drift-gate
 sub-resource validator), C (mods-scanner determinism), and E (V0/V1/V2
-reader drop) are landed. Stage 12 productizes the mods/ scanner that
-ships in port.cpp today as a one-shot startup scan with no UI.
+reader drop) are landed. Stage 11 Phase 2 (struct-fixup byte-transform
+deletion) was reverted (`b28352b`) — see the plan + handoff for why
+(short version: catalog only covers 125 of 2,132 files, deleting the
+runtime fallback broke any sprite/bitmap in an uncovered file). The
+runtime helpers are the source of truth; the catalog is a perf
+optimization. Don't try to re-delete them without first landing
+follow-up M (static-analysis catalog).
+
+Stage 12 productizes the mods/ scanner that ships in port.cpp today
+as a one-shot startup scan with no UI.
 
 Sanity check before any changes (must be green):
 
@@ -128,4 +136,5 @@ Other open follow-ups in docs/refactor_buildtime_reloc_followups.md
   J — Per-file census + collision observability (tooling)
   K — Mod-author guide (Stage-12 deliverable, see Phase 5 above)
   L — Full-container override pathway docs (~10 min)
+  M — Static-analysis struct fixup catalog (Phase 2 retry prereq, ~3 sessions)
 ```

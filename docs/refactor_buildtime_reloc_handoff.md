@@ -15,19 +15,17 @@ Stage 12; it does not re-explain the architecture.
 ## Status entering this session
 
 Branch HEAD on `agent/buildtime-reloc`: see `git log --oneline -10`.
-Recent landings (Stage 11 commits in commit-order):
+Recent landings (Stage 11 phased commits + Phase 2 revert):
 
 ```
+b28352b Revert "Stage 11 Phase 2: drop struct fixup byte-transform bodies"
+05b8fd0 docs: add Stage 12 next-agent kickoff prompt
+67c8b64 docs: close Stage 11 — pivot handoff to Stage 12, mark follow-up E done
 ba3098d Stage 11 Phase 5: drop V0/V1/V2 reloc-file readers (follow-up E)
 ed056d7 Stage 11 Phase 4: rename portRelocByteSwapBlob → portRelocSeedVertexTrackers
 4b77fe4 Stage 11 Phase 3: drop runtime halfswap helper
-36c131a Stage 11 Phase 2: drop struct fixup byte-transform bodies
+36c131a Stage 11 Phase 2: drop struct fixup byte-transform bodies   ← reverted
 671eb43 Stage 11 Phase 1: drop pass1/pass2 byte-transform helpers
-d830ee4 docs: add Stage 11 next-agent kickoff prompt
-57e2b52 docs: split follow-up backlog out of handoff, focus handoff on Stage 11
-6e43ef0 docs: mark Stage 10 follow-ups B + C done in handoff
-0b81d3e port_reloc_regen: add --check-subres v3 sub-resource validator (B)
-77afbc5 Sort mods/ scanner entries alphabetically (C)
 ```
 
 The bit map of `processing_flags` after Stage 11 (unchanged from
@@ -35,18 +33,23 @@ Stage 10 — Stage 11 only deleted runtime code that consumed each bit):
 
 | bit  | name                          | stage     | status                   |
 |------|-------------------------------|-----------|--------------------------|
-| 0    | `PROC_PASS1_BSWAP_DONE`       | 4         | done                     |
-| 1    | `PROC_PASS2_DONE`             | 5         | done                     |
-| 2    | `PROC_STRUCT_U16_DONE`        | 6d        | done                     |
-| 3    | `PROC_STRUCT_U32_DONE`        | 6d        | done                     |
-| 4    | `PROC_SPRITE_DONE`            | 6d        | done                     |
-| 5    | `PROC_BITMAP_DONE`            | 6d        | done                     |
-| 6    | `PROC_MOBJSUB_DONE`           | 6d        | done                     |
-| 7    | `PROC_FTATTRIBUTES_DONE`      | 6d        | done                     |
-| 8    | `PROC_HALFSWAP_DONE`          | 7         | done                     |
+| 0    | `PROC_PASS1_BSWAP_DONE`       | 4         | done — runtime helper deleted in P1 |
+| 1    | `PROC_PASS2_DONE`             | 5         | done — runtime byte transforms deleted in P1 |
+| 2    | `PROC_STRUCT_U16_DONE`        | 6d        | done — runtime fallback STAYS (catalog incomplete) |
+| 3    | `PROC_STRUCT_U32_DONE`        | 6d        | done — runtime fallback STAYS (catalog incomplete) |
+| 4    | `PROC_SPRITE_DONE`            | 6d        | done — runtime fallback STAYS (catalog incomplete) |
+| 5    | `PROC_BITMAP_DONE`            | 6d        | done — runtime fallback STAYS (catalog incomplete) |
+| 6    | `PROC_MOBJSUB_DONE`           | 6d        | done — runtime fallback STAYS (catalog incomplete) |
+| 7    | `PROC_FTATTRIBUTES_DONE`      | 6d        | done — runtime fallback STAYS (catalog incomplete) |
+| 8    | `PROC_HALFSWAP_DONE`          | 7         | done — runtime helper deleted in P3 |
 | 9    | (reserved-unused)             | —         | AObjEvent ADR carve-out  |
 | 10   | `PROC_CHAIN_FLATTENED`        | 9         | done                     |
 | 11   | `PROC_SUBRESOURCES_EMITTED`   | 10        | done                     |
+
+**Bits 2–7 are set per-file only when `port/test/struct_fixup_catalog.json`
+has an entry for that file** (125 of 2,132 files). The other 94% of files
+hit the runtime fallback that Phase 2 was supposed to delete. See
+"Phase 2 carve-out" in `docs/refactor_buildtime_reloc_plan.md`.
 
 V0/V1/V2 archive readers were dropped in Stage 11 Phase 5 — only V3
 archives load now. Asset/torch coupling already forced re-extraction on
@@ -84,37 +87,62 @@ re-running `cmake --build build --target ExtractAssets`.
 
 ---
 
-## Stage 11 closeout note
+## Stage 11 closeout note (Phase 2 reverted)
 
-Stage 11 deleted the following along with all dead-on-v3 byte transforms:
+Stage 11 deleted the following:
 
-- `port/bridge/lbreloc_byteswap.cpp`: 2,367 → 2,009 LOC. Deletions:
+- `port/bridge/lbreloc_byteswap.cpp` (Phases 1, 3, 4):
   pass1_swap_u32, scan-time apply_fixup_{vertex,tex_bytes,tex_u16},
-  static fixup_{rotate16,bswap32,u16_u8u8}, fixup_torch_already_did_it,
-  the kProc<Family>Done constants, and the byte-transform bodies of
-  portFixupStruct{U16,U32}, portFixupRawTextureBSWAP32, portFixupSprite,
-  portFixupBitmap, portFixupMObjSub, portFixupFTAttributes. Survived:
-  every tracker (sStructU16Fixups + cache-invalidation friends), the
-  4c deswizzle, portFixupSpriteBitmapData (chain-resolved Bitmap.buf
-  bytes are NOT pre-transformed by torch — see follow-up A scope),
-  chain_fixup_*, runtime lazy fixup, all diagnostics.
-- `port/bridge/lbreloc_bridge.cpp`: dropped portRelocFixupFighterFigatree
-  + figatree_reloc_words tracking inside applyInternEntry/applyExternEntry.
+  rename portRelocByteSwapBlob → portRelocSeedVertexTrackers + drop
+  proc_flags param. **Phase 2 (struct fixup byte-transform bodies)
+  reverted in `b28352b`** — all per-family byte-transform bodies and
+  the catalog-aware skip gate restored.
+- `port/bridge/lbreloc_bridge.cpp` (Phase 3): dropped
+  portRelocFixupFighterFigatree + figatree_reloc_words tracking
+  inside applyInternEntry/applyExternEntry.
   port_aobj_register_halfswapped_range still fires per Stage 7 ADR.
 - `port/bridge/lbreloc_byteswap.h`: renamed portRelocByteSwapBlob to
   portRelocSeedVertexTrackers, dropped proc_flags parameter.
 - `port/resource/RelocFileFactory.{h,cpp}` + the V0/V1/V2 register
-  calls in `port/port.cpp` and `port/test/reloc_harness.cpp` — gone.
+  calls in `port/port.cpp` and `port/test/reloc_harness.cpp` — gone
+  (Phase 5 / follow-up E).
 
-The plan-target outcome ("~150 LOC of trackers + sprite codec") was
-optimistic. Real residual ~2k LOC because the chain-walk fixup
-(chain_fixup_settimg/vertex), runtime lazy fixup
-(portRelocFixupVertex/TextureAtRuntime), sprite bitmap data BSWAP +
-non-4c TMEM deswizzle (portFixupSpriteBitmapData), and ~550 LOC of
-env-gated diagnostics (stage audit / tex log / tex dump) all do real
-work or are kept by the Stage 8 ADR. Whether to push more of those
-into torch is a future-work decision; the present file is "no dead
-code", not "no code".
+### Why Phase 2 was reverted
+
+The freshly-built post-Phase-5 binary surfaced sprite regressions
+during a visual smoke test: Link's sword hit effect corrupted, 1P
+stage-clear results screen showing only stray numbers, "GAME SET"
+title-card missing letters. Diagnosis:
+`port/test/struct_fixup_catalog.json` covers only 125 of 2,132
+reloc files — `reloc_scene/SC1PStageClear1`, `SC1PStageClear3`, and
+several wallpaper files have **no catalog entries**. Pre-Phase-2 the
+runtime helpers used a catalog-aware short-circuit
+(`fixup_torch_already_did_it`) and **fell through to a runtime
+byte-transform fallback** when the catalog had no entry for a given
+offset. Phase 2 deleted that fallback on the premise "torch did it
+on every v3 file" — true only for pass1/pass2/halfswap, not for
+the per-family struct fixups. Torch's
+`ApplyStructFixupsInPlace` only emits transforms (and sets the
+matching PROC_*_DONE bit) for catalog entries.
+
+The drift gate was useless here: the harness only runs
+`lbRelocLoadAndRelocFile`. portFixupSprite/Bitmap/etc. are called
+later from decomp source code (e.g. `lbCommonMakeSObjForGObj`). The
+fixtures snapshot pre-portFixup* bytes, so Phase 2 stayed gate-green
+through five phases despite breaking real rendering.
+
+**Decision**: revert Phase 2. Reframe the catalog as a build-time
+optimization (skip the runtime body when torch already did it for
+this specific offset), **not a correctness contract**. Disk struct
+bytes are post-pass1 in files torch hasn't catalogued; the runtime
+helpers transform them at first access exactly as before. Modders
+authoring sprite/bitmap/etc. sub-resource overrides supply
+post-pass1 bytes — one consistent format across all files.
+
+For Phase 2 to be safely deletable, the catalog needs to be 100%
+complete via static analysis of decomp source — see
+`refactor_buildtime_reloc_followups.md` follow-up M. Until then,
+the runtime fallback is the source of truth.
 
 ---
 
@@ -145,6 +173,9 @@ The Stage 10 follow-up backlog is in
 `docs/refactor_buildtime_reloc_followups.md`. A, B, C, E are done.
 D, F, G, H, I, J, K, L remain — pick what fits a session, or focus on
 Stage 12. K (mod-author guide) is naturally a Stage 12 deliverable.
+**M (static-analysis catalog) is the prerequisite for retrying
+Phase 2** — non-trivial; defer until modder demand justifies the
+analyzer effort.
 
 ---
 
