@@ -609,8 +609,11 @@ static int PortInitImpl(int argc, char* argv[]) {
 		try {
 			std::filesystem::path modsDir = std::filesystem::path(ssb64o2r).parent_path() / "mods";
 			std::error_code modsEc;
-			if (std::filesystem::exists(modsDir, modsEc)
-			    && std::filesystem::is_directory(modsDir, modsEc)) {
+			const bool modsExists = std::filesystem::exists(modsDir, modsEc);
+			const bool modsIsDir  = modsExists && std::filesystem::is_directory(modsDir, modsEc);
+			port_log("SSB64: mods/ scan: dir=%s exists=%d is_dir=%d\n",
+			         modsDir.string().c_str(), (int)modsExists, (int)modsIsDir);
+			if (modsIsDir) {
 				// Collect candidate paths first so we can register them in a
 				// stable order. directory_iterator's traversal order is
 				// filesystem-dependent (APFS / ext4 / NTFS each differ), and
@@ -627,10 +630,12 @@ static int PortInitImpl(int argc, char* argv[]) {
 					modPaths.push_back(entry.path());
 				}
 				std::sort(modPaths.begin(), modPaths.end());
+				port_log("SSB64: mods/ scan: found %zu candidate archive(s)\n", modPaths.size());
 
 				size_t modCount = 0;
 				for (const auto& path : modPaths) {
 					const std::string modPath = path.string();
+					port_log("SSB64: mod archive loading: %s\n", modPath.c_str());
 					if (am->AddArchive(modPath)) {
 						port_log("SSB64: mod archive registered -> %s\n", modPath.c_str());
 						modCount++;
@@ -643,6 +648,8 @@ static int PortInitImpl(int argc, char* argv[]) {
 					portRelocSetOverridesActive(1);
 					port_log("SSB64: %zu mod archive(s) loaded — sub-resource overlay active\n",
 					         modCount);
+				} else {
+					port_log("SSB64: mods/ scan: no mods loaded — overlay path inactive\n");
 				}
 			}
 		} catch (const std::exception& e) {
