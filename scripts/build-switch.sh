@@ -66,6 +66,10 @@ echo ""
 # ------------------------------------------------------------------
 # Step 0: Check for devkitPro toolchain
 # ------------------------------------------------------------------
+
+# Add devkitPro to PATH
+export PATH="${DKP}/devkitA64/bin:${PATH}"
+
 if ! command -v aarch64-none-elf-g++ &>/dev/null; then
     echo "ERROR: aarch64-none-elf-g++ not found."
     echo "  Install devkitPro: dkp-pacman -S switch-dev"

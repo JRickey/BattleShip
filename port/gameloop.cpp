@@ -164,6 +164,7 @@ static int sFrameLoadBytes = 0;
 static int sLastDLTris = 0;
 static int sLastDLRectPx = 0;
 static int sLastDLLoadBytes = 0;
+static int sDLSubmitCount = 0;
 
 /* Thin C wrapper for the trace callback (matches GbiTraceCallbackFn signature) */
 static void gbi_trace_callback(uintptr_t w0, uintptr_t w1, int dl_depth)

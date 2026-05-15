@@ -56,7 +56,6 @@ option(NON_MATCHING "Build without matching decomp constraints" ON)
 option(NON_EQUIVALENT "Build without equivalent decomp constraints" ON)
 option(USE_AUTO_VCPKG "Use automated vcpkg for dependency management" ON)
 option(SSB64_STAGE_CYCLE_DEMO "Boot directly into attract-demo stage cycle for rendering regression testing" OFF)
-
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 ################################################################################
@@ -210,7 +209,7 @@ file(GLOB_RECURSE SSB64_SRC_PORT "port/*.cpp" "port/*.c" "port/*.h")
 list(FILTER SSB64_SRC_PORT EXCLUDE REGEX "port/stubs/")
 
 if(CMAKE_SYSTEM_NAME STREQUAL "NintendoSwitch")
-    list(APPEND SSB64_SRC_PORT "port/switch/context_switch.S")
+    list(APPEND SSB64_SRC_PORT "port/switch/context_switch.s")
 endif()
 
 # Debug tools (GBI trace + Acmd trace systems)
@@ -359,7 +358,6 @@ if (NOT MSVC)
         -Werror=int-conversion
         -Werror=incompatible-pointer-types
         -Wno-shift-negative-value
-        -Wno-parentheses-equality
         -Wno-pointer-sign
         -Wno-unused-value
         -Wno-unused-variable
@@ -375,6 +373,7 @@ if (NOT MSVC)
         target_compile_options(ssb64_game PRIVATE
             -Werror=incompatible-library-redeclaration
             -Werror=return-mismatch
+            -Wno-parentheses-equality
             -Wno-constant-conversion
             -Wno-tautological-constant-out-of-range-compare
         )
@@ -447,12 +446,47 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL "NintendoSwitch")
     target_compile_definitions(ssb64_game PRIVATE __SWITCH__ _GNU_SOURCE)
     target_compile_definitions(${PROJECT_NAME} PRIVATE __SWITCH__ _GNU_SOURCE)
 
+    find_program(NACPTOOL_EXECUTABLE
+        NAMES nacptool
+        HINTS
+            "$ENV{DEVKITPRO}/tools/bin"
+            "${DEVKITPRO}/tools/bin"
+        REQUIRED
+    )
+
+    find_program(ELF2NRO_EXECUTABLE
+        NAMES elf2nro
+        HINTS
+            "$ENV{DEVKITPRO}/tools/bin"
+            "${DEVKITPRO}/tools/bin"
+        REQUIRED
+    )
+
     # Aggressive optimization for Tegra X1 (Cortex-A57).
     # -march is already set by the devkitPro toolchain; we only add -mtune and -O3.
     set(SWITCH_OPT_FLAGS -O3 -mtune=cortex-a57 -ffast-math)
     target_compile_options(ssb64_game PRIVATE ${SWITCH_OPT_FLAGS})
-    target_compile_options(${PROJECT_NAME} PRIVATE ${SWITCH_OPT_FLAGS} -flto)
-    target_link_options(${PROJECT_NAME} PRIVATE -flto -Wl,--gc-sections)
+    target_compile_options(${PROJECT_NAME} PRIVATE ${SWITCH_OPT_FLAGS})
+    target_link_options(${PROJECT_NAME} PRIVATE -Wl,--gc-sections)
+
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:${PROJECT_NAME}>
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>/BattleShip.elf.keep
+        COMMAND ${NACPTOOL_EXECUTABLE}
+            --create
+            BattleShip
+            JRickey
+            ${BATTLESHIP_VERSION}
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>/control.nacp
+        COMMAND ${ELF2NRO_EXECUTABLE}
+            $<TARGET_FILE:${PROJECT_NAME}>
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>/BattleShip.nro
+            --alignedheader
+            --icon=/opt/devkitpro/libnx/default_icon.jpg
+            --nacp=$<TARGET_FILE_DIR:${PROJECT_NAME}>/control.nacp
+        COMMENT "Packaging BattleShip.nro from BattleShip.elf"
+    )
 
     if(TARGET TorchExternal)
         add_dependencies(${PROJECT_NAME} TorchExternal)
@@ -563,17 +597,8 @@ else()
     )
     message(STATUS "BattleShip.o2r: baserom absent — ExtractAssets stub installed")
 endif()
-if(NOT CMAKE_SYSTEM_NAME STREQUAL "NintendoSwitch")
-add_custom_target(ExtractAssets
-    DEPENDS TorchExternal PrepareBuildInputs GenerateF3DO2R
-    COMMAND ${TORCH_EXECUTABLE} o2r ${SSB64_BASEROM} -s ${CMAKE_SOURCE_DIR} -d ${CMAKE_SOURCE_DIR}
-    COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_SOURCE_DIR}/BattleShip.o2r
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>/BattleShip.o2r
-    COMMENT "Extracting assets from ${SSB64_BASEROM} into O2R archive"
-)
 
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "NintendoSwitch")
 add_custom_target(GenerateBattleShipO2R
     DEPENDS ExtractAssets
     COMMENT "Generating BattleShip.o2r"
@@ -605,9 +630,6 @@ if (CMAKE_SYSTEM_NAME STREQUAL "NintendoSwitch")
             "${SWITCH_GAME_DIR}/"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${CMAKE_SOURCE_DIR}/f3d.o2r"
-            "${SWITCH_GAME_DIR}/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${CMAKE_SOURCE_DIR}/ssb64.o2r"
             "${SWITCH_GAME_DIR}/"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${CMAKE_SOURCE_DIR}/gamecontrollerdb.txt"

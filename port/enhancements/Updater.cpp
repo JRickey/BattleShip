@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #endif
 
+<<<<<<< HEAD
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -40,6 +41,24 @@ static std::string s_downloadUrl = "";
 static std::string s_updateStatus = "";
 static std::string s_downloadStatus = "";
 static std::mutex s_stringMutex; // Only locks when reading/writing the actual text
+=======
+namespace ssb64
+{
+    namespace enhancements
+    {
+
+        // We use atomics for the state flags so the UI thread doesn't have to lock a mutex 60 times a second!
+        static std::atomic<bool> s_updateChecked{false};
+        static std::atomic<bool> s_updateAvailable{false};
+        static std::atomic<bool> s_isDownloading{false};
+        static std::atomic<bool> s_downloadComplete{false};
+        static std::atomic<bool> s_isCheckingForUpdates{false};
+
+        static std::string s_latestVersion = "";
+        static std::string s_downloadUrl = "";
+        static std::string s_downloadStatus = "";
+        static std::mutex s_stringMutex; // Only locks when reading/writing the actual text
+>>>>>>> df32245 (Refactor Updater.cpp for improved readability and maintainability)
 
 namespace {
 
@@ -47,6 +66,7 @@ namespace {
 #define BATTLESHIP_CURRENT_VERSION "v1.0.0"
 #endif
 
+<<<<<<< HEAD
 constexpr const char* kLatestReleaseApi =
     "https://api.github.com/repos/JRickey/BattleShip/releases/latest";
 constexpr const char* kReleasePageUrl =
@@ -239,15 +259,87 @@ void CheckForUpdatesAsync(bool force) {
         if (exitCode != 0) {
             s_updateCheckFailed.store(true);
             SetUpdateStatus("Unable to check for updates.");
+=======
+        void CheckForUpdatesAsync(bool force)
+        {
+#if defined(__SWITCH__)
+            (void)force;
+            s_updateChecked.store(true);
+            s_updateAvailable.store(false);
+            s_isCheckingForUpdates.store(false);
+            return;
+#endif
+
+            // Check our atomic flags (no locks required)
+            if (s_isCheckingForUpdates.load() || s_isDownloading.load())
+                return;
+            if (!force && s_updateChecked.load())
+                return;
+
+            s_updateChecked.store(true);
+            s_isCheckingForUpdates.store(true);
+
+            std::thread([]()
+                        {
+#if defined(_WIN32)
+        FILE* pipe = _popen("curl -s -m 10 -H \"User-Agent: BattleShip-Updater\" https://api.github.com/repos/JRickey/BattleShip/tags", "r");
+#else
+        FILE* pipe = popen("curl -s -m 10 -H \"User-Agent: BattleShip-Updater\" https://api.github.com/repos/JRickey/BattleShip/tags", "r");
+#endif
+        if (!pipe) {
+>>>>>>> df32245 (Refactor Updater.cpp for improved readability and maintainability)
             s_isCheckingForUpdates.store(false);
             return;
         }
 
+<<<<<<< HEAD
         if (!response.empty()) {
             try {
                 auto release = nlohmann::json::parse(response);
                 if (!release.contains("tag_name") || !release["tag_name"].is_string()) {
                     throw std::runtime_error("latest release missing tag_name");
+=======
+        std::string response = "";
+        char buffer[128];
+        while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+            response += buffer;
+        }
+
+#if defined(_WIN32)
+        _pclose(pipe);
+#else
+        pclose(pipe);
+#endif
+
+        if (!response.empty()) {
+            try {
+                auto json = nlohmann::json::parse(response);
+
+                if (json.is_array() && !json.empty() && json[0].contains("name")) {
+                    std::string latest_tag = json[0]["name"];
+
+                    {
+                        std::lock_guard<std::mutex> lock(s_stringMutex);
+                        s_latestVersion = latest_tag;
+                    }
+
+                    if (latest_tag != BATTLESHIP_CURRENT_VERSION) {
+                        s_updateAvailable.store(true);
+
+#if defined(__linux__)
+                        std::lock_guard<std::mutex> lock(s_stringMutex);
+                        s_downloadUrl = "https://github.com/JRickey/BattleShip/releases/download/" + latest_tag + "/BattleShip-x86_64.AppImage";
+#elif defined(_WIN32)
+                        std::lock_guard<std::mutex> lock(s_stringMutex);
+                        s_downloadUrl = "https://github.com/JRickey/BattleShip/releases/download/" + latest_tag + "/BattleShip-windows.zip";
+#elif defined(__APPLE__)
+                        std::lock_guard<std::mutex> lock(s_stringMutex);
+                        s_downloadUrl = "https://github.com/JRickey/BattleShip/releases/download/" + latest_tag + "/BattleShip.dmg";
+#endif
+                    } else {
+                        s_updateAvailable.store(false);
+                    }
+>>>>>>> df32245 (Refactor Updater.cpp for improved readability and maintainability)
                 }
 
                 std::string latestTag = release["tag_name"].get<std::string>();
@@ -282,14 +374,23 @@ void CheckForUpdatesAsync(bool force) {
             SetUpdateStatus("Unable to check for updates.");
         }
 
-        s_isCheckingForUpdates.store(false);
-    }).detach();
-}
+        s_isCheckingForUpdates.store(false); })
+                .detach();
+        }
 
-void StartGameUpdate() {
-    if (s_isDownloading.load()) return;
-    s_isDownloading.store(true);
+        void StartGameUpdate()
+        {
+#if defined(__SWITCH__)
+            {
+                std::lock_guard<std::mutex> lock(s_stringMutex);
+                s_downloadStatus = "Updater not supported on Switch";
+            }
+            s_isDownloading.store(false);
+            s_downloadComplete.store(false);
+            return;
+#else
 
+<<<<<<< HEAD
     {
         std::lock_guard<std::mutex> lock(s_stringMutex);
         if (s_downloadUrl.empty()) {
@@ -299,15 +400,26 @@ void StartGameUpdate() {
         }
         s_downloadStatus = "Initializing download...";
     }
+=======
+            if (s_isDownloading.load())
+                return;
+            s_isDownloading.store(true);
+>>>>>>> df32245 (Refactor Updater.cpp for improved readability and maintainability)
 
-    std::thread([]() {
+            {
+                std::lock_guard<std::mutex> lock(s_stringMutex);
+                s_downloadStatus = "Initializing download...";
+            }
+
+            std::thread([]()
+                        {
         std::string url;
         {
             std::lock_guard<std::mutex> lock(s_stringMutex);
             url = s_downloadUrl;
         }
 
-        #if defined(__linux__)
+#if defined(__linux__)
         const char* appImagePath = getenv("APPIMAGE");
         if (!appImagePath) {
             {
@@ -321,14 +433,20 @@ void StartGameUpdate() {
         std::string tempPath = std::string(appImagePath) + ".part";
         std::string cmd = BuildDownloadCommand(tempPath, url);
 
-        #elif defined(_WIN32)
+#elif defined(_WIN32)
         std::string tempZip = "update_temp.zip";
         std::string cmd = BuildDownloadCommand(tempZip, url);
 
-        #elif defined(__APPLE__)
+#elif defined(__APPLE__)
         std::string tempDmg = "/tmp/BattleShip_Update.dmg";
+<<<<<<< HEAD
         std::string cmd = BuildDownloadCommand(tempDmg, url);
         #endif
+=======
+        std::string cmd = "curl -L -# -o \"" + tempDmg + "\" \"" + url + "\" 2>&1";
+        FILE* pipe = popen(cmd.c_str(), "r");
+#endif
+>>>>>>> df32245 (Refactor Updater.cpp for improved readability and maintainability)
 
         auto onProgressLine = [](const std::string& line) {
             if (line.find('%') == std::string::npos) return;
@@ -343,10 +461,18 @@ void StartGameUpdate() {
             }
         };
 
+<<<<<<< HEAD
         int exitCode = RunCapture(cmd, onProgressLine);
+=======
+#if defined(_WIN32)
+        int exitCode = _pclose(pipe);
+#else
+        int exitCode = pclose(pipe);
+#endif
+>>>>>>> df32245 (Refactor Updater.cpp for improved readability and maintainability)
 
         if (exitCode == 0) {
-            #if defined(__linux__)
+#if defined(__linux__)
             chmod(tempPath.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
             if (std::rename(tempPath.c_str(), appImagePath) == 0) {
                 {
@@ -358,7 +484,7 @@ void StartGameUpdate() {
                 std::lock_guard<std::mutex> lock(s_stringMutex);
                 s_downloadStatus = "Error: Failed to replace AppImage.";
             }
-            #elif defined(_WIN32)
+#elif defined(_WIN32)
             FILE* bat = fopen("update_game.bat", "w");
             if (bat) {
                 fprintf(bat, "@echo off\n");
@@ -386,7 +512,7 @@ void StartGameUpdate() {
                 std::lock_guard<std::mutex> lock(s_stringMutex);
                 s_downloadStatus = "Error: Failed to create updater script.";
             }
-            #elif defined(__APPLE__)
+#elif defined(__APPLE__)
             {
                 std::lock_guard<std::mutex> lock(s_stringMutex);
                 s_downloadStatus = "Download complete! Opening DMG...";
@@ -394,25 +520,27 @@ void StartGameUpdate() {
             s_downloadComplete.store(true);
             std::string openCmd = "open \"" + tempDmg + "\"";
             system(openCmd.c_str());
-            #endif
+#endif
         } else {
             {
                 std::lock_guard<std::mutex> lock(s_stringMutex);
                 s_downloadStatus = "Error: Download failed.";
             }
-            #if defined(__linux__)
+#if defined(__linux__)
             std::remove(tempPath.c_str());
-            #elif defined(_WIN32)
+#elif defined(_WIN32)
             std::remove(tempZip.c_str());
-            #elif defined(__APPLE__)
+#elif defined(__APPLE__)
             std::remove(tempDmg.c_str());
-            #endif
+#endif
         }
 
-        s_isDownloading.store(false);
-    }).detach();
-}
+        s_isDownloading.store(false); })
+                .detach();
+#endif
+        }
 
+<<<<<<< HEAD
 // OS-aware URL opener for Windows and Mac fallback
 void OpenReleasePage() {
     const char* url = kReleasePageUrl;
@@ -440,6 +568,42 @@ bool IsDownloadComplete() { return s_downloadComplete.load(); }
 std::string GetUpdateStatus() { std::lock_guard<std::mutex> lock(s_stringMutex); return s_updateStatus; }
 std::string GetDownloadStatus() { std::lock_guard<std::mutex> lock(s_stringMutex); return s_downloadStatus; }
 std::string GetLatestVersion() { std::lock_guard<std::mutex> lock(s_stringMutex); return s_latestVersion; }
+=======
+        // OS-aware URL opener for Windows and Mac fallback
+        void OpenReleasePage()
+        {
+            const char *url = "https://github.com/JRickey/BattleShip/releases/latest";
 
-} // namespace enhancements
+#if defined(_WIN32)
+            std::string cmd = std::string("start \"\" \"") + url + "\"";
+            system(cmd.c_str());
+#elif defined(__APPLE__)
+            std::string cmd = std::string("open ") + url;
+            system(cmd.c_str());
+#else
+            std::string cmd = std::string("xdg-open ") + url + " &";
+            system(cmd.c_str());
+#endif
+        }
+
+        // Atomic reads - no locks required for the UI thread!
+        bool IsCheckingForUpdates() { return s_isCheckingForUpdates.load(); }
+        bool IsUpdateAvailable() { return s_updateAvailable.load(); }
+        bool IsDownloading() { return s_isDownloading.load(); }
+        bool IsDownloadComplete() { return s_downloadComplete.load(); }
+
+        // String getters still need the lock, but they are incredibly fast now
+        std::string GetDownloadStatus()
+        {
+            std::lock_guard<std::mutex> lock(s_stringMutex);
+            return s_downloadStatus;
+        }
+        std::string GetLatestVersion()
+        {
+            std::lock_guard<std::mutex> lock(s_stringMutex);
+            return s_latestVersion;
+        }
+>>>>>>> df32245 (Refactor Updater.cpp for improved readability and maintainability)
+
+    } // namespace enhancements
 } // namespace ssb64
