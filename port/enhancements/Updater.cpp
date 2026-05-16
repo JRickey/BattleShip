@@ -148,6 +148,8 @@ int RunCaptureNoWindow(std::string cmd,
 
 int RunCapture(std::string cmd, const std::function<void(const std::string&)>& onLine) {
 #ifdef __SWITCH__
+    // No point in trying to capture output on Switch.
+    return 0;
 #elif defined(_WIN32)
     return RunCaptureNoWindow(std::move(cmd), onLine);
 #else
@@ -221,6 +223,7 @@ void ResetDownloadStateForNewCheck() {
 } // namespace
 
 void CheckForUpdatesAsync(bool force) {
+#ifndef __SWITCH__
     // Check our atomic flags (no locks required)
     if (s_isCheckingForUpdates.load() || s_isDownloading.load()) return;
     if (!force && s_updateChecked.load()) return;
@@ -285,6 +288,7 @@ void CheckForUpdatesAsync(bool force) {
 
         s_isCheckingForUpdates.store(false);
     }).detach();
+#endif
 }
 
 void StartGameUpdate() {
