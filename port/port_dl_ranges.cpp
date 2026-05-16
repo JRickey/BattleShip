@@ -116,11 +116,12 @@ extern "C" int port_dl_range_classify_str(uintptr_t addr, char *buf, size_t buf_
     return 0;
 }
 
-/* Called once at port startup to wire our bounds-check and classifier
- * into libultraship's GFX walker and diag dump. libultraship has zero
- * knowledge of port_dl_* symbols — only the function pointers it
- * receives from these registrations. */
+/* Called once at port startup.
+ *
+ * Historical note: older libultraship revisions exposed
+ * Fast::RegisterDLBoundsCheck / Fast::RegisterAddressClassifier hooks.
+ * The current API no longer exposes those registration points, so this
+ * remains as a compatibility no-op until a replacement hook is added. */
 extern "C" void port_dl_ranges_init(void) {
-    Fast::RegisterDLBoundsCheck(&port_dl_check_addr);
-    Fast::RegisterAddressClassifier(&port_dl_range_classify_str);
+    /* No-op on current libultraship API. */
 }
