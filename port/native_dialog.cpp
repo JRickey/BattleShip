@@ -171,6 +171,10 @@ std::string OpenFileDialog(const std::string& title,
                         nullptr, nullptr);
     return out;
 
+#elif defined(__SWITCH__)
+    // Switch has no native file dialog. The first-run wizard falls back
+    // to manual path entry; the Browse button is simply a no-op.
+    return {};
 #else
     (void)title;
     (void)extensions;

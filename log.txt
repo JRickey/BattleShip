@@ -1,0 +1,317 @@
+=== SSB64 Switch Build ===
+Config:         Release
+Build dir:      /home/winston/repos/BattleShip/build-switch
+Skip extract:   1
+
+--- Step 1: Skipping asset extraction ---
+
+--- Step 2: Cross-compiling BattleShip.nro ---
+-- BattleShip updater version: v0.9-beta
+-- Configuring dependencies for Nintendo Switch
+CMake Warning (dev) at build-switch/_deps/zlib-src/CMakeLists.txt:152 (add_library):
+  ADD_LIBRARY called with SHARED option but the target platform does not
+  support dynamic linking.  Building a STATIC library instead.  This may lead
+  to problems.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Could NOT find Nettle (missing: Nettle_LIBRARY Nettle_INCLUDE_DIR) (Required is at least version "3.0")
+-- Could NOT find GnuTLS (missing: GNUTLS_LIBRARY GNUTLS_INCLUDE_DIR) 
+-- Could NOT find MbedTLS (missing: MbedTLS_LIBRARY MbedTLS_INCLUDE_DIR) (Required is at least version "1.0")
+-- Could NOT find OpenSSL, try to set the path to OpenSSL root folder in the system variable OPENSSL_ROOT_DIR (missing: OPENSSL_CRYPTO_LIBRARY OPENSSL_INCLUDE_DIR) 
+-- Could NOT find BZip2 (missing: BZIP2_LIBRARIES BZIP2_INCLUDE_DIR) 
+CMake Warning at build-switch/_deps/libzip-src/CMakeLists.txt:233 (message):
+  -- bzip2 library not found; bzip2 support disabled
+
+
+-- Could NOT find LibLZMA (missing: LIBLZMA_LIBRARY LIBLZMA_INCLUDE_DIR LIBLZMA_HAS_AUTO_DECODER LIBLZMA_HAS_EASY_ENCODER LIBLZMA_HAS_LZMA_PRESET) (Required is at least version "5.2")
+CMake Warning at build-switch/_deps/libzip-src/CMakeLists.txt:242 (message):
+  -- lzma library not found; lzma/xz support disabled
+
+
+-- Could NOT find zstd (missing: _zstd_LIBRARY zstd_INCLUDE_DIR) (Required is at least version "1.4.0")
+CMake Warning at build-switch/_deps/libzip-src/CMakeLists.txt:256 (message):
+  -- zstd library not found; zstandard support disabled
+
+
+CMake Warning at build-switch/_deps/libzip-src/CMakeLists.txt:278 (message):
+  -- neither Common Crypto, GnuTLS, mbed TLS, OpenSSL, nor Windows
+  Cryptography found; AES support disabled
+
+
+-- Using the multi-header code from /home/winston/repos/BattleShip/build-switch/_deps/nlohmann_json-src/include/
+-- Build spdlog: 1.16.0
+-- Build type: Release
+CMake Deprecation Warning at build-switch/_deps/prism-src/CMakeLists.txt:2 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- Configuring done (5.0s)
+-- Generating done (0.5s)
+-- Build files have been written to: /home/winston/repos/BattleShip/build-switch
+[  1%] Built target ImGui
+[  3%] Built target zlibstatic
+[  4%] Built target spdlog
+[  4%] Building C object libultraship/CMakeFiles/stb.dir/__/_deps/stb/stb_impl.o
+[  4%] Generating reloc headers and RelocFileTable.cpp
+[  4%] Packaging Fast3D shaders into f3d.o2r
+[  4%] Built target GenerateF3DO2R
+[  6%] Built target zlib
+[  7%] Built target prism
+[ 63%] Built target ssb64_game
+[ 64%] Built target example
+[ 78%] Built target zip
+[ 78%] Built target minigzip
+Loaded 4230 symbols from tools/reloc_data_symbols.us.txt
+Scanned src/ and found 5680 ll* references
+  3910 referenced symbols resolve from the table
+  1770 referenced symbols stub to ((intptr_t)0)
+Wrote include/reloc_data.h (6000 total #defines)
+Generated port/resource/RelocFileTable.cpp (2132 entries)
+[ 78%] Built target GenerateRelocArtifacts
+[ 78%] Linking C static library libstb.a
+[ 78%] Built target stb
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/fast/Fast3dWindow.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/fast/interpreter.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/fast/backends/gfx_opengl.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/fast/FastMouseStateManager.o
+/home/winston/repos/BattleShip/libultraship/src/fast/backends/gfx_opengl.cpp:1092: warning: ignoring '#pragma clang diagnostic' [-Wunknown-pragmas]
+ 1092 | #pragma clang diagnostic pop
+/home/winston/repos/BattleShip/libultraship/src/fast/interpreter.cpp: In function 'const char* Fast::gfx_get_shader(int16_t)':
+/home/winston/repos/BattleShip/libultraship/src/fast/interpreter.cpp:4701:48: warning: loop variable 'shader' of type 'const std::pair<long unsigned int, const char*>&' binds to a temporary constructed from type 'std::pair<const long unsigned int, const char*>' [-Wrange-loop-construct]
+ 4701 |     for (const std::pair<size_t, const char*>& shader : gfx->mShaders) {
+      |                                                ^~~~~~
+/home/winston/repos/BattleShip/libultraship/src/fast/interpreter.cpp:4701:48: note: use non-reference type 'const std::pair<long unsigned int, const char*>' to make the copy explicit or 'const std::pair<const long unsigned int, const char*>&' to prevent copying
+/home/winston/repos/BattleShip/libultraship/src/fast/interpreter.cpp:4702:26: warning: comparison of integer expressions of different signedness: 'const long unsigned int' and 'int16_t' {aka 'short int'} [-Wsign-compare]
+ 4702 |         if (shader.first == id) {
+      |             ~~~~~~~~~~~~~^~~~~
+/home/winston/repos/BattleShip/libultraship/src/fast/interpreter.cpp: In member function 'void Fast::Interpreter::SpReset()':
+/home/winston/repos/BattleShip/libultraship/src/fast/interpreter.cpp:6156:23: warning: comparison of integer expressions of different signedness: 'int' and 'const size_t' {aka 'const long unsigned int'} [-Wsign-compare]
+ 6156 |     for (int i = 0; i < MAX_SEGMENT_POINTERS; i++) {
+      |                     ~~^~~~~~~~~~~~~~~~~~~~~~
+/home/winston/repos/BattleShip/libultraship/src/fast/interpreter.cpp: In member function 'void Fast::Interpreter::Init(Fast::GfxWindowBackend*, Fast::GfxRenderingAPI*, const char*, bool, uint32_t, uint32_t, uint32_t, uint32_t)':
+/home/winston/repos/BattleShip/libultraship/src/fast/interpreter.cpp:6199:23: warning: comparison of integer expressions of different signedness: 'int' and 'const size_t' {aka 'const long unsigned int'} [-Wsign-compare]
+ 6199 |     for (int i = 0; i < MAX_SEGMENT_POINTERS; i++) {
+      |                     ~~^~~~~~~~~~~~~~~~~~~~~~
+In file included from /opt/devkitpro/devkitA64/aarch64-none-elf/include/c++/15.2.0/bits/stl_algobase.h:64,
+                 from /opt/devkitpro/devkitA64/aarch64-none-elf/include/c++/15.2.0/bits/specfun.h:43,
+                 from /opt/devkitpro/devkitA64/aarch64-none-elf/include/c++/15.2.0/cmath:3913,
+                 from /opt/devkitpro/devkitA64/aarch64-none-elf/include/c++/15.2.0/math.h:36,
+                 from /home/winston/repos/BattleShip/libultraship/src/fast/interpreter.cpp:7:
+/opt/devkitpro/devkitA64/aarch64-none-elf/include/c++/15.2.0/bits/stl_pair.h: In instantiation of 'constexpr std::pair<typename std::__strip_reference_wrapper<typename std::decay<_Tp>::type>::__type, typename std::__strip_reference_wrapper<typename std::decay<_Tp2>::type>::__type> std::make_pair(_T1&&, _T2&&) [with _T1 = float&; _T2 = float&; typename __strip_reference_wrapper<typename decay<_Tp>::type>::__type = float; typename decay<_Tp>::type = float; typename __strip_reference_wrapper<typename decay<_Tp2>::type>::__type = float; typename decay<_Tp2>::type = float]':
+/home/winston/repos/BattleShip/libultraship/src/fast/interpreter.cpp:6561:59:   required from here
+ 6561 |     if (auto it = mGetPixelDepthCached.find(std::make_pair(x, y)); it != mGetPixelDepthCached.end()) {
+      |                                             ~~~~~~~~~~~~~~^~~~~~
+/opt/devkitpro/devkitA64/aarch64-none-elf/include/c++/15.2.0/bits/stl_pair.h:1164:5: note: parameter passing for argument of type 'std::pair<float, float>' when C++17 is enabled changed to match C++14 in GCC 10.1
+ 1164 |     make_pair(_T1&& __x, _T2&& __y)
+      |     ^~~~~~~~~
+/home/winston/repos/BattleShip/libultraship/src/fast/backends/gfx_opengl.cpp: In member function 'std::string Fast::GfxRenderingAPIOGL::BuildFsShader(const CCFeatures&)':
+/home/winston/repos/BattleShip/libultraship/src/fast/backends/gfx_opengl.cpp:279:29: warning: cast between incompatible function types from 'prism::ContextTypes* (*)(prism::ContextTypes*, prism::ContextTypes*, prism::ContextTypes*, prism::ContextTypes*, prism::ContextTypes*, prism::ContextTypes*, prism::ContextTypes*, prism::ContextTypes*, prism::ContextTypes*)' {aka 'std::variant<prism::Void, int, float, prism::MTDArray<bool>, prism::MTDArray<int>, prism::MTDArray<float>, prism::GeneratedRange, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, prism::ForContext, long unsigned int (*)(), prism::Opaque>* (*)(std::variant<prism::Void, int, float, prism::MTDArray<bool>, prism::MTDArray<int>, prism::MTDArray<float>, prism::GeneratedRange, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, prism::ForContext, long unsigned int (*)(), prism::Opaque>*, std::variant<prism::Void, int, float, prism::MTDArray<bool>, prism::MTDArray<int>, prism::MTDArray<float>, prism::GeneratedRange, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, prism::ForContext, long unsigned int (*)(), prism::Opaque>*, std::variant<prism::Void, int, float, prism::MTDArray<bool>, prism::MTDArray<int>, prism::MTDArray<float>, prism::GeneratedRange, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, prism::ForContext, long unsigned int (*)(), prism::Opaque>*, std::variant<prism::Void, int, float, prism::MTDArray<bool>, prism::MTDArray<int>, prism::MTDArray<float>, prism::GeneratedRange, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, prism::ForContext, long unsigned int (*)(), prism::Opaque>*, std::variant<prism::Void, int, float, prism::MTDArray<bool>, prism::MTDArray<int>, prism::MTDArray<float>, prism::GeneratedRange, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, prism::ForContext, long unsigned int (*)(), prism::Opaque>*, std::variant<prism::Void, int, float, prism::MTDArray<bool>, prism::MTDArray<int>, prism::MTDArray<float>, prism::GeneratedRange, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, prism::ForContext, long unsigned int (*)(), prism::Opaque>*, std::variant<prism::Void, int, float, prism::MTDArray<bool>, prism::MTDArray<int>, prism::MTDArray<float>, prism::GeneratedRange, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, prism::ForContext, long unsigned int (*)(), prism::Opaque>*, std::variant<prism::Void, int, float, prism::MTDArray<bool>, prism::MTDArray<int>, prism::MTDArray<float>, prism::GeneratedRange, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, prism::ForContext, long unsigned int (*)(), prism::Opaque>*, std::variant<prism::Void, int, float, prism::MTDArray<bool>, prism::MTDArray<int>, prism::MTDArray<float>, prism::GeneratedRange, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, prism::ForContext, long unsigned int (*)(), prism::Opaque>*)'} to 'InvokeFunc' {aka 'long unsigned int (*)()'} [-Wcast-function-type]
+  279 |         { "append_formula", (InvokeFunc)append_formula },
+      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/fast/backends/gfx_sdl2.o
+/home/winston/repos/BattleShip/libultraship/src/fast/backends/gfx_opengl.cpp: In function 'std::string Fast::BuildVsShader(const CCFeatures&)':
+/home/winston/repos/BattleShip/libultraship/src/fast/backends/gfx_opengl.cpp:350:57: warning: cast between incompatible function types from 'prism::ContextTypes* (*)(prism::ContextTypes*, prism::ContextTypes*)' {aka 'std::variant<prism::Void, int, float, prism::MTDArray<bool>, prism::MTDArray<int>, prism::MTDArray<float>, prism::GeneratedRange, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, prism::ForContext, long unsigned int (*)(), prism::Opaque>* (*)(std::variant<prism::Void, int, float, prism::MTDArray<bool>, prism::MTDArray<int>, prism::MTDArray<float>, prism::GeneratedRange, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, prism::ForContext, long unsigned int (*)(), prism::Opaque>*, std::variant<prism::Void, int, float, prism::MTDArray<bool>, prism::MTDArray<int>, prism::MTDArray<float>, prism::GeneratedRange, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, prism::ForContext, long unsigned int (*)(), prism::Opaque>*)'} to 'InvokeFunc' {aka 'long unsigned int (*)()'} [-Wcast-function-type]
+  350 |                                      { "update_floats", (InvokeFunc)UpdateFloats },
+      |                                                         ^~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/winston/repos/BattleShip/libultraship/src/fast/backends/gfx_opengl.cpp:23:
+/home/winston/repos/BattleShip/build-switch/_deps/prism-src/src/prism/processor.h: In instantiation of 'T& prism::MTDArray<T>::at(int, int) [with T = int]':
+/home/winston/repos/BattleShip/libultraship/src/fast/backends/gfx_opengl.cpp:197:39:   required from here
+  197 |         out += shader_item_to_str(c.at(only_alpha, 3), with_alpha, only_alpha, opt_alpha, first_cycle, false);
+      |                                   ~~~~^~~~~~~~~~~~~~~
+/home/winston/repos/BattleShip/build-switch/_deps/prism-src/src/prism/processor.h:47:15: warning: comparison of integer expressions of different signedness: 'int' and '__gnu_cxx::__alloc_traits<std::allocator<long unsigned int>, long unsigned int>::value_type' {aka 'long unsigned int'} [-Wsign-compare]
+   47 |         if (x >= dimensions[0] || y >= dimensions[1]) {
+/home/winston/repos/BattleShip/build-switch/_deps/prism-src/src/prism/processor.h:47:37: warning: comparison of integer expressions of different signedness: 'int' and '__gnu_cxx::__alloc_traits<std::allocator<long unsigned int>, long unsigned int>::value_type' {aka 'long unsigned int'} [-Wsign-compare]
+   47 |         if (x >= dimensions[0] || y >= dimensions[1]) {
+/home/winston/repos/BattleShip/build-switch/_deps/prism-src/src/prism/processor.h: In instantiation of 'prism::MTDArray<T> prism::MTDArray<T>::get(int) [with T = int]':
+/home/winston/repos/BattleShip/build-switch/_deps/prism-src/src/prism/processor.h:50:19:   required from 'T& prism::MTDArray<T>::at(int, int) [with T = int]'
+   50 |         return get(x).at(y);
+      |                ~~~^~~
+/home/winston/repos/BattleShip/libultraship/src/fast/backends/gfx_opengl.cpp:197:39:   required from here
+  197 |         out += shader_item_to_str(c.at(only_alpha, 3), with_alpha, only_alpha, opt_alpha, first_cycle, false);
+      |                                   ~~~~^~~~~~~~~~~~~~~
+/home/winston/repos/BattleShip/build-switch/_deps/prism-src/src/prism/processor.h:68:15: warning: comparison of integer expressions of different signedness: 'int' and '__gnu_cxx::__alloc_traits<std::allocator<long unsigned int>, long unsigned int>::value_type' {aka 'long unsigned int'} [-Wsign-compare]
+   68 |         if (x >= dimensions[0]) {
+/home/winston/repos/BattleShip/build-switch/_deps/prism-src/src/prism/processor.h: In instantiation of 'T& prism::MTDArray<T>::at(int) [with T = int]':
+/home/winston/repos/BattleShip/build-switch/_deps/prism-src/src/prism/processor.h:50:25:   required from 'T& prism::MTDArray<T>::at(int, int) [with T = int]'
+   50 |         return get(x).at(y);
+      |                ~~~~~~~~~^~~
+/home/winston/repos/BattleShip/libultraship/src/fast/backends/gfx_opengl.cpp:197:39:   required from here
+  197 |         out += shader_item_to_str(c.at(only_alpha, 3), with_alpha, only_alpha, opt_alpha, first_cycle, false);
+      |                                   ~~~~^~~~~~~~~~~~~~~
+/home/winston/repos/BattleShip/build-switch/_deps/prism-src/src/prism/processor.h:40:15: warning: comparison of integer expressions of different signedness: 'int' and '__gnu_cxx::__alloc_traits<std::allocator<long unsigned int>, long unsigned int>::value_type' {aka 'long unsigned int'} [-Wsign-compare]
+   40 |         if (x >= dimensions[0]) {
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/libultraship/controller/controldeck/ControlDeck.o
+/home/winston/repos/BattleShip/libultraship/src/fast/backends/gfx_opengl.cpp: In member function 'virtual std::unordered_map<std::pair<float, float>, short unsigned int, Fast::hash_pair_ff> Fast::GfxRenderingAPIOGL::GetPixelDepth(int, const std::set<std::pair<float, float> >&)':
+/home/winston/repos/BattleShip/libultraship/src/fast/backends/gfx_opengl.cpp:1021:64: warning: 'depth_stencil_value' may be used uninitialized [-Wmaybe-uninitialized]
+ 1021 |         res.emplace(*coordinates.begin(), (depth_stencil_value >> 18) << 2);
+      |                                           ~~~~~~~~~~~~~~~~~~~~~^~~~~~
+/home/winston/repos/BattleShip/libultraship/src/fast/backends/gfx_opengl.cpp:1013:18: note: 'depth_stencil_value' was declared here
+ 1013 |         uint32_t depth_stencil_value;
+      |                  ^~~~~~~~~~~~~~~~~~~
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/libultraship/controller/controldevice/controller/Controller.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/libultraship/bridge/controllerbridge.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/libultraship/bridge/gfxbridge.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/libultraship/bridge/resourcebridge.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/libultraship/bridge/windowbridge.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/libultraship/libultra/os.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/libultraship/libultra/os_cache.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/libultraship/libultra/os_eeprom.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/libultraship/libultra/os_mesg.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/libultraship/libultra/os_pi.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/libultraship/libultra/os_vi.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/libultraship/libultra/os_vm.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/libultraship/window/gui/GfxDebuggerWindow.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/Context.o
+[ 78%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/audio/Audio.o
+[ 79%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldeck/ControlDeck.o
+[ 79%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/Controller.o
+[ 79%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/ControllerButton.o
+[ 79%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/ControllerStick.o
+[ 80%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/factories/AxisDirectionMappingFactory.o
+[ 80%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/factories/ButtonMappingFactory.o
+[ 80%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/factories/GyroMappingFactory.o
+[ 80%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/factories/LEDMappingFactory.o
+[ 80%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/factories/RumbleMappingFactory.o
+[ 80%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/keyboard/KeyboardKeyToAnyMapping.o
+[ 80%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/keyboard/KeyboardKeyToAxisDirectionMapping.o
+[ 80%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/keyboard/KeyboardKeyToButtonMapping.o
+[ 81%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/mouse/MouseButtonToAxisDirectionMapping.o
+[ 81%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/mouse/MouseButtonToButtonMapping.o
+[ 81%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/mouse/MouseWheelToAxisDirectionMapping.o
+[ 81%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/mouse/MouseWheelToButtonMapping.o
+[ 81%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/mouse/WheelHandler.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/sdl/SDLAxisDirectionToAxisDirectionMapping.o
+/home/winston/repos/BattleShip/libultraship/src/ship/controller/controldevice/controller/mapping/mouse/WheelHandler.cpp: In member function 'float Ship::WheelHandler::CalcDirectionValue(Ship::CoordsF&, Ship::WheelDirection)':
+/home/winston/repos/BattleShip/libultraship/src/ship/controller/controldevice/controller/mapping/mouse/WheelHandler.cpp:72:12: warning: enumeration value 'LUS_WHEEL_NONE' not handled in switch [-Wswitch]
+   72 |     switch (direction) {
+      |            ^
+/home/winston/repos/BattleShip/libultraship/src/ship/controller/controldevice/controller/mapping/mouse/WheelHandler.cpp:72:12: warning: enumeration value 'LUS_WHEEL_UNKNOWN' not handled in switch [-Wswitch]
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/sdl/SDLAxisDirectionToButtonMapping.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/sdl/SDLButtonToAxisDirectionMapping.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/sdl/SDLButtonToButtonMapping.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/sdl/SDLGyroMapping.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/sdl/SDLLEDMapping.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/controldevice/controller/mapping/sdl/SDLRumbleMapping.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/controller/physicaldevice/SDLAddRemoveDeviceEventHandler.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/config/Config.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/config/ConsoleVariable.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/window/FileDropMgr.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/window/MouseStateManager.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/window/Window.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/window/gui/ConsoleWindow.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/window/gui/GameOverlay.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/window/gui/Gui.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/window/gui/GuiMenuBar.o
+/home/winston/repos/BattleShip/libultraship/src/ship/window/gui/Gui.cpp: In member function 'void Ship::Gui::ShutDownImGui(Ship::Window*)':
+/home/winston/repos/BattleShip/libultraship/src/ship/window/gui/Gui.cpp:185:12: warning: enumeration value 'FAST3D_DXGI_DX11' not handled in switch [-Wswitch]
+  185 |     switch (window->GetWindowBackend()) {
+      |            ^
+/home/winston/repos/BattleShip/libultraship/src/ship/window/gui/Gui.cpp:185:12: warning: enumeration value 'FAST3D_SDL_METAL' not handled in switch [-Wswitch]
+/home/winston/repos/BattleShip/libultraship/src/ship/window/gui/Gui.cpp:185:12: warning: enumeration value 'WINDOW_BACKEND_COUNT' not handled in switch [-Wswitch]
+/home/winston/repos/BattleShip/libultraship/src/ship/window/gui/Gui.cpp: In member function 'void Ship::Gui::DrawGame()':
+/home/winston/repos/BattleShip/libultraship/src/ship/window/gui/Gui.cpp:678:12: warning: variable 'mainPos' set but not used [-Wunused-but-set-variable]
+  678 |     ImVec2 mainPos = ImGui::GetWindowPos();
+      |            ^~~~~~~
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/window/gui/GuiWindow.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/window/gui/InputEditorWindow.o
+[ 82%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/window/gui/resource/GuiTexture.o
+[ 83%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/window/gui/resource/GuiTextureFactory.o
+[ 83%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/resource/archive/Archive.o
+[ 83%] Building CXX object libultraship/src/CMakeFiles/libultraship.dir/ship/resource/archive/O2rArchive.o
+[ 83%] Linking CXX static library libultraship.a
+[ 95%] Built target libultraship
+[ 95%] Building CXX object CMakeFiles/ssb64.dir/port/bridge/framebuffer_capture.o
+[ 95%] Building CXX object CMakeFiles/ssb64.dir/port/app_paths.o
+[ 95%] Building CXX object CMakeFiles/ssb64.dir/port/enhancements/AnalogRemap.o
+[ 95%] Building CXX object CMakeFiles/ssb64.dir/port/first_run.o
+In file included from /home/winston/repos/BattleShip/libultraship/src/../include/fast/interpreter.h:14,
+                 from /home/winston/repos/BattleShip/libultraship/src/../include/fast/Fast3dWindow.h:8,
+                 from /home/winston/repos/BattleShip/port/bridge/framebuffer_capture.cpp:26:
+/home/winston/repos/BattleShip/libultraship/src/../include/fast/lus_gbi.h:803:9: warning: '_LANGUAGE_C' redefined
+  803 | #define _LANGUAGE_C
+      |         ^~~~~~~~~~~
+<command-line>: note: this is the location of the previous definition
+In file included from /home/winston/repos/BattleShip/libultraship/src/../include/fast/interpreter.h:14,
+                 from /home/winston/repos/BattleShip/libultraship/src/../include/fast/Fast3dWindow.h:8,
+                 from /home/winston/repos/BattleShip/port/first_run.cpp:7:
+/home/winston/repos/BattleShip/libultraship/src/../include/fast/lus_gbi.h:134:9: warning: 'GIMMCMD' redefined
+  134 | #define GIMMCMD(x) = OPCODE(G_IMMFIRST - (x))
+      |         ^~~~~~~
+In file included from /home/winston/repos/BattleShip/libultraship/src/../include/libultraship/libultra.h:8,
+                 from /home/winston/repos/BattleShip/libultraship/src/../include/libultraship/libultraship.h:3,
+                 from /home/winston/repos/BattleShip/port/first_run.cpp:6:
+/home/winston/repos/BattleShip/libultraship/src/../include/libultraship/libultra/gbi.h:256:9: note: this is the location of the previous definition
+  256 | #define GIMMCMD(x) (G_IMMFIRST - (x))
+      |         ^~~~~~~
+/home/winston/repos/BattleShip/libultraship/src/../include/fast/lus_gbi.h:803:9: warning: '_LANGUAGE_C' redefined
+  803 | #define _LANGUAGE_C
+      |         ^~~~~~~~~~~
+<command-line>: note: this is the location of the previous definition
+[ 95%] Building CXX object CMakeFiles/ssb64.dir/port/gameloop.o
+[ 95%] Building CXX object CMakeFiles/ssb64.dir/port/gui/Menu.o
+In file included from /home/winston/repos/BattleShip/libultraship/src/../include/fast/interpreter.h:14,
+                 from /home/winston/repos/BattleShip/libultraship/src/../include/fast/Fast3dWindow.h:8,
+                 from /home/winston/repos/BattleShip/port/gameloop.cpp:30:
+/home/winston/repos/BattleShip/libultraship/src/../include/fast/lus_gbi.h:134:9: warning: 'GIMMCMD' redefined
+  134 | #define GIMMCMD(x) = OPCODE(G_IMMFIRST - (x))
+      |         ^~~~~~~
+In file included from /home/winston/repos/BattleShip/libultraship/src/../include/libultraship/libultra.h:8,
+                 from /home/winston/repos/BattleShip/libultraship/src/../include/libultraship/libultraship.h:3,
+                 from /home/winston/repos/BattleShip/port/gameloop.cpp:29:
+/home/winston/repos/BattleShip/libultraship/src/../include/libultraship/libultra/gbi.h:256:9: note: this is the location of the previous definition
+  256 | #define GIMMCMD(x) (G_IMMFIRST - (x))
+      |         ^~~~~~~
+/home/winston/repos/BattleShip/libultraship/src/../include/fast/lus_gbi.h:803:9: warning: '_LANGUAGE_C' redefined
+  803 | #define _LANGUAGE_C
+      |         ^~~~~~~~~~~
+<command-line>: note: this is the location of the previous definition
+[ 96%] Building CXX object CMakeFiles/ssb64.dir/port/gui/PortMenu.o
+[ 96%] Building CXX object CMakeFiles/ssb64.dir/port/gui/UIWidgets.o
+[ 96%] Building CXX object CMakeFiles/ssb64.dir/port/port.o
+In file included from /home/winston/repos/BattleShip/libultraship/src/../include/fast/interpreter.h:14,
+                 from /home/winston/repos/BattleShip/libultraship/src/../include/fast/Fast3dWindow.h:8,
+                 from /home/winston/repos/BattleShip/port/port.cpp:8:
+/home/winston/repos/BattleShip/libultraship/src/../include/fast/lus_gbi.h:134:9: warning: 'GIMMCMD' redefined
+  134 | #define GIMMCMD(x) = OPCODE(G_IMMFIRST - (x))
+      |         ^~~~~~~
+In file included from /home/winston/repos/BattleShip/libultraship/src/../include/libultraship/libultra.h:8,
+                 from /home/winston/repos/BattleShip/libultraship/src/../include/libultraship/libultraship.h:3,
+                 from /home/winston/repos/BattleShip/port/port.cpp:5:
+/home/winston/repos/BattleShip/libultraship/src/../include/libultraship/libultra/gbi.h:256:9: note: this is the location of the previous definition
+  256 | #define GIMMCMD(x) (G_IMMFIRST - (x))
+      |         ^~~~~~~
+/home/winston/repos/BattleShip/libultraship/src/../include/fast/lus_gbi.h:803:9: warning: '_LANGUAGE_C' redefined
+  803 | #define _LANGUAGE_C
+      |         ^~~~~~~~~~~
+<command-line>: note: this is the location of the previous definition
+[ 96%] Building CXX object CMakeFiles/ssb64.dir/port/port_save.o
+[ 96%] Building CXX object CMakeFiles/ssb64.dir/port/resource/RelocFileTable.o
+[ 96%] Linking CXX executable BattleShip.elf
+Packaging BattleShip.nro from BattleShip.elf
+Post-build copy complete
+[100%] Built target ssb64
+Built: /home/winston/repos/BattleShip/build-switch/BattleShip.nro
+
+--- Step 3: Bundling SD card files ---
+Bundling Switch deployment files into /home/winston/repos/BattleShip/build-switch/switch_sd/switch/BattleShip
+Built target BundleSwitch
+
+=== Build Complete ===
+Copy the contents of:
+  /home/winston/repos/BattleShip/build-switch/switch_sd/switch/BattleShip
+to the root of your Switch SD card.
+
+Game path: sdmc:/switch/BattleShip/BattleShip.nro
+total 23744
+drwxrwxr-x 3 winston winston     4096 May 14 18:43 .
+drwxrwxr-x 3 winston winston     4096 May 13 10:44 ..
+-rw-rw-r-- 1 winston winston 11577541 May 14 18:37 BattleShip.nro
+-rw-rw-r-- 1 winston winston 12114884 May 14 18:37 BattleShip.o2r
+-rw-rw-r-- 1 winston winston     8380 May 14 18:37 f3d.o2r
+-rw-rw-r-- 1 winston winston   592586 May 14 18:43 gamecontrollerdb.txt
+drwxrwxr-x 2 winston winston     4096 May 14 18:43 shader_cache

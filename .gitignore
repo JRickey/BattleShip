@@ -1,6 +1,11 @@
 # Build
 build/
 build-*/
+
+# Switch build artifacts (generated, never committed)
+*.elf
+*.nro
+switch_sd/
 cmake-build-*/
 dist/
 .vs/

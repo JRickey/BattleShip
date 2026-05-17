@@ -147,7 +147,10 @@ int RunCaptureNoWindow(std::string cmd,
 #endif
 
 int RunCapture(std::string cmd, const std::function<void(const std::string&)>& onLine) {
-#if defined(_WIN32)
+#ifdef __SWITCH__
+    // No point in trying to capture output on Switch.
+    return 0;
+#elif defined(_WIN32)
     return RunCaptureNoWindow(std::move(cmd), onLine);
 #else
     FILE* pipe = popen(cmd.c_str(), "r");
@@ -220,6 +223,7 @@ void ResetDownloadStateForNewCheck() {
 } // namespace
 
 void CheckForUpdatesAsync(bool force) {
+#ifndef __SWITCH__
     // Check our atomic flags (no locks required)
     if (s_isCheckingForUpdates.load() || s_isDownloading.load()) return;
     if (!force && s_updateChecked.load()) return;
@@ -284,9 +288,11 @@ void CheckForUpdatesAsync(bool force) {
 
         s_isCheckingForUpdates.store(false);
     }).detach();
+#endif
 }
 
 void StartGameUpdate() {
+#ifndef __SWITCH__
     if (s_isDownloading.load()) return;
     s_isDownloading.store(true);
 
@@ -411,10 +417,13 @@ void StartGameUpdate() {
 
         s_isDownloading.store(false);
     }).detach();
+#endif
 }
 
 // OS-aware URL opener for Windows and Mac fallback
 void OpenReleasePage() {
+#ifndef __SWITCH__
+
     const char* url = kReleasePageUrl;
 
     #if defined(_WIN32)
@@ -427,6 +436,7 @@ void OpenReleasePage() {
                       ShellSingleQuote(url) + " &";
     system(cmd.c_str());
     #endif
+#endif
 }
 
 // Atomic reads - no locks required for the UI thread!

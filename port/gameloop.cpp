@@ -62,13 +62,14 @@ extern "C" void lbBackupApplyCheats(void);
 /*  External game symbols (C linkage)                                        */
 /* ========================================================================= */
 
-extern "C" {
+extern "C"
+{
 
-/* The N64 game entry point — starts the whole boot chain. */
-extern void syMainLoop(void);
+	/* The N64 game entry point — starts the whole boot chain. */
+	extern void syMainLoop(void);
 
-/* Scheduler task message queue — we post INTR_VRETRACE here each frame. */
-extern OSMesgQueue gSYSchedulerTaskMesgQueue;
+	/* Scheduler task message queue — we post INTR_VRETRACE here each frame. */
+	extern OSMesgQueue gSYSchedulerTaskMesgQueue;
 
 /* VI retrace interrupt value (matches scheduler.c local define). */
 #define INTR_VRETRACE 1
@@ -92,8 +93,8 @@ extern OSMesgQueue gSYSchedulerTaskMesgQueue;
  */
 static inline OSMesg port_make_os_mesg_int(uint32_t code)
 {
-	OSMesg m{};          /* zero-initialise every union member */
-	m.data32 = code;     /* then set the scalar we care about */
+	OSMesg m{};		 /* zero-initialise every union member */
+	m.data32 = code; /* then set the scalar we care about */
 	return m;
 }
 
@@ -163,6 +164,7 @@ static int sFrameLoadBytes = 0;
 static int sLastDLTris = 0;
 static int sLastDLRectPx = 0;
 static int sLastDLLoadBytes = 0;
+static int sDLSubmitCount = 0;
 
 /* Thin C wrapper for the trace callback (matches GbiTraceCallbackFn signature) */
 static void gbi_trace_callback(uintptr_t w0, uintptr_t w1, int dl_depth)
@@ -170,7 +172,8 @@ static void gbi_trace_callback(uintptr_t w0, uintptr_t w1, int dl_depth)
 	gbi_trace_log_cmd((unsigned long long)w0, (unsigned long long)w1, dl_depth);
 
 	uint8_t opcode = (uint8_t)((w0 >> 24) & 0xFFu);
-	switch (opcode) {
+	switch (opcode)
+	{
 	/* SSB64 ucode is F3DEX2 (gsp.fifo). Tri opcodes are 0x05/0x06/0x07,
 	 * NOT F3DEX's 0xBF/0xB1/0xB5 — confirmed by histogram showing 0x05
 	 * and 0x06 emitted in the hundreds per frame. RDP rect/load opcodes
@@ -190,12 +193,13 @@ static void gbi_trace_callback(uintptr_t w0, uintptr_t w1, int dl_depth)
 		 * G_FILLRECT: w0 = 0xF6 | lrx<<12 | lry; w1 = ulx<<12 | uly
 		 * Pixel area = (lrx - ulx) * (lry - uly) >> 4 (10.2 → integer). */
 		int lrx = (int)((w0 >> 12) & 0xFFF);
-		int lry = (int)( w0        & 0xFFF);
+		int lry = (int)(w0 & 0xFFF);
 		int ulx = (int)((w1 >> 12) & 0xFFF);
-		int uly = (int)( w1        & 0xFFF);
+		int uly = (int)(w1 & 0xFFF);
 		int w_px = (lrx - ulx) >> 2;
 		int h_px = (lry - uly) >> 2;
-		if (w_px > 0 && h_px > 0) {
+		if (w_px > 0 && h_px > 0)
+		{
 			sFrameRectPx += w_px * h_px;
 		}
 		break;
@@ -228,7 +232,8 @@ extern "C" int port_get_last_dl_defer_n(void)
 	static int sBudget = -1;
 	static int sForceN = -1;
 	static int sRectGate = -1;
-	if (sBudget < 0) {
+	if (sBudget < 0)
+	{
 		/* Calibrated empirically against attract-mode DL cost histogram:
 		 * p99 ≈ 394k, p99.5 ≈ 397k, max observed = 415k. Setting the
 		 * budget at 400k means only the top ~0.1% of DLs trigger a
@@ -238,7 +243,8 @@ extern "C" int port_get_last_dl_defer_n(void)
 		 * the full design + tuning rationale. */
 		const char *env = std::getenv("SSB64_RCP_CYCLE_BUDGET");
 		sBudget = (env != NULL) ? std::atoi(env) : 400000;
-		if (sBudget < 1000) sBudget = 1000;
+		if (sBudget < 1000)
+			sBudget = 1000;
 		const char *fenv = std::getenv("SSB64_RCP_FORCE_N");
 		sForceN = (fenv != NULL) ? std::atoi(fenv) : 0;
 		/* Fillrate gate: a DL must ALSO push significant rect_px (texrect /
@@ -250,11 +256,13 @@ extern "C" int port_get_last_dl_defer_n(void)
 		 * Default 200k sits cleanly between the two distributions. */
 		const char *renv = std::getenv("SSB64_RCP_RECT_GATE");
 		sRectGate = (renv != NULL) ? std::atoi(renv) : 200000;
-		if (sRectGate < 0) sRectGate = 0;
+		if (sRectGate < 0)
+			sRectGate = 0;
 		port_log("SSB64: RCP cost model — budget=%d cycles/VI, force_n=%d (0=cost-model, >=1=fixed), rect_gate=%d\n",
-		         sBudget, sForceN, sRectGate);
+				 sBudget, sForceN, sRectGate);
 	}
-	if (sForceN >= 1) return sForceN;
+	if (sForceN >= 1)
+		return sForceN;
 
 	/* Scene-level allowlist gate. The cost model exists to recreate the
 	 * authored climax-freeze frames in cutscenes / opening sequences /
@@ -267,31 +275,37 @@ extern "C" int port_get_last_dl_defer_n(void)
 	 * game-tick rate). Issue #78. */
 	extern unsigned char port_diag_get_scene_curr(void);
 	extern int port_scene_wants_freeze_simulation(unsigned char scene_id);
-	if (!port_scene_wants_freeze_simulation(port_diag_get_scene_curr())) {
+	if (!port_scene_wants_freeze_simulation(port_diag_get_scene_curr()))
+	{
 		return 1;
 	}
 
-	int cost = sLastDLTris * 75
-	         + sLastDLRectPx
-	         + sLastDLLoadBytes;
+	int cost = sLastDLTris * 75 + sLastDLRectPx + sLastDLLoadBytes;
 	/* Heavy-DL deferral. The port's coroutine scheduler observes the held
 	 * framebuffer one host frame after slot contention, so climax DLs need
 	 * one extra VI of synthetic RCP latency beyond the first visible stall.
 	 * This shifts all authored freezes together (portrait banners, fighter
 	 * poses, stage cuts) instead of patching scene timers individually. */
 	int n;
-	if (cost < sBudget) {
+	if (cost < sBudget)
+	{
 		n = 1;
-	} else if (sLastDLRectPx < sRectGate) {
+	}
+	else if (sLastDLRectPx < sRectGate)
+	{
 		/* Cost is over budget but the load is dominated by triangles, not
 		 * fillrate — looks like a fighter model render, not an authored
 		 * full-screen effect. Don't freeze. */
 		n = 1;
-	} else {
+	}
+	else
+	{
 		n = 3;
 	}
-	if (n < 1) n = 1;
-	if (n > 3) n = 3;
+	if (n < 1)
+		n = 1;
+	if (n > 3)
+		n = 3;
 	return n;
 }
 
@@ -305,7 +319,17 @@ extern "C" void port_submit_display_list(void *dl)
 	/* Lazy-init the GBI trace system on first DL submit. Always install
 	 * the callback because Phase 3's per-DL cost model also runs through
 	 * it — gbi_trace_log_cmd is the no-op fast path when tracing is off. */
-	if (!sGbiTraceInitDone) {
+	sDLSubmitCount++;
+#ifndef __SWITCH__
+	if (sDLSubmitCount <= 60 || (sDLSubmitCount % 60 == 0))
+	{
+		port_log("SSB64: port_submit_display_list #%d dl=%p\n", sDLSubmitCount, dl);
+	}
+#endif
+
+	/* Lazy-init the GBI trace system on first DL submit */
+	if (!sGbiTraceInitDone)
+	{
 		sGbiTraceInitDone = 1;
 		gbi_trace_init();
 		gfx_set_trace_callback(gbi_trace_callback);
@@ -316,19 +340,22 @@ extern "C" void port_submit_display_list(void *dl)
 	sFrameRectPx = 0;
 	sFrameLoadBytes = 0;
 
-	if (dl == NULL) {
+	if (dl == NULL)
+	{
 		port_log("SSB64: WARNING — display list is NULL!\n");
 		return;
 	}
 
 	auto context = Ship::Context::GetInstance();
-	if (!context) {
+	if (!context)
+	{
 		port_log("SSB64: WARNING — no Ship::Context in display list submit!\n");
 		return;
 	}
 
 	auto window = std::dynamic_pointer_cast<Fast::Fast3dWindow>(context->GetWindow());
-	if (!window) {
+	if (!window)
+	{
 		port_log("SSB64: WARNING — no Fast3dWindow in display list submit!\n");
 		return;
 	}
@@ -337,13 +364,18 @@ extern "C" void port_submit_display_list(void *dl)
 	gbi_trace_begin_frame();
 
 	std::unordered_map<Mtx *, MtxF> mtxReplacements;
-	try {
+	try
+	{
 		window->DrawAndRunGraphicsCommands(static_cast<Gfx *>(dl), mtxReplacements);
-	} catch (long hr) {
+	}
+	catch (long hr)
+	{
 		port_log("SSB64: CAUGHT DX shader exception HRESULT=0x%08lX\n", hr);
 		gbi_trace_end_frame();
 		return;
-	} catch (...) {
+	}
+	catch (...)
+	{
 		port_log("SSB64: CAUGHT unknown exception while processing display list\n");
 		gbi_trace_end_frame();
 		return;
@@ -378,7 +410,8 @@ void PortGameInit(void)
 	 * This will host the entire game: syMainLoop -> Thread 1 -> Thread 5
 	 * -> scheduler, controller, audio init -> scManagerRunLoop. */
 	sGameCoroutine = port_coroutine_create(game_coroutine_entry, NULL, 1024 * 1024);
-	if (sGameCoroutine == NULL) {
+	if (sGameCoroutine == NULL)
+	{
 		port_log("SSB64: FATAL — failed to create game coroutine\n");
 		return;
 	}
@@ -423,43 +456,55 @@ static std::string sScreenshotDir;
 
 static void port_screenshot_init_once(void)
 {
-	if (sScreenshotInited) {
+	if (sScreenshotInited)
+	{
 		return;
 	}
 	sScreenshotInited = true;
 
 	const char *frames_env = std::getenv("SSB64_SCREENSHOT_FRAMES");
-	if (frames_env == nullptr || frames_env[0] == '\0') {
+	if (frames_env == nullptr || frames_env[0] == '\0')
+	{
 		sScreenshotEnabled = false;
 		return;
 	}
 
 	const char *dir_env = std::getenv("SSB64_SCREENSHOT_DIR");
 	sScreenshotDir = (dir_env != nullptr && dir_env[0] != '\0')
-		? dir_env
-		: "debug_traces/screenshots";
+						 ? dir_env
+						 : "debug_traces/screenshots";
 
-	if (std::strcmp(frames_env, "all") == 0) {
+	if (std::strcmp(frames_env, "all") == 0)
+	{
 		sScreenshotAllFrames = true;
-	} else {
+	}
+	else
+	{
 		/* Parse comma-separated integer list. Ignores malformed tokens. */
 		const char *p = frames_env;
-		while (*p != '\0') {
-			while (*p == ',' || *p == ' ' || *p == '\t') {
+		while (*p != '\0')
+		{
+			while (*p == ',' || *p == ' ' || *p == '\t')
+			{
 				p++;
 			}
-			if (*p == '\0') {
+			if (*p == '\0')
+			{
 				break;
 			}
 			char *end = nullptr;
 			long v = std::strtol(p, &end, 10);
-			if (end != p && v >= 0 && v <= 0x7FFFFFFF) {
+			if (end != p && v >= 0 && v <= 0x7FFFFFFF)
+			{
 				sScreenshotFrames.insert(static_cast<int>(v));
 			}
-			if (end == p) {
+			if (end == p)
+			{
 				/* Couldn't parse — skip a char to avoid infinite loop. */
 				p++;
-			} else {
+			}
+			else
+			{
 				p = end;
 			}
 		}
@@ -467,40 +512,50 @@ static void port_screenshot_init_once(void)
 
 	sScreenshotEnabled = sScreenshotAllFrames || !sScreenshotFrames.empty();
 
-	if (sScreenshotEnabled) {
+	if (sScreenshotEnabled)
+	{
 		std::error_code ec;
 		std::filesystem::create_directories(sScreenshotDir, ec);
-		if (ec) {
+		if (ec)
+		{
 			port_log("SSB64: screenshot: failed to create dir '%s': %s\n",
-				sScreenshotDir.c_str(), ec.message().c_str());
+					 sScreenshotDir.c_str(), ec.message().c_str());
 		}
-		if (sScreenshotAllFrames) {
+		if (sScreenshotAllFrames)
+		{
 			port_log("SSB64: screenshot capture ENABLED (all frames) dir='%s'\n",
-				sScreenshotDir.c_str());
-		} else {
+					 sScreenshotDir.c_str());
+		}
+		else
+		{
 			port_log("SSB64: screenshot capture ENABLED (%zu frames) dir='%s'\n",
-				sScreenshotFrames.size(), sScreenshotDir.c_str());
+					 sScreenshotFrames.size(), sScreenshotDir.c_str());
 		}
 	}
 }
 
 static void port_screenshot_maybe_capture(int frame)
 {
-	if (!sScreenshotEnabled) {
+	if (!sScreenshotEnabled)
+	{
 		return;
 	}
-	if (!sScreenshotAllFrames && sScreenshotFrames.count(frame) == 0) {
+	if (!sScreenshotAllFrames && sScreenshotFrames.count(frame) == 0)
+	{
 		return;
 	}
 
 	char path[1024];
 	std::snprintf(path, sizeof(path), "%s/frame_%d.png",
-		sScreenshotDir.c_str(), frame);
+				  sScreenshotDir.c_str(), frame);
 
 	int ok = portFastCaptureBackbufferPNG(path);
-	if (ok) {
+	if (ok)
+	{
 		port_log("SSB64: screenshot frame %d -> %s\n", frame, path);
-	} else {
+	}
+	else
+	{
 		port_log("SSB64: screenshot frame %d FAILED -> %s\n", frame, path);
 	}
 }
@@ -517,9 +572,11 @@ void PortPushFrame(void)
 	/* Pump SDL events so the window stays responsive and WindowIsRunning
 	 * detects the close button. HandleEvents also updates controller state. */
 	auto context = Ship::Context::GetInstance();
-	if (context) {
+	if (context)
+	{
 		auto window = context->GetWindow();
-		if (window) {
+		if (window)
+		{
 			window->HandleEvents();
 		}
 	}
@@ -558,33 +615,40 @@ void PortPushFrame(void)
 	 * 0-submit frames can otherwise hold an older swapchain image. Present
 	 * the cached game framebuffer texture through the normal GUI/window path
 	 * without re-running any display list or touching game memory. */
-	if (sDLSubmitsThisFrame == 0) {
+	if (sDLSubmitsThisFrame == 0)
+	{
 		bool idlePresented = false;
 		static int sFreezePacing = -1;
-		if (sFreezePacing < 0) {
+		if (sFreezePacing < 0)
+		{
 			const char *env = std::getenv("SSB64_FREEZE_PACING");
 			sFreezePacing = (env != nullptr) ? std::atoi(env) : 1;
 		}
-		if (sFreezePacing) {
+		if (sFreezePacing)
+		{
 			auto context = Ship::Context::GetInstance();
 			auto window = context
-				? std::dynamic_pointer_cast<Fast::Fast3dWindow>(context->GetWindow())
-				: nullptr;
-			if (window) {
+							  ? std::dynamic_pointer_cast<Fast::Fast3dWindow>(context->GetWindow())
+							  : nullptr;
+			if (window)
+			{
 				idlePresented = window->PresentCurrentFramebuffer();
 			}
 
-			if (!idlePresented) {
+			if (!idlePresented)
+			{
 				/* Fallback pace to one VI period if there is no cached
 				 * framebuffer yet. Normal idle presents pace through the
 				 * backend's SwapBuffers path. */
 				auto target = frameStart + std::chrono::microseconds(16667);
 				auto coarseTarget = target - std::chrono::microseconds(2000);
 				auto now = std::chrono::steady_clock::now();
-				if (now < coarseTarget) {
+				if (now < coarseTarget)
+				{
 					std::this_thread::sleep_for(coarseTarget - now);
 				}
-				while (std::chrono::steady_clock::now() < target) {
+				while (std::chrono::steady_clock::now() < target)
+				{
 					/* busy-wait */
 				}
 			}
@@ -610,16 +674,20 @@ void PortPushFrame(void)
 		static auto sStartTime = std::chrono::steady_clock::now();
 		auto now = std::chrono::steady_clock::now();
 		double elapsed = std::chrono::duration<double>(now - sStartTime).count();
-		if (sFrameCount <= 60 || (sFrameCount % 60 == 0)) {
+#ifndef __SWITCH__
+		if (sFrameCount <= 60 || (sFrameCount % 60 == 0))
+		{
 			port_log("SSB64: Frame %d complete (t=%.2fs)\n", sFrameCount, elapsed);
 		}
+#endif
 	}
 }
 
 void PortGameShutdown(void)
 {
 	port_watchdog_shutdown();
-	if (sGameCoroutine != NULL) {
+	if (sGameCoroutine != NULL)
+	{
 		port_coroutine_destroy(sGameCoroutine);
 		sGameCoroutine = NULL;
 	}

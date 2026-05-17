@@ -14,8 +14,10 @@
  *  - All logging goes through port_log so it lands in ssb64.log alongside
  *    the other port diagnostics.
  */
-
 #include "renderdoc_trigger.h"
+
+#ifndef __SWITCH__
+
 #include "renderdoc_app.h"
 #include "port_log.h"
 
@@ -24,7 +26,7 @@
   #define WIN32_LEAN_AND_MEAN
   #endif
   #include <windows.h>
-#else
+#elif !defined(__SWITCH__)
   #include <dlfcn.h>
 #endif
 
@@ -142,7 +144,7 @@ extern "C" void portRenderDocInit(void)
     pRENDERDOC_GetAPI getApi =
         reinterpret_cast<pRENDERDOC_GetAPI>(
             reinterpret_cast<void *>(GetProcAddress(mod, "RENDERDOC_GetAPI")));
-#else
+#elif !defined(__SWITCH__)
     // Linux/macOS: try librenderdoc.so. RTLD_NOLOAD first so we only probe
     // an already-loaded instance, then fall back to a regular load.
     void *mod = dlopen("librenderdoc.so", RTLD_NOW | RTLD_NOLOAD);
@@ -155,6 +157,9 @@ extern "C" void portRenderDocInit(void)
     }
     pRENDERDOC_GetAPI getApi = reinterpret_cast<pRENDERDOC_GetAPI>(
         dlsym(mod, "RENDERDOC_GetAPI"));
+#else
+    // Switch: RenderDoc is not available on console.
+    return;
 #endif
 
     if (getApi == nullptr) {
@@ -217,3 +222,12 @@ extern "C" void portRenderDocShutdown(void)
     // init/shutdown symmetry without ifdefs.
     sRdocApi = nullptr;
 }
+
+#else  // __SWITCH__ — RenderDoc not available on console
+
+extern "C" void portRenderDocInit(void) {}
+extern "C" void portRenderDocOnFrame(unsigned int) {}
+extern "C" void portRenderDocShutdown(void) {}
+extern "C" void portRenderDocTriggerCaptureStart(int) {}
+
+#endif // __SWITCH__
