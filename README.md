@@ -2,9 +2,9 @@
   <img src="assets/BattleShip.svg" alt="BattleShip" width="640">
 </p>
 
-# BattleShip
+# RafaelSmashing
 
-**BattleShip** is a PC port of **Super Smash Bros. (N64)** — both the **US** (NTSC-U v1.0) and **Japanese** (Nintendo All-Star! Dairantou Smash Brothers) releases — built on top of the [VetriTheRetri/ssb-decomp-re](https://github.com/vetritheretri/ssb-decomp-re) decompilation, using [libultraship](https://github.com/Kenix3/libultraship) for PC-native rendering / audio / input and [Torch](https://github.com/HarbourMasters/Torch) for extracting assets out of the ROM at build time.
+**RafaelSmashing** is a PC port of **Super Smash Bros. (N64)** — both the **US** (NTSC-U v1.0) and **Japanese** (Nintendo All-Star! Dairantou Smash Brothers) releases — built on top of the [VetriTheRetri/ssb-decomp-re](https://github.com/vetritheretri/ssb-decomp-re) decompilation, using [libultraship](https://github.com/Kenix3/libultraship) for PC-native rendering / audio / input and [Torch](https://github.com/HarbourMasters/Torch) for extracting assets out of the ROM at build time.
 
 Runs natively on macOS (Apple Silicon), Linux, and Windows.
 
