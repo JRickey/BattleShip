@@ -8,9 +8,9 @@
 Runs natively on Windows.
 
 
-## No copyrighted assets are included in this repository
+## No copyrighted assets are included in this fork
 
-**None of Nintendo's assets (code, textures, audio, models, text, ROM data) are checked into this repo or distributed with builds.** The port is a pure C/C++ source tree; every byte of Nintendo-owned data is extracted at build time from a ROM that *you* supply. If you do not own a legal copy of Super Smash Bros. for the Nintendo 64, you cannot build or run this project.
+**None of Nintendo's assets (code, textures, audio, models, text, ROM data) are checked into this fork or distributed with builds.** The port is a pure C/C++ source tree; every byte of Nintendo-owned data is extracted at build time from a ROM that *you* supply. If you do not own a legal copy of Super Smash Bros. for the Nintendo 64, you cannot build or run this project.
 
 You supply your own ROM. The decomp game code is region-compiled, so US
 and JP are separate builds — build the one matching your ROM
@@ -47,7 +47,7 @@ All Powered by LibultraShip
 - Anti Aliasing
 - Tri Point Texture Filtering
 
-## Rollback Netcode and Online Play (WORK IN PROGRESS)
+## Rollback Netcode and Online Play (NOT WORKING IN IT)
 
 ## Building
 
