@@ -171,7 +171,7 @@ SSB64 drives the RDP differently than the Zelda / Mario 64 / Star Fox 64 titles 
 
 ### [`torch`](https://github.com/JRickey/Torch/tree/ssb64) — fork of [HarbourMasters/Torch](https://github.com/HarbourMasters/Torch)
 
-Torch is the tool that reads the ROM and emits `BattleShip.o2r`. Upstream supports OoT, MM, SF64, MK64, PM64, etc., but has no knowledge of SSB64's file formats. The fork adds:
+Torch is the tool that reads the ROM and emits `RafaelSmashing.o2r`. Upstream supports OoT, MM, SF64, MK64, PM64, etc., but has no knowledge of SSB64's file formats. The fork adds:
 
 - An `SSB64` build flag and game target
 - A reloc-file factory for SSB64's relocatable data blobs (fighters, items, effects, sprites)
@@ -196,7 +196,7 @@ decomp/       submodule — decompiled SSB64 C source (largely unchanged
                 src/mn/ it/ ef/ menus / items / effects
                 src/relocData/  reloc data sources
 libultraship/ submodule — PC-native render / audio / input / resource mgr
-torch/        submodule — asset extractor (ROM → BattleShip.o2r)
+torch/        submodule — asset extractor (ROM → RafaelSmashing.o2r)
 yamls/us/     Torch YAML extraction configs (some generated)
 tools/        Python helpers: reloc stubs, YAML gen, credits encoder
 docs/         architecture notes, bug write-ups, debugging guides
@@ -227,7 +227,7 @@ PRs are welcome but please don't be offended if responses are slow — this is a
 
 ## Credits & licensing
 
-- Game code, data, sound, textures, models, and trademarks: **© Nintendo / HAL Laboratory.** Not included in this repository, not redistributed, and not endorsed by them.
+- Game code, data, sound, textures, models, and trademarks: **© Nintendo / HAL Laboratory.** Not included in this fork, not redistributed, and not endorsed by them.
 - Decompilation: [VetriTheRetri/ssb-decomp-re](https://github.com/VetriTheRetri/ssb-decomp-re) and its contributors. Vendored as the `decomp/` submodule. At the time of writing the upstream project does not publish an explicit license; this repository makes no copyright claim over the decompiled source and refers to the upstream project for any rights, terms, or restrictions on reuse.
 - Runtime framework: [libultraship](https://github.com/Kenix3/libultraship) — Copyright (c) 2022 kenix3, MIT-licensed. Originated by the Harbour Masters team (Ship of Harkinian) and now maintained at Kenix3/libultraship. Vendored as the `libultraship/` submodule.
 - Asset pipeline: [Torch](https://github.com/HarbourMasters/Torch) — Copyright (c) 2023 Lywx (Harbour Masters), MIT-licensed. Vendored as the `torch/` submodule.
