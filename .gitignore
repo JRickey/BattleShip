@@ -1,13 +1,11 @@
 # Build
 build/
 build-*/
-cmake-build-*/
 dist/
 .vs/
 .idea/
 *.sln
 *.vcxproj*
-CMakeSettings.json
 out/
 
 # IDE
@@ -56,8 +54,6 @@ assets/*
 !assets/icon-jp.png
 !assets/icon-jp.ico
 !assets/icon-jp.icns
-!assets/macos_dmg_banner.png
-!assets/BattleShip.svg
 !assets/custom/
 !assets/custom/fonts/
 !assets/custom/fonts/*
