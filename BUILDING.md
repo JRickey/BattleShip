@@ -12,7 +12,7 @@ of the build (cached afterwards) — there is no separate extract step.
 
 ## Prerequisites
 
-- Git, CMake, Python 3, or Visual Studio 2022 +
+- Git, Python 3, or Visual Studio 2022 +
   Windows SDK (Windows)
 - Submodules: `git submodule update --init --recursive`
 - A legal ROM at the repo root matching the version you are building:
