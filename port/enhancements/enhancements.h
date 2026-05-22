@@ -48,6 +48,24 @@ void port_enhancement_analog_remap(int player_index, signed char* stick_x, signe
 
 int port_cheat_unlock_all_active(void);
 
+// competitive ruleset enhancements
+int port_get_comp_ruleset(void);
+void port_apply_comp_ruleset_overrides(void);
+void port_cleanup_comp_ruleset(void);
+void port_comp_ruleset_skip_stageselect(void);
+
+// neutral spawn points on dreamland
+int port_enhancement_neutral_spawns(void);
+
+// boot to CSS
+int port_enhancement_boot_to_vs_css(void);
+
+// skip results screen
+int port_enhancement_skip_results_screen(void);
+
+// cpu behavior
+int port_enhancement_cpu_level_9(void);
+
 #ifdef __cplusplus
 }
 
@@ -62,6 +80,11 @@ const char* AnalogRemapCVarName(int playerIndex);
 const char* AnalogRemapDeadzoneCVarName(int playerIndex);
 const char* AnalogRemapRangeCVarName(int playerIndex);
 const char* WidescreenCVarName();
+const char* CompRulesetCVarName();
+const char* NeutralSpawnsCVarName();
+const char* BootToVSCSSCVarName();
+const char* SkipResultsScreenCVarName();
+const char* CpuLevel9CVarName();
 
 // Updater functions
 void CheckForUpdatesAsync(bool force = false);

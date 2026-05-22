@@ -981,6 +981,37 @@ void PortMenu::AddMenuSettings() {
                      .ComboMap(kHitboxViewMap)
                      .DefaultIndex(0));
 
+    // competitive ruleset stuff
+    AddWidget(path, "Rules", WIDGET_SEPARATOR_TEXT);
+    AddWidget(path, "Use Competitive Ruleset", WIDGET_CVAR_CHECKBOX)
+        .CVar(ssb64::enhancements::CompRulesetCVarName())
+        .RaceDisable(false)
+        .Options(CheckboxOptions().Tooltip("Forces the following in VS Mode: \n"
+                                           "- 4 Stocks \n"
+                                           "- 8 Minutes \n"
+                                           "- Items Off \n"
+                                           "- Team Attack ON \n"
+                                           "- Dream Land only"));
+    AddWidget(path, "Neutral Spawns on Dreamland", WIDGET_CVAR_CHECKBOX)
+        .CVar(ssb64::enhancements::NeutralSpawnsCVarName())
+        .RaceDisable(false)
+        .Options(CheckboxOptions().Tooltip("Forces balanced, opposite-side starting positions for 1v1 and Team Battles."));
+
+    // QoL
+    AddWidget(path, "Quality-of-Life", WIDGET_SEPARATOR_TEXT);
+    AddWidget(path, "Boot to VS CSS", WIDGET_CVAR_CHECKBOX)
+        .CVar(ssb64::enhancements::BootToVSCSSCVarName())
+        .RaceDisable(false)
+        .Options(CheckboxOptions().Tooltip("Skips the intro sequences and boots directly to the VS Mode Character Select Screen."));
+    AddWidget(path, "Skip Results Screen", WIDGET_CVAR_CHECKBOX)
+        .CVar(ssb64::enhancements::SkipResultsScreenCVarName())
+        .RaceDisable(false)
+        .Options(CheckboxOptions().Tooltip("Skips the victory podium and returns directly to the Character Select Screen."));
+    AddWidget(path, "Force CPU Level 9", WIDGET_CVAR_CHECKBOX)
+        .CVar(ssb64::enhancements::CpuLevel9CVarName())
+        .RaceDisable(false)
+        .Options(CheckboxOptions().Tooltip("Automatically forces all CPU players to Level 9."));
+
     // --- Controls sidebar: per-player input remapping ---
     path.sidebarName = "Controls";
     path.column = SECTION_COLUMN_1;
