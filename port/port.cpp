@@ -41,6 +41,9 @@
 #if !defined(__ANDROID__)
 #include "port_window_icon.h"
 #endif
+#if defined(__ANDROID__)
+#include <android/api-level.h>  // android_get_device_api_level (audio-driver gate)
+#endif
 #ifndef DISABLE_SCRIPTING
 #include "mods/HookManager.h"
 #include "mods/SymbolResolver.h"
@@ -1247,11 +1250,14 @@ int main(int argc, char* argv[]) {
 		         SDL_GetError());
 	}
 
-	// Prefer AAudio (Android 8.0+ low-latency audio API) over the default
-	// OpenSL ES backend. Worth a few ms of latency for a fighting game,
-	// and SDL2 falls back to OpenSL ES if AAudio isn't compiled in or
-	// the device rejects it.
-	SDL_SetHint(SDL_HINT_AUDIODRIVER, "aaudio");
+	// Prefer AAudio (low-latency) only where it exists — API 26+. AAudio's
+	// libaaudio.so is absent below that, and SDL_AudioInit does NOT fall back
+	// once a driver name is pinned (it fails with "Audio target not
+	// available"), so forcing it on older devices kills audio outright. Below
+	// 26 we leave the hint unset and let SDL auto-select OpenSL ES.
+	if (android_get_device_api_level() >= 26) {
+		SDL_SetHint(SDL_HINT_AUDIODRIVER, "aaudio");
+	}
 
 	// 2. Suppress ImGui's per-frame SDL_GetDisplayUsableBounds JNI path.
 	//    ImGui_ImplSDL2_UpdateMonitors runs on the SSB64 GFX coroutine

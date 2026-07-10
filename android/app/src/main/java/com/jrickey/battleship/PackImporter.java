@@ -12,8 +12,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 import java.util.zip.ZipFile;
 
@@ -137,10 +135,17 @@ public final class PackImporter {
                 Log.e(TAG, "rejected " + total + " bytes: not a valid .zip archive");
                 return null;
             }
-            // Files.move replaces any existing same-named pack in one step — no
+            // rename(2) on the same filesystem (tmp and dst share mods/)
+            // atomically replaces any existing same-named pack — no
             // delete-then-rename window that could leave mods/ with neither the
-            // old nor the new pack.
-            Files.move(tmp.toPath(), dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            // old nor the new pack. Fall back to delete+rename only if a strict
+            // renameTo refuses to overwrite.
+            if (!tmp.renameTo(dst)) {
+                dst.delete();
+                if (!tmp.renameTo(dst)) {
+                    throw new IOException("rename " + tmp + " -> " + dst + " failed");
+                }
+            }
             published = true;
             Log.i(TAG, "imported " + total + " bytes -> " + dst);
             return dst;
