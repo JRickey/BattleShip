@@ -129,7 +129,35 @@ This is **separate from and not a regression of** the minSdk fix — it is the f
 actual *runtime* exercise of the armeabi-v7a build (the ILP32 port was only ever
 compile-validated).
 
-### UPDATE 2026-07-10 (later): coroutine theory DISPROVEN — it's per-frame render-path stack growth
+### UPDATE 2026-07-10 (latest): it's a CORRUPTED CODE POINTER, not "recursion"
+
+Debugged under lldb (lldb-server on the ARMv7 emulator, box-side NDK client, ASLR
+disabled for stable addresses). Key finding: **the crash is nondeterministic** —
+across runs it presents as either `SIGABRT` (the `StackOverflowError` seen without a
+debugger) OR `SIGSEGV: invalid permissions for mapped object (fault addr =
+0x2c03083c)`. "Invalid permissions" at a small ILP32-shaped address means the code
+**jumped to / called a corrupted pointer** that lands on a non-executable page.
+
+That reconciles everything: a **bad function/DL/callback pointer** is being called on
+the first content frame. Depending on heap/token state the garbage target either (a)
+loops back into executable memory → runaway → stack overflow → SIGABRT, or (b) hits a
+non-exec page → SIGSEGV. Same root cause; the "infinite recursion" chased earlier was
+a *symptom* of the corrupted pointer, not the disease. The nondeterminism (SIGABRT vs
+SIGSEGV across identical runs) is the signature of memory/pointer corruption.
+
+**This is an ILP32 pointer-corruption bug** — matching the port's long history of
+LP64 token/reloc/fixup issues, which on 32-bit ARM (ILP32, 4-byte pointers) either
+don't apply or misfire. Prime suspect: `Interpreter::SegAddr` (interpreter.cpp:4620)
+gates reloc-token resolution on `if (w1 <= UINT32_MAX)`. On LP64 a real host pointer
+is > UINT32_MAX so it skips the token table; on **ILP32 every value fits in 32 bits**,
+so real pointers are also fed to `portRelocTryResolvePointer` and can be misdecoded as
+tokens → a wrong pointer used as a DL/function target. Other reloc/fixup call sites
+that assume LP64 pointer width should be audited the same way. NEXT: catch the SIGSEGV
+under lldb with an intact stack (symbolicate the crashing PC + the call site — the raw
+crash PC is in libmain's range, symbolicate offline via addr2line + the `/proc/maps`
+libmain base), which names the exact bad-pointer call site.
+
+### (earlier) coroutine theory DISPROVEN — it's per-frame render-path stack growth
 
 An SP-bounds probe in `PortPushFrame` (log current SP vs. this thread's
 `pthread_getattr_np` stack bounds each frame) settled it:
