@@ -127,13 +127,46 @@ so the ~1 MB SDL-thread stack is genuinely exhausted by armeabi-v7a native init.
 
 This is **separate from and not a regression of** the minSdk fix — it is the first
 actual *runtime* exercise of the armeabi-v7a build (the ILP32 port was only ever
-compile-validated). Open follow-ups:
-- The likely fix is enlarging the SDL main-thread stack (SDL creates `SDLThread`
-  in `SDLActivity.java` with the ~1 MB Android default; desktop `main()` assumes
-  ~8 MB). Options: bump the vendored SDL thread stack, or move heavy init off the
-  SDL thread.
-- **Verify whether the shipped arm64-v8a build actually reaches gameplay** — if
-  arm64 was only ever install/launch-tested, it may hit the same 1 MB stack wall.
+compile-validated).
+
+### Root cause (symbolicated): JNI-from-coroutine infinite recursion
+
+NOT a stack-budget shortfall — bumping the SDL thread stack to 8 MB just made it
+overflow a 9 MB stack instead, confirming *unbounded recursion*. Symbolicating the
+repeating cycle (unstripped libs in `android/app/build/intermediates/cxx/RelWithDebInfo/*/obj/armeabi-v7a/`,
+`llvm-addr2line`) shows the game's per-frame render path re-entering SDL's Android
+JNI helpers from inside a `port_coroutine` fiber:
+
+```
+SDL_main → PortPushFrame → port_drain_pending_display_list
+  → Fast3dWindow::DrawAndRunGraphicsCommands → Gui::StartFrame → Gui::ImGuiWMNewFrame
+    → ImGui_ImplSDL2_NewFrame → ImGui_ImplSDL2_UpdateMonitors
+      → SDL_GetDisplayDPI → Android_JNI_GetDisplayDPI → [JNI] → (recurses)
+```
+
+This is the **same class** as the `SDL_GetDisplayUsableBounds` hazard `port.cpp`
+already mitigates (comment at the `SDL_HINT_DISPLAY_USABLE_BOUNDS` block): SDL
+Android helpers that Binder-IPC into Java misbehave when called from a coroutine
+fiber (the ManagedStack head dangles across `port_coroutine_swap`). `port.cpp`
+pre-seeds the *usable-bounds* hint and warms `bHasEnvironmentVariables` on the real
+thread, but `ImGui_ImplSDL2_UpdateMonitors` *also* calls `SDL_GetDisplayDPI`, which
+hits `Android_JNI_GetDisplayDPI` **directly** (not via a hint), so it is not covered
+and still re-enters JNI every frame. `ImGui_ImplSDL2_NewFrame` calls
+`UpdateMonitors()` unconditionally each frame, so this fires on every GFX-coroutine
+frame. arm64 survives because its coroutine JNI transition happens to succeed.
+
+Likely fix direction (not yet implemented): stop ImGui's per-frame monitor
+enumeration from doing JNI on Android — e.g. populate `platform_io.Monitors` once on
+the JVM-attached SDL_main thread and skip `UpdateMonitors()` on subsequent frames,
+or disable the multi-viewport monitor path on Android. A stack bump is NOT a fix.
+Expect more than one JNI-from-coroutine call site (manifest-env/getenv was one; DPI
+is another) — the durable fix is to keep the game's coroutines off SDL's Android JNI
+helpers entirely.
+
+### Also: verify arm64-v8a
+The shipped arm64-v8a build has NOT been confirmed to reach gameplay in this
+investigation — the user reports it works on real devices/emulators. If it was only
+install/launch-tested, re-check it against this same coroutine-JNI path.
 
 ## Audit hook
 
