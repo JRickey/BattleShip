@@ -129,7 +129,41 @@ This is **separate from and not a regression of** the minSdk fix — it is the f
 actual *runtime* exercise of the armeabi-v7a build (the ILP32 port was only ever
 compile-validated).
 
-### UPDATE 2026-07-10 (latest): it's a CORRUPTED CODE POINTER, not "recursion"
+### UPDATE 2026-07-10 (SYMBOLICATED): corrupted Fast3dWindow/mInterpreter pointer in the render
+
+Captured a clean SIGSEGV under lldb (crash-register capture, ASLR off, break at the
+render entry biases the nondeterministic crash toward SIGSEGV). Symbolicated:
+
+```
+SIGSEGV invalid permissions, fault addr = 0x3003083c   (data deref of a garbage pointer)
+pc = Fast3dWindow::EndFrame()            libultraship/src/fast/Fast3dWindow.cpp:183
+       (inlined std::shared_ptr<Fast::Interpreter>::operator->)
+lr = port_drain_pending_display_list     port/gameloop.cpp:393
+```
+
+`Fast3dWindow::EndFrame()` (line 183 = `mInterpreter->EndFrame();`) faults reading
+`mInterpreter` through a **corrupted `Fast3dWindow this` pointer** (~`0x3003083c`). The
+corrupt value's SHAPE names the cause: across runs it was `0x2c03083c` then
+`0x3003083c` — **low 24 bits `0x03083c` stable, high byte varying**. That is exactly an
+**N64 segmented GBI address** `(segment << 24) | offset` (offset `0x03083c`). So a
+display-list `w1` / segmented address has leaked into a C++ pointer slot — the reloc/
+pointer confusion this bug family is known for, now on ILP32.
+
+This closes the loop on the nondeterminism: the corrupt pointer is dereferenced as an
+object; if that garbage address is non-accessible → SIGSEGV (seen), if it's a callable-
+but-wrong `Interpreter*`/vtable → jump through it → runaway → StackOverflow/SIGABRT
+(also seen). Same corrupted pointer, both crash faces.
+
+The corruption happens DURING the render: `DrawAndRunGraphicsCommands` runs
+`mInterpreter->StartFrame()` then `Run(commands)` then `EndFrame()`; `StartFrame`
+(earlier) does NOT fault but `EndFrame` (after `Run`) does — so **`Interpreter::Run()`
+(the GBI display-list processor) performs an out-of-bounds / wrong-width write that
+clobbers the `Fast3dWindow`/`window` pointer with an N64 segmented address**. NEXT:
+find the OOB write in `Interpreter::Run` / a GBI command handler (an ILP32 stride or
+pointer-width bug that writes a GBI `w1` into an adjacent pointer slot). Value `0x03083c`
+offset may help identify which command/data.
+
+### (earlier) it's a CORRUPTED CODE POINTER, not "recursion"
 
 Debugged under lldb (lldb-server on the ARMv7 emulator, box-side NDK client, ASLR
 disabled for stable addresses). Key finding: **the crash is nondeterministic** —
