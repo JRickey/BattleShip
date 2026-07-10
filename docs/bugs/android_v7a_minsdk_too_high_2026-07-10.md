@@ -158,10 +158,25 @@ The corruption happens DURING the render: `DrawAndRunGraphicsCommands` runs
 `mInterpreter->StartFrame()` then `Run(commands)` then `EndFrame()`; `StartFrame`
 (earlier) does NOT fault but `EndFrame` (after `Run`) does — so **`Interpreter::Run()`
 (the GBI display-list processor) performs an out-of-bounds / wrong-width write that
-clobbers the `Fast3dWindow`/`window` pointer with an N64 segmented address**. NEXT:
-find the OOB write in `Interpreter::Run` / a GBI command handler (an ILP32 stride or
-pointer-width bug that writes a GBI `w1` into an adjacent pointer slot). Value `0x03083c`
-offset may help identify which command/data.
+clobbers the `Fast3dWindow`/`window` pointer with an N64 segmented address**.
+
+Register-level (lldb SIGSEGV capture, disasm cross-checked against unstripped libmain):
+- Fault instruction `Fast3dWindow::EndFrame` off 0x3a9d4a: `ldr r0, [r0, #0x3c]` — reads
+  `mInterpreter` (member at object offset 0x3c) through `this` in r0.
+- **r0 = this = 0x30030800** (corrupt). Across runs the corrupt value is `0xNN030800`
+  (low 24 bits `0x030800` stable, high byte varies) — i.e. an N64 segmented address
+  `(seg<<24)|offset`, offset `0x030800`. `mInterpreter` deref then faults at r0+0x3c =
+  `0xNN03083c`.
+- Reached via `port_drain_pending_display_list` (gameloop.cpp:382, the `try{}` call)
+  → PLT thunk 0x5945c0 → `DrawAndRunGraphicsCommands` (r0=window, r1=dl, r2=mtx).
+
+NEXT: find the OOB/wrong-width write in `Interpreter::Run` / a GBI command handler (an
+ILP32 stride or pointer-width bug that writes a GBI `w1`/unresolved segment address into
+an adjacent pointer slot — likely the reloc/SegAddr/fixup family the user flagged). The
+written value `0xNN030800` (offset `0x030800`) may identify the source command/data.
+Note: HW watchpoints do NOT work under lldb on this qemu/TCG emulator (fire spuriously);
+use GDB (gdb-multiarch client → gdbserver) if a data watchpoint on the clobbered slot is
+needed to catch the exact write.
 
 ### (earlier) it's a CORRUPTED CODE POINTER, not "recursion"
 
