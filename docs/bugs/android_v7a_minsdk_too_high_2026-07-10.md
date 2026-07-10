@@ -178,6 +178,35 @@ Note: HW watchpoints do NOT work under lldb on this qemu/TCG emulator (fire spur
 use GDB (gdb-multiarch client → gdbserver) if a data watchpoint on the clobbered slot is
 needed to catch the exact write.
 
+### UPDATE 2026-07-10 (watchpoint attempt): TWO crash variants; TCG debugger limits
+
+Tried to catch the exact corrupting write. Findings:
+- **The crash has two faces depending on the debugger.** WITHOUT any debugger, 6/6
+  launches crash as `SIGABRT` StackOverflow, and the (ART-unwound) stack histogram is
+  the ImGui render chain `DrawAndRunGraphicsCommands → Gui::StartFrame →
+  ImGuiWMNewFrame → ImGui_ImplSDL2_NewFrame → UpdateMonitors → SDL_GetDisplayDPI`
+  (plus `ImGui_ImplOpenGL3_CreateDeviceObjects`, a first-frame GL-init path). The clean
+  `SIGSEGV` in `Fast3dWindow::EndFrame` (corrupt `this=0x??030800`) only appears when a
+  breakpoint at the render entry perturbs timing. Same underlying corruption, different
+  downstream fault. So the dominant/real crash is the StackOverflow in the ImGui path,
+  NOT `Fast3dWindow::EndFrame` (that was a debugger-induced variant).
+- **Instrumentation guard** (log+bail if `this` low24==0x030800 in Fast3dWindow::
+  Start/End/RunGuiOnly) NEVER fired across 6 unperturbed runs — the StackOverflow path
+  does not go through those methods, and its corrupt value differs from the debugger's
+  `0x??030800`.
+- **Debugger tooling is broken on this qemu/TCG emulator** (a real blocker, not a skill
+  issue): lldb HW watchpoints fire spuriously; GDB can't speak lldb-server's protocol
+  ("Invalid hex digit"); GDB (17.1) segfaults internally against the NDK-r22 android
+  `gdbserver`; and it stops on the wrong (main) thread. A data watchpoint to catch the
+  write is not achievable here.
+
+**Recommended next environment:** reproduce on REAL armeabi-v7a hardware (where GDB HW
+watchpoints work) or a native ILP32 build (x86 32-bit / armhf under a non-TCG debugger),
+then watchpoint the clobbered slot. Alternatively, a focused manual audit of ILP32
+write sites in `Interpreter::Run` / the reloc/`SegAddr`/fixup path (the value shape is a
+GBI segmented address leaking into a pointer). The install fix (committed) is unaffected
+and complete; this runtime crash is a separate, still-open ILP32 corruption bug.
+
 ### (earlier) it's a CORRUPTED CODE POINTER, not "recursion"
 
 Debugged under lldb (lldb-server on the ARMv7 emulator, box-side NDK client, ASLR
