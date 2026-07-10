@@ -129,7 +129,37 @@ This is **separate from and not a regression of** the minSdk fix — it is the f
 actual *runtime* exercise of the armeabi-v7a build (the ILP32 port was only ever
 compile-validated).
 
-### Root cause (symbolicated): JNI-from-coroutine infinite recursion
+### UPDATE 2026-07-10 (later): coroutine theory DISPROVEN — it's per-frame render-path stack growth
+
+An SP-bounds probe in `PortPushFrame` (log current SP vs. this thread's
+`pthread_getattr_np` stack bounds each frame) settled it:
+
+```
+frame=0 sp=0x995a5ae0 stack=[0x994a2000,+1042K) in_bounds=1 depth_used=3K
+frame=1 sp=0x995a5ae0 ... in_bounds=1 depth_used=3K
+frame=2 sp=0x995a5ae0 ... in_bounds=1 depth_used=3K
+frame=3 sp=0x995a5ae0 ... in_bounds=1 depth_used=3K   <- then StackOverflow mid-frame
+```
+
+`PortPushFrame` runs exactly **4 times**, each entering at the *identical* SP,
+**in bounds**, only **3K deep** — so the armv7 coroutine swap restores SP
+perfectly and there is **no leak between frames and no corrupted/wrong SP**. The
+coroutine backend is exonerated. Also NOT re-entrancy: a re-entrancy guard on
+`PortPushFrame` never fired. The overflow happens *within frame 3* (the first
+frame with real game content): the stack grows from 3K to 1038K inside one
+`PortPushFrame` call, in the render path (`drain → DrawAndRunGraphicsCommands →
+Gui::StartFrame → ImGui...`). The earlier "repeating SDL_main→PushFrame" backtrace
+was unwinder garbage walking the corrupted deep stack, NOT real re-entry.
+
+So it IS genuine deep stack growth (~1 MB) confined to a single render frame,
+armv7-only. Exact recursing/deep function still to be pinned down (ART's unwind
+over the overflowed stack is unreliable; needs lldb or a probe deeper in the
+render path). Leading suspects: ImGui multi-viewport/monitor handling in
+`Gui::StartFrame`, or a Fast3D display-list path that is deep only on the first
+content frame. NOTE: the section below (JNI-from-coroutine) was the earlier,
+now-superseded hypothesis — kept for history.
+
+### (SUPERSEDED) Earlier hypothesis: JNI-from-coroutine infinite recursion
 
 NOT a stack-budget shortfall — bumping the SDL thread stack to 8 MB just made it
 overflow a 9 MB stack instead, confirming *unbounded recursion*. Symbolicating the
