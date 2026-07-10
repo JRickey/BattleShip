@@ -109,6 +109,32 @@ translation (`abilist=x86` only, `ro.dalvik.vm.native.bridge=0`), so it rejects
 armeabi-v7a APKs with `INSTALL_FAILED_NO_MATCHING_ABIS` — an x86 image cannot
 substitute for a true ARM device here.
 
+## Known follow-up: native game crash on the ARMv7 emulator
+
+With both fixes in, the APK installs, launches, and renders its Java ROM-picker
+UI, and asset extraction completes — but entering the native game
+(`BattleShipActivity` → SDL `nativeRunMain`) dies with a
+`java.lang.StackOverflowError (stack size 1038KB)` on the `SDLThread`, ~10 s in.
+The game's native `main()` runs on SDL's Android thread, whose stack is only
+~1 MB (`1038KB`), and 32-bit ARM init overflows it.
+
+**Confirmed a real bug, not an emulator artifact.** First seen with the emulator's
+forced CheckJNI (`ro.kernel.android.checkjni=1`) turning the pending
+`StackOverflowError` into a `SIGABRT` at a JNI boundary, which suggested a CheckJNI
+amplification. But re-running the emulator with `-no-jni` (CheckJNI off, verified
+`ro.kernel.android.checkjni` empty) reproduced the **same** `StackOverflowError` —
+so the ~1 MB SDL-thread stack is genuinely exhausted by armeabi-v7a native init.
+
+This is **separate from and not a regression of** the minSdk fix — it is the first
+actual *runtime* exercise of the armeabi-v7a build (the ILP32 port was only ever
+compile-validated). Open follow-ups:
+- The likely fix is enlarging the SDL main-thread stack (SDL creates `SDLThread`
+  in `SDLActivity.java` with the ~1 MB Android default; desktop `main()` assumes
+  ~8 MB). Options: bump the vendored SDL thread stack, or move heavy init off the
+  SDL thread.
+- **Verify whether the shipped arm64-v8a build actually reaches gameplay** — if
+  arm64 was only ever install/launch-tested, it may hit the same 1 MB stack wall.
+
 ## Audit hook
 
 Any per-ABI `minSdk` must be justified by the *lowest* API each native
