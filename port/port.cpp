@@ -113,6 +113,10 @@ extern "C" void* sModBridgeAnchorDataFilesRef = (void*)&dFTManagerDataFiles_Ref;
 #include <filesystem>
 #include <system_error>
 
+#ifdef __APPLE__
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+
 #ifdef _WIN32
 #include <windows.h>
 #include <dbghelp.h>
@@ -1193,6 +1197,21 @@ int main(int argc, char* argv[]) {
 		}
 		port_log_init(logPath.c_str());
 	}
+
+#ifdef __APPLE__
+	/* Disable the macOS press-and-hold accent/diacritic popup for this app.
+	 * SDL keeps a Cocoa text-input context alive for the game window, so
+	 * holding a movement key (e.g. WASD) makes AppKit pop the accent picker
+	 * instead of delivering key-repeat — the held key stops registering as
+	 * down. AppKit reads ApplePressAndHoldEnabled from the app's user
+	 * defaults when the text-input context is first created, so this must
+	 * run before SDL creates the window (i.e. before PortInit). Writing it
+	 * per-app (kCFPreferencesCurrentApplication) leaves the global/system
+	 * default untouched. Key repeat still works. */
+	CFPreferencesSetAppValue(CFSTR("ApplePressAndHoldEnabled"), kCFBooleanFalse,
+	                         kCFPreferencesCurrentApplication);
+	CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication);
+#endif
 
 #ifdef _WIN32
 	SetUnhandledExceptionFilter(portWindowsCrashFilter);

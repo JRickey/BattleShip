@@ -862,6 +862,13 @@ else()
     add_dependencies(${PROJECT_NAME} libultraship TorchExternal discord-rpc)
     target_link_libraries(${PROJECT_NAME} PRIVATE libultraship discord-rpc)
 endif()
+
+# macOS: the port calls CFPreferences* directly (ApplePressAndHoldEnabled fix
+# in main()), so link CoreFoundation explicitly rather than relying on it
+# arriving transitively through libultraship's PRIVATE framework links.
+if (APPLE)
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-framework CoreFoundation")
+endif()
 add_dependencies(ssb64_game GenerateCreditsAssets)
 if (NOT DISABLE_SCRIPTING)
     # funchook hook backend (libultraship is already linked above).
