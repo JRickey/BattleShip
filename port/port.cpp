@@ -116,6 +116,7 @@ extern "C" void* sModBridgeAnchorDataFilesRef = (void*)&dFTManagerDataFiles_Ref;
 #include <filesystem>
 #include <system_error>
 
+#include <ship/debug/Console.h>
 #ifdef __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
 #endif
@@ -590,6 +591,31 @@ static std::string PortLocateFile(const std::string& basename) {
 	return "./" + basename;
 }
 
+/* ── Console "reset" command ─────────────────────────────────────────────
+ * The ESC-menu Reset button (port/gui/Menu.cpp) and the Ctrl/Cmd-R shortcut
+ * (libultraship Gui.cpp) both Dispatch("reset") at the LUS console, but the
+ * command was never registered, so both fell through to "[LUS] Command not
+ * found" and did nothing.
+ *
+ * The handler performs an in-game reset back to the boot scene — the same
+ * "return to title" semantics as a console reset — via the scene manager's
+ * normal transition path. The mechanics live decomp-side in
+ * portSCManagerRequestReset() (decomp/src/sc/scmanager.c) because the port
+ * layer can't include decomp headers (the C shim stdlib shadows libc++ —
+ * see the include-path note in CMakeLists.txt) and mirroring the scene
+ * struct layout here would invite exactly the layout-drift bugs
+ * docs/debug_ido_bitfield_layout.md warns about. */
+extern "C" void portSCManagerRequestReset(void);
+
+static int32_t ResetCommandHandler(std::shared_ptr<Ship::Console> console, std::vector<std::string> args,
+                                   std::string* output) {
+	portSCManagerRequestReset();
+	if (output) {
+		*output = "Resetting to the opening scene...";
+	}
+	return 0;
+}
+
 extern "C" {
 
 static int PortInitImpl(int argc, char* argv[]);
@@ -819,6 +845,10 @@ static int PortInitImpl(int argc, char* argv[]) {
 	if (!sContext->InitCrashHandler()) { port_log("SSB64: InitCrashHandler failed\n"); return 1; }
 	if (!sContext->InitConsole()) { port_log("SSB64: InitConsole failed\n"); return 1; }
 	port_log("SSB64: CrashHandler + Console OK\n");
+
+	/* Back the ESC-menu Reset button / Ctrl+Cmd-R Dispatch("reset") with a
+	 * real command — see the reset block above PortInit for the mechanism. */
+	sContext->GetConsole()->AddCommand("reset", { ResetCommandHandler, "Resets the game to the opening scene" });
 
 	// ControlDeck MUST be initialized before Window — the DXGI window proc
 	// calls ControllerUnblockGameInput on WM_SETFOCUS during window creation.
