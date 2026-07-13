@@ -59,16 +59,34 @@ std::string FindMenuAssetPath(const std::string& relativePath) {
 }
 
 ImFont* AddMergedMenuFont(ImGuiIO& io, float size, const std::string& path = std::string()) {
+    // HiDPI/Retina: bake the glyph atlas at device density so the menu text is
+    // crisp instead of a bilinearly-upscaled 1x atlas. On a Retina display the
+    // ImGui SDL2 backend sets DisplayFramebufferScale=2, which otherwise
+    // stretches the 1x-baked glyphs and makes the menu look soft. Raising
+    // RasterizerDensity increases only the rasterization resolution, not the
+    // layout metrics, so on-screen sizes are unchanged. A fixed 2x is used on
+    // macOS (the common backing scale): perfect 1:1 on a 2x display, and on a
+    // 1x display the 2x atlas simply downsamples — still crisp, just a little
+    // extra atlas memory. (A window DPI accessor in libultraship would let this
+    // be derived dynamically; kept port-local here to avoid a submodule change.)
+#ifdef __APPLE__
+    constexpr float kMenuFontDensity = 2.0f;
+#else
+    constexpr float kMenuFontDensity = 1.0f;
+#endif
+
     ImFont* font = nullptr;
     if (path.empty()) {
         ImFontConfig fontCfg;
         fontCfg.OversampleH = fontCfg.OversampleV = 1;
         fontCfg.PixelSnapH = true;
         fontCfg.SizePixels = size;
+        fontCfg.RasterizerDensity = kMenuFontDensity;
         font = io.Fonts->AddFontDefault(&fontCfg);
     } else {
         ImFontConfig fontCfg;
         fontCfg.FontDataOwnedByAtlas = false;
+        fontCfg.RasterizerDensity = kMenuFontDensity;
         font = io.Fonts->AddFontFromFileTTF(path.c_str(), size, &fontCfg);
     }
 
@@ -78,6 +96,7 @@ ImFont* AddMergedMenuFont(ImGuiIO& io, float size, const std::string& path = std
     iconsConfig.MergeMode = true;
     iconsConfig.PixelSnapH = true;
     iconsConfig.GlyphMinAdvanceX = iconFontSize;
+    iconsConfig.RasterizerDensity = kMenuFontDensity;
     io.Fonts->AddFontFromMemoryCompressedBase85TTF(fontawesome_compressed_data_base85, iconFontSize, &iconsConfig,
                                                    sIconsRanges);
     return font;
