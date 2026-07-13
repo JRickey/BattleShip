@@ -36,7 +36,9 @@ jobs:
           ref: ${{ github.event.repository.default_branch }}
       - name: Generate README charts
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          # The Actions installation token cannot read stargazer timestamps.
+          # This repository secret is a PAT with read access to the repository.
+          GITHUB_TOKEN: ${{ secrets.README_STATS_TOKEN }}
         run: python3 tools/generate_readme_stats.py --repo "$GITHUB_REPOSITORY"
       - name: Commit chart updates
         run: |

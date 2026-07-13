@@ -52,6 +52,18 @@ fi
 APP="$DIST_DIR/$APP_NAME.app"
 JOBS="${JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || echo 4)}"
 
+# Bundle version for Info.plist. Mirrors CMake's BATTLESHIP_VERSION
+# resolution (the string the in-app updater reports) so the Finder
+# Get Info version matches what the app says about itself:
+#   1. $BATTLESHIP_VERSION env — release CI sets this to the tag.
+#   2. Nearest release tag from git.
+#   3. "0.0.0" fallback for tarball builds (no git metadata).
+# CFBundle*Version want dotted numerics, so strip the tag's leading "v"
+# and fall back if what's left isn't numeric.
+APP_TAG="${BATTLESHIP_VERSION:-$(git -C "$ROOT" describe --tags --abbrev=0 2>/dev/null || true)}"
+APP_VERSION="${APP_TAG#v}"
+[[ "$APP_VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]] || APP_VERSION="0.0.0"
+
 step() { printf '\n\033[36m=== %s ===\033[0m\n' "$1"; }
 fail() { printf '\033[31mERROR: %s\033[0m\n' "$1" >&2; exit 1; }
 truthy() {
@@ -203,8 +215,8 @@ cat > "$APP/Contents/Info.plist" <<EOF
     <key>CFBundleName</key>                <string>$APP_NAME</string>
     <key>CFBundleDisplayName</key>         <string>$APP_NAME</string>
     <key>CFBundleIdentifier</key>          <string>$APP_BUNDLE_ID</string>
-    <key>CFBundleVersion</key>             <string>1.0</string>
-    <key>CFBundleShortVersionString</key>  <string>1.0</string>
+    <key>CFBundleVersion</key>             <string>$APP_VERSION</string>
+    <key>CFBundleShortVersionString</key>  <string>$APP_VERSION</string>
     <key>CFBundlePackageType</key>         <string>APPL</string>
     <key>CFBundleSignature</key>           <string>????</string>
     <key>CFBundleExecutable</key>          <string>$APP_NAME</string>

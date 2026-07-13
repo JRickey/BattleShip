@@ -124,12 +124,15 @@ android {
 
     defaultConfig {
         applicationId = "com.jrickey.battleship"
-        // Production/default floor is Android 8.0 (API 26). The newest SDK
-        // manager-provided armeabi-v7a emulator image is API 25, so local
-        // emulator verification can temporarily lower this with
-        // -Pssb64.minSdk=25; AGP forwards that minSdk into the CMake Android
-        // platform for the native build.
-        val ssb64MinSdk = (project.findProperty("ssb64.minSdk") as String?)?.toInt() ?: 26
+        // Default floor is Android 7.0 (API 24) — the lowest this codebase can
+        // build for on 32-bit ARM. libc++ <fstream> (pulled in via libultraship)
+        // calls ::fseeko/::ftello, which Bionic only declares at API >= 24 on
+        // ILP32; below that the native build fails to compile. This still drops
+        // the floor from the old Android 8.0 (API 26) so pre-8.0 devices can
+        // install. The former API-26 dependency (forced AAudio hint) is now
+        // gated at runtime in port.cpp (OpenSL ES below 26). Override with
+        // -Pssb64.minSdk=<n>; AGP forwards it into the CMake Android platform.
+        val ssb64MinSdk = (project.findProperty("ssb64.minSdk") as String?)?.toInt() ?: 24
         minSdk = ssb64MinSdk
         targetSdk = 34       // Play Store requires >= 34 (since Aug 2024)
         versionCode = 1

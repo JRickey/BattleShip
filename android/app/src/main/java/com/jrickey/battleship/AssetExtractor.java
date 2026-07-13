@@ -4,14 +4,14 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 
 /**
  * Copies bundled APK assets (f3d.o2r, config.yml, yamls/) into the app's
@@ -53,7 +53,7 @@ public final class AssetExtractor {
         File sentinel = new File(dst, SENTINEL);
         if (sentinel.isFile()) {
             try {
-                String have = new String(Files.readAllBytes(sentinel.toPath()),
+                String have = new String(readAll(sentinel),
                                          StandardCharsets.UTF_8).trim();
                 if (wantedVersion.equals(have)) {
                     Log.i(TAG, "Bundled assets are current (versionCode=" + wantedVersion + ")");
@@ -82,8 +82,8 @@ public final class AssetExtractor {
             return "Asset extraction failed: " + e.getMessage();
         }
 
-        try {
-            Files.write(sentinel.toPath(), wantedVersion.getBytes(StandardCharsets.UTF_8));
+        try (OutputStream out = new FileOutputStream(sentinel)) {
+            out.write(wantedVersion.getBytes(StandardCharsets.UTF_8));
         } catch (IOException ioe) {
             Log.w(TAG, "Couldn't write sentinel — extraction will repeat next launch: " + ioe.getMessage());
             // Not fatal; the assets are extracted and the game can run.
@@ -91,6 +91,18 @@ public final class AssetExtractor {
 
         Log.i(TAG, "Asset extraction complete");
         return null;
+    }
+
+    private static byte[] readAll(File f) throws IOException {
+        try (InputStream in = new FileInputStream(f)) {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            byte[] buf = new byte[64 * 1024];
+            int n;
+            while ((n = in.read(buf)) > 0) {
+                bos.write(buf, 0, n);
+            }
+            return bos.toByteArray();
+        }
     }
 
     private static void copyAsset(AssetManager am, String assetPath, File outFile) throws IOException {

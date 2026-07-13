@@ -41,6 +41,9 @@
 #if !defined(__ANDROID__)
 #include "port_window_icon.h"
 #endif
+#if defined(__ANDROID__)
+#include <android/api-level.h>  // android_get_device_api_level (audio-driver gate)
+#endif
 #ifndef DISABLE_SCRIPTING
 #include "mods/HookManager.h"
 #include "mods/SymbolResolver.h"
@@ -114,6 +117,9 @@ extern "C" void* sModBridgeAnchorDataFilesRef = (void*)&dFTManagerDataFiles_Ref;
 #include <system_error>
 
 #include <ship/debug/Console.h>
+#ifdef __APPLE__
+#include <CoreFoundation/CoreFoundation.h>
+#endif
 
 #ifdef _WIN32
 #include <windows.h>
@@ -1225,6 +1231,21 @@ int main(int argc, char* argv[]) {
 		port_log_init(logPath.c_str());
 	}
 
+#ifdef __APPLE__
+	/* Disable the macOS press-and-hold accent/diacritic popup for this app.
+	 * SDL keeps a Cocoa text-input context alive for the game window, so
+	 * holding a movement key (e.g. WASD) makes AppKit pop the accent picker
+	 * instead of delivering key-repeat — the held key stops registering as
+	 * down. AppKit reads ApplePressAndHoldEnabled from the app's user
+	 * defaults when the text-input context is first created, so this must
+	 * run before SDL creates the window (i.e. before PortInit). Writing it
+	 * per-app (kCFPreferencesCurrentApplication) leaves the global/system
+	 * default untouched. Key repeat still works. */
+	CFPreferencesSetAppValue(CFSTR("ApplePressAndHoldEnabled"), kCFBooleanFalse,
+	                         kCFPreferencesCurrentApplication);
+	CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication);
+#endif
+
 #ifdef _WIN32
 	SetUnhandledExceptionFilter(portWindowsCrashFilter);
 	AddVectoredExceptionHandler(1, portWindowsVectoredHandler);
@@ -1278,11 +1299,14 @@ int main(int argc, char* argv[]) {
 		         SDL_GetError());
 	}
 
-	// Prefer AAudio (Android 8.0+ low-latency audio API) over the default
-	// OpenSL ES backend. Worth a few ms of latency for a fighting game,
-	// and SDL2 falls back to OpenSL ES if AAudio isn't compiled in or
-	// the device rejects it.
-	SDL_SetHint(SDL_HINT_AUDIODRIVER, "aaudio");
+	// Prefer AAudio (low-latency) only where it exists — API 26+. AAudio's
+	// libaaudio.so is absent below that, and SDL_AudioInit does NOT fall back
+	// once a driver name is pinned (it fails with "Audio target not
+	// available"), so forcing it on older devices kills audio outright. Below
+	// 26 we leave the hint unset and let SDL auto-select OpenSL ES.
+	if (android_get_device_api_level() >= 26) {
+		SDL_SetHint(SDL_HINT_AUDIODRIVER, "aaudio");
+	}
 
 	// 2. Suppress ImGui's per-frame SDL_GetDisplayUsableBounds JNI path.
 	//    ImGui_ImplSDL2_UpdateMonitors runs on the SSB64 GFX coroutine
