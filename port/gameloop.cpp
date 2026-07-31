@@ -22,6 +22,7 @@
 #include "gameloop.h"
 #include "coroutine.h"
 #include "enhancements/enhancements.h"
+#include "interpolation/frame_interpolation.h"
 #include "widescreen/widescreen.h"
 #include "port.h"
 #include "port_watchdog.h"
@@ -377,28 +378,48 @@ extern "C" void port_drain_pending_display_list(void)
 
 	gbi_trace_begin_frame();
 
-	std::unordered_map<Mtx *, MtxF> mtxReplacements;
-	try {
-		window->DrawAndRunGraphicsCommands(dl, mtxReplacements);
-	} catch (long hr) {
-		port_log("SSB64: CAUGHT DX shader exception HRESULT=0x%08lX\n", hr);
-		gbi_trace_end_frame();
-		return;
-	} catch (...) {
-		port_log("SSB64: CAUGHT unknown exception while processing display list\n");
-		gbi_trace_end_frame();
-		return;
+	/* Enhanced framerate mode: render this tick's DL as `subframes` paced
+	 * presents, each with matrices lerped between the previous and current
+	 * tick (the last subframe uses an empty map = bit-exact game memory).
+	 * Each DrawAndRunGraphicsCommands call paces itself to 1/(60k) s via
+	 * SetTargetFps(60*k), so the whole tick still occupies one VI period and
+	 * the 60 Hz game clock is untouched. subframes == 1 when the feature is
+	 * off, reproducing the old single-call behavior exactly. */
+	int subframes = portInterpActiveSubframes();
+	portInterpBeginDraw();
+	bool costLatched = false;
+	for (int sub = 1; sub <= subframes; sub++) {
+		/* Reset per run so the RCP cost model sees one DL walk, not k. */
+		sFrameTriCount = 0;
+		sFrameRectPx = 0;
+		sFrameLoadBytes = 0;
+		try {
+			window->DrawAndRunGraphicsCommands(dl, portInterpGetReplacements(sub, subframes));
+		} catch (long hr) {
+			port_log("SSB64: CAUGHT DX shader exception HRESULT=0x%08lX\n", hr);
+			portInterpEndDraw();
+			gbi_trace_end_frame();
+			return;
+		} catch (...) {
+			port_log("SSB64: CAUGHT unknown exception while processing display list\n");
+			portInterpEndDraw();
+			gbi_trace_end_frame();
+			return;
+		}
+		if (!costLatched) {
+			costLatched = true;
+			/* Capture this DL's cost so port_get_last_dl_defer_n() can use it
+			 * to set N for THIS task's SP/DP-interrupt deferral. osSpTaskStartGo
+			 * reads it AFTER port_submit_display_list returns. */
+			sLastDLTris = sFrameTriCount;
+			sLastDLRectPx = sFrameRectPx;
+			sLastDLLoadBytes = sFrameLoadBytes;
+		}
 	}
+	portInterpEndDraw();
 
 	sDLSubmitsThisFrame++;
 	gbi_trace_end_frame();
-
-	/* Capture this DL's cost so port_get_last_dl_defer_n() can use it
-	 * to set N for THIS task's SP/DP-interrupt deferral. osSpTaskStartGo
-	 * reads it AFTER port_submit_display_list returns. */
-	sLastDLTris = sFrameTriCount;
-	sLastDLRectPx = sFrameRectPx;
-	sLastDLLoadBytes = sFrameLoadBytes;
 }
 
 /* ========================================================================= */
@@ -652,7 +673,17 @@ void PortPushFrame(void)
 				? std::dynamic_pointer_cast<Fast::Fast3dWindow>(context->GetWindow())
 				: nullptr;
 			if (window) {
-				idlePresented = window->PresentCurrentFramebuffer();
+				/* Held frame: present k paced subframes of the cached
+				 * framebuffer so the tick still occupies one VI period at
+				 * the interpolated render rate. k == 1 when the feature is
+				 * off (single present, old behavior). */
+				int idleSubframes = portInterpActiveSubframes();
+				for (int sub = 0; sub < idleSubframes; sub++) {
+					idlePresented = window->PresentCurrentFramebuffer();
+					if (!idlePresented) {
+						break;
+					}
+				}
 			}
 
 			if (!idlePresented) {
@@ -672,6 +703,12 @@ void PortPushFrame(void)
 		}
 	}
 	sDLSubmitsThisFrame = 0;
+
+	/* Feed the interpolation auto-throttle the wall duration of this tick;
+	 * if the host cannot sustain 60 ticks/s at the configured subframe
+	 * count, it steps the render rate down to protect the game clock. */
+	portInterpNoteTicDuration(std::chrono::duration_cast<std::chrono::microseconds>(
+		std::chrono::steady_clock::now() - frameStart).count());
 
 	/* Tell the hang watchdog a frame completed. */
 	port_watchdog_note_frame_end();

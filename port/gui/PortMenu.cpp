@@ -9,6 +9,7 @@
 
 #include "Compat.h"
 #include "../enhancements/enhancements.h"
+#include "../interpolation/frame_interpolation.h"
 #ifdef PORT_HIRES_ENABLED
 #include "../hires/HiResPack.h"
 #endif
@@ -66,6 +67,15 @@ static const std::map<int32_t, const char*> kTextureFilteringMap = {
     { Fast::FILTER_THREE_POINT, "Three-Point" },
     { Fast::FILTER_LINEAR, "Linear" },
     { Fast::FILTER_NONE, "None" },
+};
+
+// Enhanced framerate mode: CVar stores the target render fps; game logic
+// always stays at 60 Hz (see port/interpolation/frame_interpolation.h).
+static const std::map<int32_t, const char*> kEnhancedFpsMap = {
+    { 0, "Off (60 FPS)" },
+    { 120, "120 FPS" },
+    { 180, "180 FPS" },
+    { 240, "240 FPS" },
 };
 
 // Mirrors the LowResMode switch in libultraship Gui::CalculateGameViewport /
@@ -952,6 +962,20 @@ void PortMenu::AddMenuSettings() {
         .PreFunc([this](WidgetInfo& info) { info.isHidden = disabledMap.at(DISABLE_FOR_NO_VSYNC).active; })
         .Options(CheckboxOptions().Tooltip("Removes tearing, but can cap the game to the display refresh rate.")
                      .DefaultValue(true));
+
+    AddWidget(path, "Enhanced Framerate (Interpolated)", WIDGET_CVAR_COMBOBOX)
+        .CVar(PORT_INTERP_CVAR_FPS)
+        .RaceDisable(false)
+        .Callback([](WidgetInfo&) { portInterpApplyConfig(); })
+        .Options(ComboboxOptions()
+                     .Tooltip("Renders extra frames between 60 Hz game ticks by interpolating object "
+                              "and camera motion. Game logic, physics, and input timing stay at exactly "
+                              "60 Hz; only rendering is smoother. Adds up to one tick (16 ms) of visual "
+                              "latency. Requires a display refresh rate at or above the chosen value "
+                              "(or Vsync off) — if the host can't keep up, the game automatically steps "
+                              "back down to protect game speed.")
+                     .ComboMap(kEnhancedFpsMap)
+                     .DefaultIndex(0));
 
 #if !defined(__ANDROID__)
     AddWidget(path, "Windowed Fullscreen", WIDGET_CVAR_CHECKBOX)
