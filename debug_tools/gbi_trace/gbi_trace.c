@@ -29,6 +29,10 @@ static int      sInitialized = 0;
 static int      sFrameNum    = 0;
 static int      sCmdIndex    = 0;
 static int      sMaxFrames   = 300;  /* default: 5 seconds */
+static int      sStartFrame  = 0;    /* SSB64_GBI_TRACE_START: skip until this VI frame */
+static int      sViFrame     = 0;    /* VI frame index of the DL being traced (set by gameloop) */
+static int      sSkipping    = 0;    /* current frame is before sStartFrame */
+static int      sFlushIndex  = 0;    /* backend draw calls this frame (see gbi_trace_note_flush) */
 static FILE    *sTraceFile   = NULL;
 static char     sTraceDir[512] = "debug_traces";
 
@@ -62,6 +66,16 @@ void gbi_trace_init(void)
 	env = getenv("SSB64_GBI_TRACE_DIR");
 	if (env && env[0]) {
 		snprintf(sTraceDir, sizeof(sTraceDir), "%s", env);
+	}
+
+	/* Skip tracing until this VI frame index (as reported by
+	 * gbi_trace_set_vi_frame — the gameloop's PortPushFrame counter, same
+	 * unit as SSB64_SCREENSHOT_FRAMES). The frame limit counts captured
+	 * frames after the start point. */
+	env = getenv("SSB64_GBI_TRACE_START");
+	if (env) {
+		int val = atoi(env);
+		if (val > 0) sStartFrame = val;
 	}
 
 	if (!sEnabled) return;
@@ -129,9 +143,17 @@ void gbi_trace_set_max_frames(int max_frames)
 /*  Frame lifecycle                                                          */
 /* ========================================================================= */
 
+void gbi_trace_set_vi_frame(int vi_frame)
+{
+	sViFrame = vi_frame;
+}
+
 void gbi_trace_begin_frame(void)
 {
 	if (!sEnabled || !sTraceFile) return;
+
+	sSkipping = (sViFrame < sStartFrame);
+	if (sSkipping) return;
 
 	/* Check frame limit */
 	if (sMaxFrames > 0 && sFrameNum >= sMaxFrames) {
@@ -144,13 +166,15 @@ void gbi_trace_begin_frame(void)
 		return;
 	}
 
-	fprintf(sTraceFile, "\n=== FRAME %d ===\n", sFrameNum);
+	fprintf(sTraceFile, "\n=== FRAME %d (vi %d) ===\n", sFrameNum, sViFrame);
 	sCmdIndex = 0;
+	sFlushIndex = 0;
 }
 
 void gbi_trace_end_frame(void)
 {
 	if (!sEnabled || !sTraceFile) return;
+	if (sSkipping) return;
 	if (sMaxFrames > 0 && sFrameNum >= sMaxFrames) {
 		sFrameNum++;
 		return;
@@ -170,6 +194,7 @@ void gbi_trace_log_cmd(unsigned long long w0, unsigned long long w1, int depth)
 	char decoded[512];
 
 	if (!sEnabled || !sTraceFile) return;
+	if (sSkipping) return;
 	if (sMaxFrames > 0 && sFrameNum >= sMaxFrames) return;
 
 	/* Extract lower 32 bits for the shared decoder (N64-compatible representation).
@@ -190,5 +215,58 @@ void gbi_trace_log_cmd(unsigned long long w0, unsigned long long w1, int depth)
 		        sCmdIndex, depth, decoded);
 	}
 
+	/* SSB64_GBI_TRACE_DATA=1: also hexdump the payload behind pointer-carrying
+	 * commands (G_MTX matrices, G_VTX vertices). The command stream alone can
+	 * be byte-identical between a good and a corrupt frame when the divergence
+	 * lives in CPU-computed matrix/vertex data; this exposes it. w1 is a host
+	 * pointer on PC (w1_64), so the payload is directly readable here. */
+	{
+		static int sDumpData = -1;
+		if (sDumpData < 0) {
+			const char *env = getenv("SSB64_GBI_TRACE_DATA");
+			sDumpData = (env != NULL && env[0] == '1') ? 1 : 0;
+		}
+		/* Only deref w1 when its upper 32 bits are set (a genuine widened
+		 * host pointer). Segment-relative addresses (e.g. 0x0C000000) are
+		 * resolved inside Fast3D and must not be dereferenced here. */
+		if (sDumpData && w1_hi != 0) {
+			uint8_t opcode = (uint8_t)((w0_lo >> 24) & 0xFF);
+			const uint32_t *p = (const uint32_t *)(uintptr_t)w1;
+			if (opcode == 0xDA && p != NULL) { /* F3DEX2 G_MTX: 64-byte fixed-point matrix */
+				int i;
+				fprintf(sTraceFile, "       MTXDATA");
+				for (i = 0; i < 16; i++) fprintf(sTraceFile, " %08X", p[i]);
+				fprintf(sTraceFile, "\n");
+			} else if (opcode == 0xFD && p != NULL) { /* G_SETTIMG: checksum the pointed pixels */
+				/* Length is unknown at SETTIMG time; 1 KB is enough to detect
+				 * content changes between frames without risking a long read. */
+				const uint8_t *b = (const uint8_t *)p;
+				uint32_t sum = 0;
+				int i;
+				for (i = 0; i < 1024; i++) sum = sum * 31 + b[i];
+				fprintf(sTraceFile, "       TIMGSUM %08X  first=%02X%02X%02X%02X%02X%02X%02X%02X\n",
+				        sum, b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
+			} else if (opcode == 0x01 && p != NULL) { /* F3DEX2 G_VTX: n verts, 16 bytes each */
+				int n = (int)((w0_lo >> 12) & 0xFF);
+				int i;
+				if (n > 32) n = 32;
+				for (i = 0; i < n; i++) {
+					const int16_t *v = (const int16_t *)(p + i * 4);
+					fprintf(sTraceFile, "       VTX[%02d] x=%d y=%d z=%d\n", i, v[0], v[1], v[2]);
+				}
+			}
+		}
+	}
+
 	sCmdIndex++;
+}
+
+/* Correlation marker for draw-dump analysis: one line per backend draw call
+ * (Fast3D Flush), numbered in call order within the frame. */
+void gbi_trace_note_flush(int num_tris)
+{
+	if (!sEnabled || !sTraceFile) { sFlushIndex++; return; }
+	if (sSkipping) { sFlushIndex++; return; }
+	if (sMaxFrames > 0 && sFrameNum >= sMaxFrames) { sFlushIndex++; return; }
+	fprintf(sTraceFile, "       FLUSH #%d (%d tris)\n", sFlushIndex++, num_tris);
 }

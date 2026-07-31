@@ -111,6 +111,10 @@ static inline OSMesg port_make_os_mesg_int(uint32_t code)
 
 static PortCoroutine *sGameCoroutine = NULL;
 
+/* VI frame counter (incremented once per PortPushFrame, below). Lives up here
+ * so the DL-submission path can stamp diagnostics with it. */
+static int sFrameCount = 0;
+
 /* ========================================================================= */
 /*  Game coroutine entry point                                               */
 /* ========================================================================= */
@@ -320,8 +324,36 @@ static int sDLSubmitsThisFrame = 0;
  * its task-completion signaling is decoupled from the actual GPU work. */
 static Gfx *sPendingDisplayList = nullptr;
 
+/* Simulated scene-setup stall (issue #72). On N64, heavy mid-scene setup
+ * (fighter creation + stage init when a montage motion window is built at
+ * tic 15) overruns the frame by several VIs, so no gfx task is submitted
+ * and VI re-scans the previous framebuffer. The opening's movie cameras are
+ * authored with display-degenerate start states (first tics have
+ * eye-at dist.z == 0, slamming the wallpaper parallax to its clamps) that
+ * were never visible on hardware because of that stall. The port does the
+ * same setup in one host frame, so those frames would render and present.
+ * Dropping the next N submitted DLs reproduces the held-frame behavior. */
+static int sSimLoadStallFrames = 0;
+
+extern "C" int port_get_frame_count(void)
+{
+	return sFrameCount;
+}
+
+extern "C" void port_sim_load_stall(int n)
+{
+	port_log("[sim-stall] frame=%d n=%d\n", sFrameCount, n);
+	if (n > sSimLoadStallFrames) {
+		sSimLoadStallFrames = n;
+	}
+}
+
 extern "C" void port_submit_display_list(void *dl)
 {
+	if (sSimLoadStallFrames > 0) {
+		sSimLoadStallFrames--;
+		return;
+	}
 	/* Lazy-init the GBI trace system on first DL submit. Always install
 	 * the callback because Phase 3's per-DL cost model also runs through
 	 * it — gbi_trace_log_cmd is the no-op fast path when tracing is off. */
@@ -439,8 +471,6 @@ void PortGameInit(void)
 	 * This avoids firing false alarms during the long synchronous boot. */
 	port_watchdog_init();
 }
-
-static int sFrameCount = 0;
 
 /* ========================================================================= */
 /*  Screenshot capture (env-var driven)                                      */
@@ -622,6 +652,33 @@ void PortPushFrame(void)
 	 * thread (here) makes the JNI roundtrip safe. On other platforms the
 	 * deferral is a no-op behavior change — same one DL per frame, same
 	 * order relative to vblank rotation. */
+	gbi_trace_set_vi_frame(sFrameCount + 1);
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__ANDROID__)
+	/* SSB64_DUMP_DRAWS=<vi frame>: snapshot the draw target after every
+	 * DrawTriangles call while rendering that frame (GL backend only).
+	 * Output: draw_dump/draw_NNNN.png relative to CWD. */
+	{
+		extern int gPortGLDumpDraws;
+		static int sDumpDrawsFirst = -2;
+		static int sDumpDrawsLast = -1;
+		if (sDumpDrawsFirst == -2) {
+			/* Accepts "N" or "N-M" (inclusive VI-frame range). */
+			const char *env = std::getenv("SSB64_DUMP_DRAWS");
+			sDumpDrawsFirst = -1;
+			if (env != nullptr) {
+				sDumpDrawsFirst = std::atoi(env);
+				const char *dash = std::strchr(env, '-');
+				sDumpDrawsLast = (dash != nullptr) ? std::atoi(dash + 1) : sDumpDrawsFirst;
+			}
+			if (sDumpDrawsFirst > 0) {
+				std::error_code ec;
+				std::filesystem::create_directories("draw_dump", ec);
+			}
+		}
+		int vi = sFrameCount + 1;
+		gPortGLDumpDraws = (vi >= sDumpDrawsFirst && vi <= sDumpDrawsLast) ? vi : 0;
+	}
+#endif
 	port_drain_pending_display_list();
 
 	/* TCC mod hook: GamePostUpdateEvent fires once per frame AFTER game
