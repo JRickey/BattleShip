@@ -175,6 +175,7 @@ static int sFrameLoadBytes = 0;
 static int sLastDLTris = 0;
 static int sLastDLRectPx = 0;
 static int sLastDLLoadBytes = 0;
+static float sLastDLTriAreaPx = 0.0f;
 
 /* Thin C wrapper for the trace callback (matches GbiTraceCallbackFn signature) */
 static void gbi_trace_callback(uintptr_t w0, uintptr_t w1, int dl_depth)
@@ -283,9 +284,43 @@ extern "C" int port_get_last_dl_defer_n(void)
 		return 1;
 	}
 
+	/* Triangle screen coverage (native-res pixels) from Fast3D. The RDP is
+	 * fillrate-bound; a "cheap" 2-tri quad covering the window costs as much
+	 * as a huge texrect. SSB64's opening climaxes (e.g. the Yoshi melon-grab
+	 * flash, issue #72) are authored exactly this way — the giant poly IS
+	 * the freeze generator on hardware. */
+	extern float gfx_get_frame_tri_area_px(void);
+	int tri_area = (int)sLastDLTriAreaPx;
+
+	/* Triangle-fillrate weight (RDP cycles per covered pixel). Measured on
+	 * the opening montage: every window frame carries ~1.1M px of triangle
+	 * coverage, so any weight >= 1 trips the budget on ALL of them and
+	 * halves the tick rate (tested: weight 2 froze the whole montage).
+	 * Matching hardware's observed ~24% dropped-frame rate there needs a
+	 * debt/carry model rather than a per-DL threshold — see issue #136 notes
+	 * in docs/intro_divergence_triage_2026-07-30.md. Default 0 keeps the
+	 * shipped cost model; SSB64_RCP_TRI_WEIGHT_PCT (percent) enables
+	 * experimentation. */
+	static int sTriWeightPct = -1;
+	if (sTriWeightPct < 0) {
+		const char *wenv = std::getenv("SSB64_RCP_TRI_WEIGHT_PCT");
+		sTriWeightPct = (wenv != NULL) ? std::atoi(wenv) : 0;
+		if (sTriWeightPct < 0) sTriWeightPct = 0;
+	}
+	int tri_cost = (int)((long long)tri_area * sTriWeightPct / 100);
+
 	int cost = sLastDLTris * 75
 	         + sLastDLRectPx
-	         + sLastDLLoadBytes;
+	         + sLastDLLoadBytes
+	         + tri_cost;
+	int fillrate_px = (sLastDLRectPx > tri_cost) ? sLastDLRectPx : tri_cost;
+
+	static int sRcpLog = -1;
+	if (sRcpLog < 0) {
+		const char *lenv = std::getenv("SSB64_RCP_LOG");
+		sRcpLog = (lenv != NULL) ? std::atoi(lenv) : 0;
+	}
+
 	/* Heavy-DL deferral. The port's coroutine scheduler observes the held
 	 * framebuffer one host frame after slot contention, so climax DLs need
 	 * one extra VI of synthetic RCP latency beyond the first visible stall.
@@ -294,9 +329,9 @@ extern "C" int port_get_last_dl_defer_n(void)
 	int n;
 	if (cost < sBudget) {
 		n = 1;
-	} else if (sLastDLRectPx < sRectGate) {
-		/* Cost is over budget but the load is dominated by triangles, not
-		 * fillrate — looks like a fighter model render, not an authored
+	} else if (fillrate_px < sRectGate) {
+		/* Cost is over budget but the load is dominated by triangle COUNT,
+		 * not fillrate — looks like a fighter model render, not an authored
 		 * full-screen effect. Don't freeze. */
 		n = 1;
 	} else {
@@ -304,6 +339,10 @@ extern "C" int port_get_last_dl_defer_n(void)
 	}
 	if (n < 1) n = 1;
 	if (n > 3) n = 3;
+	if (sRcpLog) {
+		port_log("[rcp] frame=%d tris=%d rect_px=%d tri_area=%d load=%d cost=%d n=%d\n",
+		         sFrameCount, sLastDLTris, sLastDLRectPx, tri_area, sLastDLLoadBytes, cost, n);
+	}
 	return n;
 }
 
@@ -431,6 +470,10 @@ extern "C" void port_drain_pending_display_list(void)
 	sLastDLTris = sFrameTriCount;
 	sLastDLRectPx = sFrameRectPx;
 	sLastDLLoadBytes = sFrameLoadBytes;
+	{
+		extern float gfx_get_frame_tri_area_px(void);
+		sLastDLTriAreaPx = gfx_get_frame_tri_area_px();
+	}
 }
 
 /* ========================================================================= */

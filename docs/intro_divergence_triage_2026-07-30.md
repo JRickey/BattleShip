@@ -45,56 +45,42 @@ Each fighter segment: name ribbon tics 0–15, motion window tics 15–60 (windo
 created mid-scene at tic 15 → heavy setup), next scene loads at 60. On
 hardware the setup/load time shows as held frames; the port does it instantly.
 
-## Issue #72 — root cause chain (PINNED to the draw)
+## Issue #72 — RESOLVED: missing near-plane trivial rejection in Fast3D
 
-Reproduces deterministically at port VI frames **1985–1986 on screen**
-(screenshot labels 1984–1985 due to the GL one-frame capture lag): the Yoshi
-motion window is covered by a smooth gold gradient with a hard diagonal edge
-for exactly 2 frames, mid catch animation (Yoshi-scene tics 52–53, catch
-anim_frame 16–18; window created at frame 1947 = tic 15; tic = frame − 1932
-in the current build).
+**Root cause (proven, fixed):** the Yoshi catch-flash effect emits a 4-vertex
+CI4-textured quad whose vertices sit entirely outside the near plane — two in
+front of it (z < -w) and two behind the camera (w < 0; VBO dump showed
+w = -182 / +162 / +121 / -224). The RSP trivially rejects such triangles
+(every vertex sharing the NEAR clip code), so the quad never rasterizes on
+hardware or under cxd4-LLE — verified by RDRAM framebuffer dumps at the exact
+tics: all three swap buffers clean. Fast3D inherited an upstream line that
+**comments out the CLIP_NEAR flag** (`interpreter.cpp`, `clip_rej |= 16`),
+so negative-w vertices got semantically garbage L/R/T/B flags instead; on
+most frames those flags accidentally shared a bit (tri rejected — clean), but
+tiny per-frame coordinate drift flipped them for exactly 2 frames, letting
+the camera-plane-straddling quad reach the rasterizer, where its homogeneous
+wrap-around covers the motion window as a smooth gold gradient with a hard
+diagonal edge — the "camera blocked" wedge. Loose-timing emulators that skip
+RSP-accurate trivial rejection can show the same artifact (user report).
 
-Eliminated by experiment: RCP freeze-sim (`SSB64_RCP_FORCE_N=1` — no change),
-freeze pacing (`SSB64_FREEZE_PACING=0` — no change), stale present/idle-present
-(final game-FBO content is clean at 1984, wedge is *drawn* during 1985),
-wallpaper parallax excursion (clamps keep it covering; separate finding below),
-texture payload changes (SETTIMG checksums identical across the wedge).
+**Fix:** restore CLIP_NEAR with a robust formulation
+(`w <= 0 || z < -w` → flag; rejection still requires all three verts to
+share it, so geometry merely crossing the near plane renders exactly as
+before). Verified: wedge gone across the full window (frames 1978–1997
+flat), 18-checkpoint intro regression sweep clean, explosion transition
+unaffected. The same fix protects the other montage climax flashes (Samus
+grapple, DK smash) which use the same authored off-frustum idiom.
 
-Positive identification (draw_dump + FLUSH markers, frame vi1985):
-- The wedge is painted by **flush #84** = 2 triangles = the 4-vertex textured
-  quad submitted at trace cmds `[2473-2474]` (`G_VTX` token `0x002013CA`,
-  CI4 32×21 texture + 16-color TLUT, clamp both axes), the **last window-pass
-  object** (depth 11, after `clr=ZBUF`, so depth test off — `draw_state.log`
-  confirms depth_test=0, viewport/scissor = the motion window).
-- The quad's tris sit buffered until the **band camera's Z-clear redirect fill**
-  (`[2584-2586]`: `SETCIMG → 0x0241E860` (the Z buffer), `SETFILLCOLOR FFFC`,
-  `FILLRECT (10,150)-(309,229)`) hits `GfxDpFillRectangle`'s redirect branch,
-  whose `Flush()` renders them. (The redirect detection itself works — both
-  the CIMG and the depth image resolve through the same address form.)
-- Command streams and matrices for vi1984 (clean) vs vi1985 (wedge) are
-  structurally identical (only normal animation deltas) ⇒ the quad's
-  **CPU-built vertex data** is what explodes across the window on those two
-  frames. The blow-up coincides with a `gcEjectGObj` (id=1011, dl_link 65) at
-  the same moment and with the `dobj_wait=-FLT_MAX` state that the existing
-  `ftCommonCatchProcUpdate` trace logs — stale-data family suspicion.
-- On hardware/emulator those frames render normally (the emulator presents
-  the same tics with sane content), so this is a port-side data bug, not a
-  masked-frame artifact.
-
-Open thread for the fix: identify which effect builds that quad (CI4 32×21 +
-TLUT, rebuilt per frame in the DL heap, drawn depth-off at the end of the
-window pass — dust/eject-related billboard) and why its vertices are garbage
-for exactly the 2 frames after the eject. The `G_VTX` operand is a reloc token
-(`0x0020134C/D` neighbors it as SETTIMG), so extend the trace data dump to
-resolve tokens via the interpreter's SegAddr if payload data is needed.
-
-Also fixed/kept from this hunt:
-- `port_sim_load_stall(n)` (gameloop) + a 2-frame stall in
-  `gmCameraMakeMovieCamera` — mirrors the hardware setup overrun at motion
-  window creation, whose first 1–2 authored camera states are
-  display-degenerate (first frame literally has eye−at dist.z == 0, slamming
-  `grWallpaperCalcPersp`'s atan2 parallax to the clamps). Not the #72 wedge,
-  but hardware never displayed those frames and now the port doesn't either.
+Investigative notes kept for posterity: the wedge draw was isolated via the
+per-draw dump (`SSB64_DUMP_DRAWS`) to flush #84/#192 with identical GL
+state, texture, shader, and near-identical VBO between clean and corrupt
+frames — the only remaining difference was the clip-flag luck described
+above. Earlier hypotheses eliminated along the way: freeze-sim/idle-present,
+wallpaper parallax, stale reloc tokens (token constant across the wedge),
+texture payloads (checksums identical), effect vertex-data corruption (the
+token-resolved VTX dump shows static, sane model-space verts), and
+authored-but-timing-masked output (accurate-emulator RDRAM dumps show the
+quad is never rendered at all).
 
 ## Issue #10 — confirmed visual contract (emulator reference)
 
@@ -125,6 +111,14 @@ authored hold (~0.95 s). Established this session:
   per-DL cost model with scene-boundary load stalls (the
   `port_sim_load_stall` mechanism) sized from the emulator's presented-frame
   gaps, so holds are contiguous like hardware.
+- New instrumentation added during the #72 endgame: `SSB64_RCP_LOG=1`
+  (per-DL cost-model inputs/decisions), `SSB64_RCP_TRI_WEIGHT_PCT` (opt-in
+  triangle-fillrate term; measured: montage window frames carry ~1.1M px of
+  tri coverage, so naive weights >= 1 freeze the whole montage — a
+  debt/carry RCP clock is the right shape, see
+  docs/freeze_frame_rcp_clock_design_2026-04-26.md), `draw_vbo.log` +
+  program/texture/blend in `draw_state.log`, and token-resolving G_VTX
+  payload dumps in the GBI trace.
 - A separate crash was observed once at frame ~3095 (DL ExecStack recursion
   diag → SIGABRT) during a trace run in the standoff/clash window; did not
   reproduce in screenshot runs. Noted for a future stability pass.

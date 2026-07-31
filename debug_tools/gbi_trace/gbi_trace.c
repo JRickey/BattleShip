@@ -256,6 +256,27 @@ void gbi_trace_log_cmd(unsigned long long w0, unsigned long long w1, int depth)
 				}
 			}
 		}
+		/* Token-addressed G_VTX (w1_hi == 0): resolve through the port's
+		 * reloc handle table and dump the backing vertex data. This is how
+		 * per-frame CPU-built effect geometry is addressed, and content
+		 * corruption there is invisible to the command-stream diff. */
+		if (sDumpData && w1_hi == 0 && ((w0_lo >> 24) & 0xFF) == 0x01 && w1_lo != 0) {
+			extern void* portRelocTryResolvePointer(uint32_t token);
+			const uint32_t* vp = (const uint32_t*)portRelocTryResolvePointer(w1_lo);
+			if (vp == NULL) {
+				fprintf(sTraceFile, "       VTXTOK %08X -> UNRESOLVED\n", w1_lo);
+			} else {
+				int n = (int)((w0_lo >> 12) & 0xFF);
+				int i;
+				if (n > 8) n = 8;
+				fprintf(sTraceFile, "       VTXTOK %08X -> %p\n", w1_lo, (const void*)vp);
+				for (i = 0; i < n; i++) {
+					const int16_t* v = (const int16_t*)(vp + i * 4);
+					fprintf(sTraceFile, "       VTX[%02d] x=%d y=%d z=%d f=%04X uv=(%d,%d)\n", i, v[0], v[1],
+					        v[2], (uint16_t)v[3], v[4], v[5]);
+				}
+			}
+		}
 	}
 
 	sCmdIndex++;
