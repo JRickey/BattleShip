@@ -267,7 +267,8 @@ extern "C" int port_get_last_dl_defer_n(void)
 		port_log("SSB64: RCP cost model — budget=%d cycles/VI, force_n=%d (0=cost-model, >=1=fixed), rect_gate=%d\n",
 		         sBudget, sForceN, sRectGate);
 	}
-	if (sForceN >= 1) return sForceN;
+	/* (force-N check moved below the input logging so SSB64_RCP_LOG can
+	 * capture undisturbed cost inputs with SSB64_RCP_FORCE_N=1.) */
 
 	/* Scene-level allowlist gate. The cost model exists to recreate the
 	 * authored climax-freeze frames in cutscenes / opening sequences /
@@ -325,23 +326,63 @@ extern "C" int port_get_last_dl_defer_n(void)
 	 * framebuffer one host frame after slot contention, so climax DLs need
 	 * one extra VI of synthetic RCP latency beyond the first visible stall.
 	 * This shifts all authored freezes together (portrait banners, fighter
-	 * poses, stage cuts) instead of patching scene timers individually. */
+	 * poses, stage cuts) instead of patching scene timers individually.
+	 *
+	 * Issue #136: an ISOLATED over-budget climax gets the full N=3 hold, but
+	 * a SUSTAINED over-budget stretch must not refire it every DL — the
+	 * newcomers/silhouette scene sits at cost 460-515k with rect_px 262k on
+	 * EVERY frame, and the old rule turned that into a machine-gun stutter
+	 * (15 consecutive N=3 fires, the reported "stutter before the
+	 * silhouettes"). Real hardware paces that window as occasional
+	 * single-frame drops (~7 over the window in the issue's accurate-
+	 * emulator capture). So: after a full fire, enter a cooldown during
+	 * which continued over-budget frames accumulate their EXCESS cycles as
+	 * carry, dropping one frame (N=2) only each time the carry exceeds a
+	 * full VI budget — the debt-paced cadence the excess actually implies
+	 * (60-115k excess/frame -> one drop every ~4-6 frames there). Isolated
+	 * authored climaxes (montage fighter poses at ~1-frame spikes, e.g.
+	 * frames 1800/1881 in the attract log) still fire exactly as before. */
+	static int sCooldownUntilFrame = 0;
+	static int sCarryCycles = 0;
+	static int sCooldownLen = -1;
+	if (sCooldownLen < 0) {
+		const char *cenv = std::getenv("SSB64_RCP_COOLDOWN");
+		sCooldownLen = (cenv != NULL) ? std::atoi(cenv) : 30;
+		if (sCooldownLen < 0) sCooldownLen = 0;
+	}
 	int n;
 	if (cost < sBudget) {
 		n = 1;
+		/* Under budget: pay down lingering debt so old excess can't fire
+		 * long after the heavy stretch ended. */
+		sCarryCycles -= sBudget - cost;
+		if (sCarryCycles < 0) sCarryCycles = 0;
 	} else if (fillrate_px < sRectGate) {
 		/* Cost is over budget but the load is dominated by triangle COUNT,
 		 * not fillrate — looks like a fighter model render, not an authored
 		 * full-screen effect. Don't freeze. */
 		n = 1;
-	} else {
+	} else if (sFrameCount >= sCooldownUntilFrame) {
 		n = 3;
+		sCooldownUntilFrame = sFrameCount + sCooldownLen;
+		sCarryCycles = 0;
+	} else {
+		sCarryCycles += cost - sBudget;
+		if (sCarryCycles >= sBudget) {
+			sCarryCycles -= sBudget;
+			n = 2;
+		} else {
+			n = 1;
+		}
 	}
 	if (n < 1) n = 1;
 	if (n > 3) n = 3;
 	if (sRcpLog) {
 		port_log("[rcp] frame=%d tris=%d rect_px=%d tri_area=%d load=%d cost=%d n=%d\n",
 		         sFrameCount, sLastDLTris, sLastDLRectPx, tri_area, sLastDLLoadBytes, cost, n);
+	}
+	if (sForceN >= 1) {
+		return sForceN;
 	}
 	return n;
 }

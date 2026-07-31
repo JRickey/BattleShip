@@ -95,11 +95,31 @@ beyond the old handoff: the hardware exterior during the expansion is *stale
 framebuffer content* (N64 FBs persist across frames), so FB persistence was a
 required fourth piece alongside the Z-write emulation.
 
-## Issue #136 — timing model (analysis, fix not attempted this session)
+## Issue #136 — RESOLVED: sustained-over-budget stutter paced by carry model
 
-The pre-silhouette stutter window (clash 3975 → newcomers 4155) shows on the
-port as runs of 2–3-frame micro-freezes where the emulator shows one long
-authored hold (~0.95 s). Established this session:
+**Root cause (measured):** the newcomers/silhouette scene sustains cost
+460–515k (white-background rects 262k px + 1820 tris) over the 400k budget
+on EVERY frame, so the shipped threshold rule fired N=3 fifteen times in a
+row (frames 4177–4191 + 4213 in the attract log) — a freeze-advance-freeze
+cadence of five+ 2-frame holds. The scene-boundary long holds themselves
+were never the problem: the port already produces them naturally (46-frame
+no-DL hold at clash→newcomers, 29-frame at newcomers→logo — the anchor
+busy-waits and loads), closely matching the accurate emulator's 0.5–0.95 s
+holds.
+
+**Fix (gameloop.cpp):** isolated over-budget climaxes still fire the full
+N=3 hold (the authored montage pose freezes at frames 1800/1881 are
+unchanged), but after a fire a cooldown (default 30 frames,
+`SSB64_RCP_COOLDOWN`) redirects continued over-budget frames into a cycle
+carry that drops a single frame (N=2) only when the accumulated EXCESS
+reaches a full budget — the cadence the excess actually implies (60–115k
+excess/frame → one drop every ~4–6 frames). Under-budget frames pay the
+carry down. Live result in the window: N3 @4177, N2 @4183/4187/4192,
+N3 @4213 — visually one 2-frame hold + isolated single drops + the natural
+long hold, matching the issue's accurate-emulator capture (~7 gentle drops
++ long holds) instead of the machine-gun.
+
+Background analysis retained:
 - Anchors make wall-clock pacing roughly correct on the port, but hardware's
   hold is *contiguous* (one long load/anchor stall), while the port fragments
   it: game content advances between the RCP-sim deferrals, so the freeze is
