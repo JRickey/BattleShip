@@ -50,6 +50,7 @@ void gbi_trace_begin_frame(void);
  * about to be traced. Used by SSB64_GBI_TRACE_START and logged in the
  * frame header so traces correlate with SSB64_SCREENSHOT_FRAMES output. */
 void gbi_trace_set_vi_frame(int vi_frame);
+int gbi_trace_get_vi_frame(void);
 
 /**
  * Mark the end of the current frame and flush the trace buffer.

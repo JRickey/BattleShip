@@ -32,19 +32,26 @@ The effect therefore needs four pieces of RDP behavior the port lacked:
 - `Interpreter::RdpColorImageIsZBuffer()` — redirect detection matches on
   resolved pointers **or** the raw (pre-`SegAddr`) operands of
   `G_SETCIMG`/`G_SETZIMG`, so DLs carrying baked N64 addresses still match.
-- `GfxDpFillRectangle` redirect branch: computes the written Z from
-  `fill_color` (FILL cycle) or `prim_color` (1-cycle), packs RGBA→5551,
-  snaps ≥0xFFFC to exactly 1.0, and clears **only the fill rect region**
-  via the new `GfxRenderingAPI::ClearDepthRegion(x0,y0,x1,y1,depth)`
-  (normalized to the game FB; default implementation falls back to the old
-  full-buffer clear so non-GL backends keep their previous behavior).
-- Tri path: when redirect-active, `depth_mask` is forced on, depth test
-  follows `Z_CMP` (RDP semantics), the constant combiner output (from
-  `prim_color`, packed 5551 → /65535) is written as depth by reusing the
-  `G_ZS_PRIM` constant-depth vertex path, and framebuffer color writes are
-  suppressed via the new `GfxRenderingAPI::SetColorWriteMask(bool)`
-  (GL implements `glColorMask`; other backends default to a no-op =
-  status-quo).
+- `GfxDpFillRectangle` redirect branch: stages the written value into
+  `prim_color` (FILL cycle copies `fill_color` in; 1-cycle already drives
+  the combiner with `prim_color`), forces a PRIMITIVE combiner, applies the
+  FILL/COPY inclusive lower-right +1, and routes the rect through
+  `GfxDrawRectangle` — the redirect-active tri path below then turns it
+  into a value- and region-accurate depth fill on **every** backend with no
+  backend-specific clear hook (the earlier `ClearDepthRegion` RAPI hook was
+  removed in favor of this draw-based path).
+- Tri path: when redirect-active, `depth_mask` is forced on, the constant
+  combiner output (from `prim_color`, packed 5551, ≥0xFFFC snapping to
+  exactly 1.0 → /65535) is written as depth by reusing the `G_ZS_PRIM`
+  constant-depth vertex path, and framebuffer color writes are suppressed
+  via the new `GfxRenderingAPI::SetColorWriteMask(bool)` (GL implements
+  `glColorMask` and also scopes out `GL_DEPTH_CLAMP` for these draws;
+  DX11 implements it via a zero-write-mask blend state — untested until
+  Windows CI; Metal defaults to a no-op = status-quo).
+- Depth *testing* for all draws follows RDP semantics — enabled only when
+  `Z_CMP` is set (and the RSP emits Z, i.e. `G_ZBUFFER` in geometry mode).
+  This is load-bearing for the transition's red outer ring; see
+  `zcmp_depth_test_gating_2026-07-30.md`.
 - `GfxDrawRectangle`: sets `G_ZBUFFER` in the transient geometry mode when
   `other_mode_l & Z_CMP`, routing rects through the depth-tested path with
   the prim-depth constant — this is what lets the destination-wallpaper
@@ -73,9 +80,14 @@ port captures): dim-room exterior persists with the frozen hand, the star
 punches through to the destination image, near objects stay, the reveal
 completes at the same animation stage (±3-frame global alignment skew).
 Regression sweep of the whole opening (15 checkpoints from the chest room to
-the newcomers burst) shows no regressions. Known remaining cosmetic delta:
-the silhouette's red outer spikes read slightly dimmer than the reference in
-the first ~6 frames of the expansion.
+the newcomers burst) shows no regressions.
+
+The transition's **red starburst border** initially went missing entirely
+under this emulation (every ring pixel Z-rejected against the redirect's
+full-screen near fill) — root cause and fix in
+`zcmp_depth_test_gating_2026-07-30.md`. With that fix the full hardware
+composite reproduces: red spikes clipped outside the star silhouette,
+wallpaper interior, stale desk exterior.
 
 ## Don't break
 
@@ -86,7 +98,9 @@ the first ~6 frames of the expansion.
   (see `primdepth_unimplemented_2026-04-25.md`) still depend on the
   `G_ZS_PRIM` path; the redirect override only engages while the color image
   targets the Z buffer.
-- Non-GL backends compile against the new RAPI hooks via safe defaults but
-  do not yet implement them; DX11/Metal keep pre-existing behavior until
-  ports of `SetColorWriteMask` / `ClearDepthRegion` / `ClearColorRegion`
-  are added there.
+- Non-GL backends compile against the new RAPI hooks via safe defaults.
+  DX11 has a `SetColorWriteMask` implementation (zero-write-mask blend
+  state selected in `DrawTriangles`) that still needs a Windows CI
+  compile + behavior check; Metal keeps the no-op default. The depth-fill
+  path itself is draw-based and backend-independent — only
+  `SetColorWriteMask`/`ClearColorRegion` are per-backend.

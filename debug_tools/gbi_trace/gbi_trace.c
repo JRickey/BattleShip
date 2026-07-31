@@ -148,6 +148,11 @@ void gbi_trace_set_vi_frame(int vi_frame)
 	sViFrame = vi_frame;
 }
 
+int gbi_trace_get_vi_frame(void)
+{
+	return sViFrame;
+}
+
 void gbi_trace_begin_frame(void)
 {
 	if (!sEnabled || !sTraceFile) return;

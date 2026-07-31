@@ -95,6 +95,22 @@ beyond the old handoff: the hardware exterior during the expansion is *stale
 framebuffer content* (N64 FBs persist across frames), so FB persistence was a
 required fourth piece alongside the Z-write emulation.
 
+**Red starburst border (follow-up, RESOLVED):** the emulation above initially
+*removed* the transition's big red starburst outline (user-reported; emulator
+shows red ramping to ~28% screen coverage f1094–f1111, port had none). It was
+never a Z-value or ordering mystery: the 128-tri Outline annulus is drawn to
+the normal FB with `G_ZBUFFER` set but `Z_CMP`/`Z_UPD` clear — hardware never
+depth-tests it — while Fast3D derived depth testing from `G_ZBUFFER` alone
+and rejected every fragment against the redirect's full-screen near fill.
+Depth testing is now gated on `Z_CMP` for all draws (RDP semantics), which
+reproduces the full hardware composite with no special casing: ring paints
+unconditionally, wallpaper/scene (Z_CMP) fill the star interior over it, red
+spikes persist outside. Root-cause chain and blast-radius verification in
+`docs/bugs/zcmp_depth_test_gating_2026-07-30.md`. (Two dead ends worth
+remembering: the old build's visible red was an artifact of its buggy
+full-depth-clear-to-far, and near-clip/`w<=0` flagging was unrelated — the
+ring's verts are all in front of the camera.)
+
 ## Issue #136 — RESOLVED: sustained-over-budget stutter paced by carry model
 
 **Root cause (measured):** the newcomers/silhouette scene sustains cost
