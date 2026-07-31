@@ -657,10 +657,28 @@ set(SSB64_LIBULTRA_PORT
     decomp/src/libultra/gu/mtxutil.c        # guMtxF2L, guMtxL2F, guMtxIdentF
     decomp/src/libultra/gu/mtxxfmf.c        # guMtxXFMF
     decomp/src/libultra/gu/normalize.c      # guNormalize
+    decomp/src/libultra/gu/sinf.c           # __sinf — SGI polynomial + Cody-Waite reduction
+    decomp/src/libultra/gu/cosf.c           # __cosf — same (all game trig routes here, not host libm)
     # NOTE: sprite.c is NOT included — drawbitmap is assembly-only (MIPS).
     # Sprite functions are stubbed in port/stubs/n64_stubs.c instead.
 )
 target_sources(ssb64_game PRIVATE ${SSB64_LIBULTRA_PORT})
+
+# The SGI trig sources type-pun floats through int* (guint.h du/fu idiom) and
+# their double-precision polynomials must evaluate identically on every host:
+# AArch64 contracts a*b+c into fmadd by default, which perturbs the last ulp
+# vs. the N64's separate mul/add. Their #pragma weak sinf/cosf aliases also
+# capture the handful of bare sinf()/cosf() decomp call sites, matching how
+# libultra linked on hardware (MSVC ignores the pragma; those sites keep host
+# libm there). -fno-builtin keeps GCC/Clang from constant-folding or
+# sincos-fusing bare calls past the aliases.
+if (NOT MSVC)
+    set_source_files_properties(
+        decomp/src/libultra/gu/sinf.c
+        decomp/src/libultra/gu/cosf.c
+        PROPERTIES COMPILE_OPTIONS "-ffp-contract=off;-fno-strict-aliasing")
+    target_compile_options(ssb64_game PRIVATE -fno-builtin-sinf -fno-builtin-cosf)
+endif()
 
 # N64 audio library — synthesis driver, sequence player, voice management.
 # These decomp files are compiled with PORT defines; the CPU Acmd interpreter
