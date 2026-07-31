@@ -717,6 +717,7 @@ extern "C" void portRelocLoadFileFromBytes(
 				figatree_reloc_words[reloc_intern] = 1;
 			}
 			*slot = token;
+			portRelocNoteChainSlot(slot);
 		}
 
 		reloc_intern = next_reloc;
@@ -786,6 +787,7 @@ extern "C" void portRelocLoadFileFromBytes(
 			figatree_reloc_words[reloc_extern] = 1;
 		}
 		*slot = token;
+		portRelocNoteChainSlot(slot);
 
 		extern_idx++;
 		reloc_extern = next_reloc;
@@ -1062,6 +1064,16 @@ void* lbRelocGetForceExternBufferFile(u32 id)
 
 void* lbRelocGetForceExternHeapFile(u32 id, void *heap)
 {
+	/* NOTE: rewinding abandons prior loads above `heap`, and their corpse
+	 * entries linger in the address-keyed registries until a same-range
+	 * load evicts them (a smaller reload leaves the old tail's entries).
+	 * Do NOT try to evict [heap, sLBRelocExternFileHeap) here:
+	 * sLBRelocExternFileHeap is shared with the extern-heap bump path, so
+	 * that span can contain LIVE extern files — evicting it invalidates
+	 * their tokens and crashes scene 28 (verified regression). Corpse
+	 * chain-slot entries are instead detected at use: the runtime texture
+	 * fixup validates a candidate slot's word via
+	 * portRelocTryResolvePointer before clamping. */
 	sLBRelocExternFileHeap = heap;
 	sLBRelocInternBuffer.force_status_buffer_num = 0;
 	return lbRelocGetForceExternBufferFile(id);

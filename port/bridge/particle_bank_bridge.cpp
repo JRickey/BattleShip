@@ -378,7 +378,32 @@ extern "C" int portParticleLoadBank(uintptr_t scripts_lo, int bank_id) {
     /* Evict any prior working entry for this scripts_lo. Its pointerization
      * was invalidated when lbRelocInitSetup() reset the token table between
      * scenes, so anyone still holding a raw pointer into the old buffer is
-     * already broken — dropping the backing memory just matches. */
+     * already broken — dropping the backing memory just matches.
+     *
+     * Before the backing vectors are freed, purge every port-side cache
+     * keyed by raw addresses inside them — the same lockstep-eviction
+     * contract lbRelocLoadAndRelocFile honors for reloc loads. glibc
+     * routinely hands a freed chunk straight back to the next same-sized
+     * allocation, so without this a Fast3D TextureCacheKey whose
+     * texture_addr pointed into the old bank survives, and a later bank
+     * texture that lands on the aliased (addr, shape) key renders the
+     * previous bank's texels: intermittent corrupted particle textures
+     * whose occurrence depends on heap layout, i.e. varies per launch. */
+    for (const auto &e : sWorkingEntries) {
+        if (!e || e->scripts_lo != scripts_lo)
+            continue;
+        extern void portTextureCacheDeleteRange(const void *base, size_t size);
+        extern void portPackedDisplayListCacheDeleteRange(const void *base, size_t size);
+        extern void portEvictStructFixupsInRange(const void *begin, size_t size);
+        const std::vector<uint8_t> *bufs[2] = { &e->script_data, &e->texture_data };
+        for (const std::vector<uint8_t> *buf : bufs) {
+            if (buf->empty())
+                continue;
+            portTextureCacheDeleteRange(buf->data(), buf->size());
+            portPackedDisplayListCacheDeleteRange(buf->data(), buf->size());
+            portEvictStructFixupsInRange(buf->data(), buf->size());
+        }
+    }
     sWorkingEntries.erase(
         std::remove_if(sWorkingEntries.begin(), sWorkingEntries.end(),
                        [scripts_lo](const std::unique_ptr<WorkingEntry> &e) {

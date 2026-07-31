@@ -59,6 +59,15 @@ void portResetStructFixups(void);
 void portEvictStructFixupsInRange(const void *begin, size_t size);
 
 /**
+ * Record the absolute address of a tokenized reloc chain slot. The runtime
+ * texture fixup refuses any range containing one — texel data never holds
+ * chain slots, so such a request is a misdirected SETTIMG that would
+ * BSWAP32 live tokens/structs in place. Evicted with
+ * portEvictStructFixupsInRange / portResetStructFixups.
+ */
+void portRelocNoteChainSlot(const void *slot);
+
+/**
  * Undo pass1 BSWAP32 on a raw texture blob so its bytes return to N64
  * BE order.  Use for raw-texel file regions that the Sprite/Bitmap fixup
  * path never reaches and that pass2 can't discover statically (e.g. the

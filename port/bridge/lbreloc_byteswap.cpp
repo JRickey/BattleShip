@@ -631,6 +631,22 @@ static std::vector<ProtectedRange> sProtectedStructRanges;
 // addresses during the pre-decode BSWAP32 pass.
 static std::unordered_set<uintptr_t> sDeswizzle4cFixups;
 
+/* Absolute addresses of every tokenized reloc chain slot currently live.
+ * Texel data never contains chain slots, so a runtime texture fixup whose
+ * range covers one is aimed at non-texture data (a stale or garbage
+ * SETTIMG operand) and must be refused — applying it BSWAP32s live
+ * descriptor and token words in place. Observed cascade: a DObjDesc array
+ * in a fighter main file wholesale byte-reversed mid-scene, its sentinel
+ * unrecognizable, item spawn walks running off the array into float data
+ * → textureless objects, "impossible" token warnings (byte-swapped
+ * tokens), and SIGSEGV in gcSetupCustomDObjsWithMObj. */
+static std::unordered_set<uintptr_t> sChainSlotAddrs;
+
+extern "C" void portRelocNoteChainSlot(const void *slot)
+{
+	sChainSlotAddrs.insert(reinterpret_cast<uintptr_t>(slot));
+}
+
 static void portRegisterProtectedStructRange(const void *begin, size_t size)
 {
 	if (begin == nullptr || size == 0) return;
@@ -1031,6 +1047,7 @@ extern "C" void portResetStructFixups(void)
 	sTexFixupWords.clear();
 	sProtectedStructRanges.clear();
 	sDeswizzle4cFixups.clear();
+	sChainSlotAddrs.clear();
 }
 
 extern "C" void portEvictStructFixupsInRange(const void *begin, size_t size)
@@ -1050,6 +1067,7 @@ extern "C" void portEvictStructFixupsInRange(const void *begin, size_t size)
 	evict_set(sStructU16Fixups);
 	evict_set(sTexFixupWords);
 	evict_set(sDeswizzle4cFixups);
+	evict_set(sChainSlotAddrs);
 
 	for (auto it = sTexFixupExtent.begin(); it != sTexFixupExtent.end(); ) {
 		if (it->first >= lo && it->first < hi) it = sTexFixupExtent.erase(it);
@@ -1509,6 +1527,57 @@ extern "C" void portRelocFixupTextureAtRuntime(const void *addr, unsigned int nu
 		         described, descFileId, (void*)descBase,
 		         descSize, descPath ? descPath : "(unknown)");
 		sRuntimeTexTraceCount++;
+	}
+
+	/* Clamp the swap at the first tokenized reloc chain slot in the range.
+	 *
+	 * N64 LoadBlock/LoadTLUT legitimately over-read past the true texel
+	 * span (fixed block sizes); on hardware the extra bytes only landed in
+	 * TMEM and were never written back. This fixup MUTATES source memory,
+	 * so swapping the over-read tail byte-reverses live tokens and struct
+	 * words in place — observed as fighter-file DObjDesc arrays wholesale
+	 * BSWAP32'd (tokens included), cascading into textureless objects,
+	 * impossible-generation token warnings, and SIGSEGV in the desc walk.
+	 *
+	 * Texel data never contains chain slots, so the first slot marks the
+	 * end of trustworthy texture bytes: swap up to it, leave the rest.
+	 * The clamped tail stays in its live (already correct) byte order and
+	 * the GPU merely samples a few nonsense over-read texels the original
+	 * hardware also displayed as garbage-in-TMEM. */
+	{
+		extern void *portRelocTryResolvePointer(uint32_t token);
+		uintptr_t scan_end = target + num_bytes;
+		for (uintptr_t w = target; w < scan_end; w += 4)
+		{
+			if (!sChainSlotAddrs.count(w))
+				continue;
+			/* Registry entries can outlive their file epoch: a reload at
+			 * the same address (force-heap rewind, bump reuse) evicts only
+			 * the NEW file's smaller range, leaving corpse addresses from
+			 * the old file's tail. A live slot must hold a token that
+			 * actually resolves; anything else is a corpse — drop it and
+			 * keep the texture swap intact (clamping on a corpse truncates
+			 * real texels and renders the texture garbled). */
+			uint32_t slot_word = *reinterpret_cast<const uint32_t *>(w);
+			if (slot_word == 0 || portRelocTryResolvePointer(slot_word) == nullptr)
+			{
+				sChainSlotAddrs.erase(w);
+				continue;
+			}
+			static unsigned int sClampLogCount = 0;
+			if (sClampLogCount < 64)
+			{
+				int cl_file_id = portRelocFindFileIdAndBase(addr, nullptr);
+				port_log("SSB64: runtimeTexFix CLAMPED addr=%p num=0x%x->0x%x file=%d — "
+				         "live reloc chain slot at %p bounds the texel span\n",
+				         addr, num_bytes, (unsigned int)(w - target), cl_file_id, (void *)w);
+				sClampLogCount++;
+			}
+			num_bytes = (unsigned int)(w - target);
+			break;
+		}
+		if (num_bytes == 0)
+			return;
 	}
 
 	uint32_t *region = reinterpret_cast<uint32_t *>(target);
