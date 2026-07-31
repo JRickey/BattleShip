@@ -112,6 +112,10 @@ static inline OSMesg port_make_os_mesg_int(uint32_t code)
 
 static PortCoroutine *sGameCoroutine = NULL;
 
+/* VI frame counter (incremented once per PortPushFrame, below). Lives up here
+ * so the DL-submission path can stamp diagnostics with it. */
+static int sFrameCount = 0;
+
 /* ========================================================================= */
 /*  Game coroutine entry point                                               */
 /* ========================================================================= */
@@ -172,6 +176,7 @@ static int sFrameLoadBytes = 0;
 static int sLastDLTris = 0;
 static int sLastDLRectPx = 0;
 static int sLastDLLoadBytes = 0;
+static float sLastDLTriAreaPx = 0.0f;
 
 /* Thin C wrapper for the trace callback (matches GbiTraceCallbackFn signature) */
 static void gbi_trace_callback(uintptr_t w0, uintptr_t w1, int dl_depth)
@@ -263,7 +268,8 @@ extern "C" int port_get_last_dl_defer_n(void)
 		port_log("SSB64: RCP cost model — budget=%d cycles/VI, force_n=%d (0=cost-model, >=1=fixed), rect_gate=%d\n",
 		         sBudget, sForceN, sRectGate);
 	}
-	if (sForceN >= 1) return sForceN;
+	/* (force-N check moved below the input logging so SSB64_RCP_LOG can
+	 * capture undisturbed cost inputs with SSB64_RCP_FORCE_N=1.) */
 
 	/* Scene-level allowlist gate. The cost model exists to recreate the
 	 * authored climax-freeze frames in cutscenes / opening sequences /
@@ -280,27 +286,105 @@ extern "C" int port_get_last_dl_defer_n(void)
 		return 1;
 	}
 
+	/* Triangle screen coverage (native-res pixels) from Fast3D. The RDP is
+	 * fillrate-bound; a "cheap" 2-tri quad covering the window costs as much
+	 * as a huge texrect. SSB64's opening climaxes (e.g. the Yoshi melon-grab
+	 * flash, issue #72) are authored exactly this way — the giant poly IS
+	 * the freeze generator on hardware. */
+	extern float gfx_get_frame_tri_area_px(void);
+	int tri_area = (int)sLastDLTriAreaPx;
+
+	/* Triangle-fillrate weight (RDP cycles per covered pixel). Measured on
+	 * the opening montage: every window frame carries ~1.1M px of triangle
+	 * coverage, so any weight >= 1 trips the budget on ALL of them and
+	 * halves the tick rate (tested: weight 2 froze the whole montage).
+	 * Matching hardware's observed ~24% dropped-frame rate there needs a
+	 * debt/carry model rather than a per-DL threshold — see issue #136 notes
+	 * in docs/intro_divergence_triage_2026-07-30.md. Default 0 keeps the
+	 * shipped cost model; SSB64_RCP_TRI_WEIGHT_PCT (percent) enables
+	 * experimentation. */
+	static int sTriWeightPct = -1;
+	if (sTriWeightPct < 0) {
+		const char *wenv = std::getenv("SSB64_RCP_TRI_WEIGHT_PCT");
+		sTriWeightPct = (wenv != NULL) ? std::atoi(wenv) : 0;
+		if (sTriWeightPct < 0) sTriWeightPct = 0;
+	}
+	int tri_cost = (int)((long long)tri_area * sTriWeightPct / 100);
+
 	int cost = sLastDLTris * 75
 	         + sLastDLRectPx
-	         + sLastDLLoadBytes;
+	         + sLastDLLoadBytes
+	         + tri_cost;
+	int fillrate_px = (sLastDLRectPx > tri_cost) ? sLastDLRectPx : tri_cost;
+
+	static int sRcpLog = -1;
+	if (sRcpLog < 0) {
+		const char *lenv = std::getenv("SSB64_RCP_LOG");
+		sRcpLog = (lenv != NULL) ? std::atoi(lenv) : 0;
+	}
+
 	/* Heavy-DL deferral. The port's coroutine scheduler observes the held
 	 * framebuffer one host frame after slot contention, so climax DLs need
 	 * one extra VI of synthetic RCP latency beyond the first visible stall.
 	 * This shifts all authored freezes together (portrait banners, fighter
-	 * poses, stage cuts) instead of patching scene timers individually. */
+	 * poses, stage cuts) instead of patching scene timers individually.
+	 *
+	 * Issue #136: an ISOLATED over-budget climax gets the full N=3 hold, but
+	 * a SUSTAINED over-budget stretch must not refire it every DL — the
+	 * newcomers/silhouette scene sits at cost 460-515k with rect_px 262k on
+	 * EVERY frame, and the old rule turned that into a machine-gun stutter
+	 * (15 consecutive N=3 fires, the reported "stutter before the
+	 * silhouettes"). Real hardware paces that window as occasional
+	 * single-frame drops (~7 over the window in the issue's accurate-
+	 * emulator capture). So: after a full fire, enter a cooldown during
+	 * which continued over-budget frames accumulate their EXCESS cycles as
+	 * carry, dropping one frame (N=2) only each time the carry exceeds a
+	 * full VI budget — the debt-paced cadence the excess actually implies
+	 * (60-115k excess/frame -> one drop every ~4-6 frames there). Isolated
+	 * authored climaxes (montage fighter poses at ~1-frame spikes, e.g.
+	 * frames 1800/1881 in the attract log) still fire exactly as before. */
+	static int sCooldownUntilFrame = 0;
+	static int sCarryCycles = 0;
+	static int sCooldownLen = -1;
+	if (sCooldownLen < 0) {
+		const char *cenv = std::getenv("SSB64_RCP_COOLDOWN");
+		sCooldownLen = (cenv != NULL) ? std::atoi(cenv) : 30;
+		if (sCooldownLen < 0) sCooldownLen = 0;
+	}
 	int n;
 	if (cost < sBudget) {
 		n = 1;
-	} else if (sLastDLRectPx < sRectGate) {
-		/* Cost is over budget but the load is dominated by triangles, not
-		 * fillrate — looks like a fighter model render, not an authored
+		/* Under budget: pay down lingering debt so old excess can't fire
+		 * long after the heavy stretch ended. */
+		sCarryCycles -= sBudget - cost;
+		if (sCarryCycles < 0) sCarryCycles = 0;
+	} else if (fillrate_px < sRectGate) {
+		/* Cost is over budget but the load is dominated by triangle COUNT,
+		 * not fillrate — looks like a fighter model render, not an authored
 		 * full-screen effect. Don't freeze. */
 		n = 1;
-	} else {
+	} else if (sFrameCount >= sCooldownUntilFrame) {
 		n = 3;
+		sCooldownUntilFrame = sFrameCount + sCooldownLen;
+		sCarryCycles = 0;
+	} else {
+		sCarryCycles += cost - sBudget;
+		if (sCarryCycles >= sBudget) {
+			sCarryCycles -= sBudget;
+			n = 2;
+		} else {
+			n = 1;
+		}
 	}
 	if (n < 1) n = 1;
 	if (n > 3) n = 3;
+	if (sRcpLog) {
+		port_log("[rcp] frame=%d tris=%d rect_px=%d tri_area=%d load=%d cost=%d n=%d\n",
+		         sFrameCount, sLastDLTris, sLastDLRectPx, tri_area, sLastDLLoadBytes, cost, n);
+	}
+	if (sForceN >= 1) {
+		return sForceN;
+	}
 	return n;
 }
 
@@ -321,8 +405,36 @@ static int sDLSubmitsThisFrame = 0;
  * its task-completion signaling is decoupled from the actual GPU work. */
 static Gfx *sPendingDisplayList = nullptr;
 
+/* Simulated scene-setup stall (issue #72). On N64, heavy mid-scene setup
+ * (fighter creation + stage init when a montage motion window is built at
+ * tic 15) overruns the frame by several VIs, so no gfx task is submitted
+ * and VI re-scans the previous framebuffer. The opening's movie cameras are
+ * authored with display-degenerate start states (first tics have
+ * eye-at dist.z == 0, slamming the wallpaper parallax to its clamps) that
+ * were never visible on hardware because of that stall. The port does the
+ * same setup in one host frame, so those frames would render and present.
+ * Dropping the next N submitted DLs reproduces the held-frame behavior. */
+static int sSimLoadStallFrames = 0;
+
+extern "C" int port_get_frame_count(void)
+{
+	return sFrameCount;
+}
+
+extern "C" void port_sim_load_stall(int n)
+{
+	port_log("[sim-stall] frame=%d n=%d\n", sFrameCount, n);
+	if (n > sSimLoadStallFrames) {
+		sSimLoadStallFrames = n;
+	}
+}
+
 extern "C" void port_submit_display_list(void *dl)
 {
+	if (sSimLoadStallFrames > 0) {
+		sSimLoadStallFrames--;
+		return;
+	}
 	/* Lazy-init the GBI trace system on first DL submit. Always install
 	 * the callback because Phase 3's per-DL cost model also runs through
 	 * it — gbi_trace_log_cmd is the no-op fast path when tracing is off. */
@@ -410,10 +522,15 @@ extern "C" void port_drain_pending_display_list(void)
 			costLatched = true;
 			/* Capture this DL's cost so port_get_last_dl_defer_n() can use it
 			 * to set N for THIS task's SP/DP-interrupt deferral. osSpTaskStartGo
-			 * reads it AFTER port_submit_display_list returns. */
+			 * reads it AFTER port_submit_display_list returns. Latched from the
+			 * first subframe run only — later runs walk the same DL. */
 			sLastDLTris = sFrameTriCount;
 			sLastDLRectPx = sFrameRectPx;
 			sLastDLLoadBytes = sFrameLoadBytes;
+			{
+				extern float gfx_get_frame_tri_area_px(void);
+				sLastDLTriAreaPx = gfx_get_frame_tri_area_px();
+			}
 		}
 	}
 	portInterpEndDraw();
@@ -460,8 +577,6 @@ void PortGameInit(void)
 	 * This avoids firing false alarms during the long synchronous boot. */
 	port_watchdog_init();
 }
-
-static int sFrameCount = 0;
 
 /* ========================================================================= */
 /*  Screenshot capture (env-var driven)                                      */
@@ -643,6 +758,33 @@ void PortPushFrame(void)
 	 * thread (here) makes the JNI roundtrip safe. On other platforms the
 	 * deferral is a no-op behavior change — same one DL per frame, same
 	 * order relative to vblank rotation. */
+	gbi_trace_set_vi_frame(sFrameCount + 1);
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__ANDROID__)
+	/* SSB64_DUMP_DRAWS=<vi frame>: snapshot the draw target after every
+	 * DrawTriangles call while rendering that frame (GL backend only).
+	 * Output: draw_dump/draw_NNNN.png relative to CWD. */
+	{
+		extern int gPortGLDumpDraws;
+		static int sDumpDrawsFirst = -2;
+		static int sDumpDrawsLast = -1;
+		if (sDumpDrawsFirst == -2) {
+			/* Accepts "N" or "N-M" (inclusive VI-frame range). */
+			const char *env = std::getenv("SSB64_DUMP_DRAWS");
+			sDumpDrawsFirst = -1;
+			if (env != nullptr) {
+				sDumpDrawsFirst = std::atoi(env);
+				const char *dash = std::strchr(env, '-');
+				sDumpDrawsLast = (dash != nullptr) ? std::atoi(dash + 1) : sDumpDrawsFirst;
+			}
+			if (sDumpDrawsFirst > 0) {
+				std::error_code ec;
+				std::filesystem::create_directories("draw_dump", ec);
+			}
+		}
+		int vi = sFrameCount + 1;
+		gPortGLDumpDraws = (vi >= sDumpDrawsFirst && vi <= sDumpDrawsLast) ? vi : 0;
+	}
+#endif
 	port_drain_pending_display_list();
 
 	/* TCC mod hook: GamePostUpdateEvent fires once per frame AFTER game
