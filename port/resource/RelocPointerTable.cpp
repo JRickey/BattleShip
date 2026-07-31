@@ -62,6 +62,23 @@ static void ensureCapacity(void)
     if (sSlots == nullptr) {
         sCapacity = INITIAL_CAPACITY;
         sSlots = (Slot *)calloc(sCapacity, sizeof(Slot));
+        /* DIAG (SSB64_RELOC_GEN_SEED=<n>): pre-age every slot's generation.
+         * Token top byte = gen >> 4, so gens 16..31 mint 0x01xxxxxx tokens
+         * (G_VTX opcode) and 4048..4063 mint 0xFDxxxxxx (SETTIMG) — the
+         * bands where a tokenized chain slot masquerades as a GBI command
+         * to the chain-walk texture/vertex fixup. Seeding 15 arms the
+         * G_VTX band from the very first registration instead of after
+         * ~13 scene transitions. Zero cost when unset. */
+        if (sSlots != nullptr) {
+            const char *seed_env = getenv("SSB64_RELOC_GEN_SEED");
+            if (seed_env != nullptr) {
+                uint32_t seed = (uint32_t)strtoul(seed_env, nullptr, 0) & TOKEN_GENERATION_MAX;
+                for (uint32_t i = 0; i < sCapacity; i++) {
+                    sSlots[i].gen = seed;
+                }
+                spdlog::warn("RelocPointerTable: DIAG generation seed = {}", seed);
+            }
+        }
         return;
     }
     if (sNextIndex >= sCapacity) {

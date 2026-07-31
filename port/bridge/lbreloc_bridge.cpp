@@ -675,9 +675,28 @@ extern "C" void portRelocLoadFileFromBytes(
 	// write the 32-bit token into the 4-byte word.
 
 	u16 reloc_intern = reloc_intern_offset;
+	u32 intern_steps = 0;
 
 	while (reloc_intern != 0xFFFF)
 	{
+		/* Containment: a pristine chain only references word offsets inside
+		 * its own file and visits each slot once, so a legit walk can never
+		 * take more steps than the file has words nor step outside it. A
+		 * corrupted chain word (observed 2026-07-31: gen-16 token misparsed
+		 * as G_VTX rot16'd live descriptors) used to send this walk on an
+		 * unbounded wander that exhausted the token table — abort() in
+		 * portRelocRegisterPointer. Log + stop instead: the file keeps every
+		 * fixup applied up to the bad word, and the scene keeps running. */
+		if ((size_t)reloc_intern * sizeof(u32) + sizeof(u32) > copySize ||
+		    ++intern_steps > (u32)(copySize / sizeof(u32)))
+		{
+			spdlog::error("lbReloc bridge: file_id {} intern chain walk STOPPED "
+			              "(off={} steps={} copySize={}) — corrupt chain word",
+			              file_id, reloc_intern, intern_steps, copySize);
+			port_log("SSB64: chainWalk STOP intern file=%u off=0x%x steps=%u size=0x%zx\n",
+			         file_id, (unsigned)reloc_intern, (unsigned)intern_steps, copySize);
+			break;
+		}
 		u32 *slot = (u32 *)((uintptr_t)ram_dst + (reloc_intern * sizeof(u32)));
 
 		// Read the reloc descriptor before we overwrite the slot.
@@ -687,6 +706,18 @@ extern "C" void portRelocLoadFileFromBytes(
 		//   bits [15:0]  = target offset within this file (word index)
 		u16 next_reloc = (u16)(*slot >> 16);
 		u16 words_num  = (u16)(*slot & 0xFFFF);
+
+		/* An intern target outside the file means this chain word is not a
+		 * chain word (corruption, or the walk already left the rails). */
+		if ((size_t)words_num * sizeof(u32) >= copySize)
+		{
+			spdlog::error("lbReloc bridge: file_id {} intern chain target OOB "
+			              "(slot_off={} target_words={} copySize={}) — stopping walk",
+			              file_id, reloc_intern, words_num, copySize);
+			port_log("SSB64: chainWalk STOP intern-target-oob file=%u slot=0x%x tgt=0x%x size=0x%zx\n",
+			         file_id, (unsigned)reloc_intern, (unsigned)words_num, copySize);
+			break;
+		}
 
 		// All reloc chain entries are intra-file pointers.  Tokenize them
 		// normally so the resource system can resolve them to PC addresses.
@@ -731,9 +762,24 @@ extern "C" void portRelocLoadFileFromBytes(
 
 	u16 reloc_extern = reloc_extern_offset;
 	u32 extern_idx = 0;
+	u32 extern_steps = 0;
 
 	while (reloc_extern != 0xFFFF)
 	{
+		/* Same containment as the intern walk: slots must lie inside this
+		 * file and a legit chain can't have more entries than file words.
+		 * (words_num indexes the DEPENDENCY file, so it can't be bounds-
+		 * checked here; extern_idx >= extern_count below covers the rest.) */
+		if ((size_t)reloc_extern * sizeof(u32) + sizeof(u32) > copySize ||
+		    ++extern_steps > (u32)(copySize / sizeof(u32)))
+		{
+			spdlog::error("lbReloc bridge: file_id {} extern chain walk STOPPED "
+			              "(off={} steps={} copySize={}) — corrupt chain word",
+			              file_id, reloc_extern, extern_steps, copySize);
+			port_log("SSB64: chainWalk STOP extern file=%u off=0x%x steps=%u size=0x%zx\n",
+			         file_id, (unsigned)reloc_extern, (unsigned)extern_steps, copySize);
+			break;
+		}
 		u32 *slot = (u32 *)((uintptr_t)ram_dst + (reloc_extern * sizeof(u32)));
 
 		u16 next_reloc = (u16)(*slot >> 16);
@@ -892,10 +938,26 @@ extern "C" void portRelocLoadFileFromBytesPrivate(
 	// but without texture-fixup (no SETTIMG-driven texture cache for the
 	// mod-private buffer) and without figatree halfswap.
 	u16 reloc_intern = reloc_intern_offset;
+	u32 intern_steps = 0;
 	while (reloc_intern != 0xFFFF) {
+		/* Same containment as the public intern walk (see there). */
+		if ((size_t)reloc_intern * sizeof(u32) + sizeof(u32) > copySize ||
+		    ++intern_steps > (u32)(copySize / sizeof(u32))) {
+			spdlog::error("portRelocLoadFileFromBytesPrivate: chain walk STOPPED "
+			              "(off={} steps={} copySize={}) — corrupt chain word",
+			              reloc_intern, intern_steps, copySize);
+			break;
+		}
 		u32 *slot = (u32 *)((uintptr_t)ram_dst + (reloc_intern * sizeof(u32)));
 		u16 next_reloc = (u16)(*slot >> 16);
 		u16 words_num  = (u16)(*slot & 0xFFFF);
+
+		if ((size_t)words_num * sizeof(u32) >= copySize) {
+			spdlog::error("portRelocLoadFileFromBytesPrivate: chain target OOB "
+			              "(slot_off={} target_words={} copySize={}) — stopping walk",
+			              reloc_intern, words_num, copySize);
+			break;
+		}
 
 		void *target = (void *)((uintptr_t)ram_dst + (words_num * sizeof(u32)));
 		u32 token = portRelocRegisterPointer(target);

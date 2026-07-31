@@ -1367,6 +1367,42 @@ extern "C" int portRelocFixupTextureFromChain(void *file_base, size_t file_size,
 
 	const uint8_t *file_bytes = static_cast<const uint8_t *>(file_base);
 
+	/* The w0 candidate at slot-4 may be a TOKEN this same walk already wrote:
+	 * chain entries are frequently adjacent words, so the "command" preceding
+	 * this slot is the previous entry's freshly-tokenized slot. A token's top
+	 * byte is its generation >> 4 — at gen 16..31 that byte is 0x01 (G_VTX),
+	 * at gen 4048..4063 it's 0xFD (SETTIMG) — and the rest of the token also
+	 * passes the structural checks (reserved bits zero, plausible num_vtx).
+	 * Parsing such a token as a command applies vertex/texture byte
+	 * permutations over live chain descriptors: observed 2026-07-31 as a
+	 * gen-16 token misparse that rot16'd five descriptors in
+	 * reloc_effects/EFCommonEffects2, derailing the walk into a token-feedback
+	 * spiral that exhausted the slot table (abort in portRelocRegisterPointer).
+	 * A live tokenized slot is never a real command word — skip. Corpse
+	 * entries (address reused, word no longer a resolving token) are pruned
+	 * so a stale registry can't suppress real fixups. */
+	{
+		uintptr_t w0_addr = (uintptr_t)(file_bytes + slot_byte_off) - 4;
+		auto it = sChainSlotAddrs.find(w0_addr);
+		if (it != sChainSlotAddrs.end())
+		{
+			extern void *portRelocTryResolvePointer(uint32_t token);
+			uint32_t w0_word = *(const uint32_t *)w0_addr;
+			if (w0_word != 0 && portRelocTryResolvePointer(w0_word) != nullptr)
+			{
+				static unsigned int sW0TokenSkips = 0;
+				if (sW0TokenSkips < 16)
+				{
+					sW0TokenSkips++;
+					port_log("SSB64: chainFixup SKIP w0-is-chain-token base=%p slot_off=0x%x w0=0x%08X\n",
+					         file_base, slot_byte_off, w0_word);
+				}
+				return 0;
+			}
+			sChainSlotAddrs.erase(it);
+		}
+	}
+
 	// The cmd's w0 is at slot_byte_off - 4, w1 is at slot_byte_off.
 	uint32_t w0 = *(const uint32_t *)(file_bytes + slot_byte_off - 4);
 	uint8_t opcode = (uint8_t)(w0 >> 24);
