@@ -24,6 +24,7 @@ extern "C" {
     // Called when the stage select screen is loaded to reset the state
     void port_enhancement_music_select_reset(void) {
         sIsSelectingMusic = false;
+        gManualMusicSelection = -1; // clear the track choice
     }
 
     // Returns:

@@ -59,10 +59,8 @@ extern "C" {
 
 extern "C" uint32_t port_enhancement_shuffle_music(uint32_t requested_bgm) {
     // 1. highest priority: Manual Selection via Double-Tap UI
-    if (gManualMusicSelection != -1) {
-        uint32_t chosen_track = (uint32_t)gManualMusicSelection;
-        gManualMusicSelection = -1; // Consume the selection so it doesn't loop
-        return chosen_track;
+    if (gManualMusicSelection != -1 && IsStageBGM(requested_bgm)) {
+        return (uint32_t)gManualMusicSelection;
     }
 
     // 2. middle priority: Shuffle Music
