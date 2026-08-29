@@ -182,6 +182,8 @@ SSB64_REPLAY_PLAY=/tmp/test.ssb64r ./BattleShip
 
 `SSB64_REPLAY_RECORD_FRAMES` is optional and defaults to 1800 frames. Record mode still uses the normal VS menus; playback mode loads the file and jumps directly into VS battle using the saved metadata.
 
+Playback verification accumulates the source-independent input checksum one tick at a time from the frames `syNetInputFuncRead()` actually published (`syNetInputGetPublishedFrame()`), never from the 720-entry history ring, so it is valid for any replay length up to `SYNETINPUT_REPLAY_MAX_FRAMES`. The verify line also reports `continuous=` (0 if any tick was skipped, which is a FAIL). Set `SSB64_RIG_EXIT=1` to have the process exit with code 0 on PASS / 1 on FAIL right after the verify line, for scripted batch runs. See `docs/bugs/replay_verify_ring_window_2026-08-29.md`.
+
 ## Debug P2P Netplay
 
 `src/sys/netpeer.c` adds a UDP-only debug transport for manual P2P testing. It is not a final lobby or NAT traversal layer; it exists to prove that two local game instances can share match setup and exchange per-tick input frames.

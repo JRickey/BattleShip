@@ -56,7 +56,7 @@ Build rollback netcode in phases:
 - Clear last published input so `button_tap` and `button_release` derive from the new match only.
 - Configure player slot ownership after reset: local, remote confirmed/predicted, saved, or future CPU/spectator modes.
 - Use the VS-local netinput tick for input frame history; do not key rollback input history directly on `dSYTaskmanUpdateCount`.
-- Debug replay record/playback is controlled by `SSB64_REPLAY_RECORD`, `SSB64_REPLAY_PLAY`, and optional `SSB64_REPLAY_RECORD_FRAMES`.
+- Debug replay record/playback is controlled by `SSB64_REPLAY_RECORD`, `SSB64_REPLAY_PLAY`, and optional `SSB64_REPLAY_RECORD_FRAMES`. `SSB64_RIG_EXIT=1` turns the playback verify verdict into the process exit code (0 PASS / 1 FAIL).
 - Debug P2P is controlled by `SSB64_NETPLAY`, `SSB64_NETPLAY_LOCAL_PLAYER`, `SSB64_NETPLAY_REMOTE_PLAYER`, `SSB64_NETPLAY_BIND`, `SSB64_NETPLAY_PEER`, `SSB64_NETPLAY_DELAY`, `SSB64_NETPLAY_SESSION`, `SSB64_NETPLAY_BOOTSTRAP`, `SSB64_NETPLAY_HOST`, and `SSB64_NETPLAY_SEED`.
 - The start barrier should only gate bootstrap P2P sessions. Non-netplay, replay, and manual P2P sessions should return true from `syNetPeerCheckStartBarrierReleased()` and advance netinput normally.
 - The VS execution gate should only hold bootstrap P2P sessions. Non-netplay, replay, and manual P2P sessions should return true from `syNetPeerCheckBattleExecutionReady()` and run scene updates normally.
@@ -108,7 +108,7 @@ When editing `src/sys/netpeer.c`:
 - Build after touching netplay input or battle controller callbacks.
 - Test local device input in VS battle after routing through `syNetInputFuncRead`.
 - Test that menus, 1P Game, Training Mode, Bonus 1 Practice, and Bonus 2 Practice still use `syControllerFuncRead`.
-- For replay work, run from `build/`, record with `SSB64_REPLAY_RECORD=/tmp/test.ssb64r`, replay with `SSB64_REPLAY_PLAY=/tmp/test.ssb64r`, compare the logged input checksum first, then add stronger gameplay-state validation.
+- For replay work, run from `build/`, record with `SSB64_REPLAY_RECORD=/tmp/test.ssb64r`, replay with `SSB64_REPLAY_PLAY=/tmp/test.ssb64r`, compare the logged input checksum first, then add stronger gameplay-state validation. The playback checksum is accumulated from published frames as ticks run — never re-read `sSYNetInputHistory` at the end, it is a 720-entry ring (`docs/bugs/replay_verify_ring_window_2026-08-29.md`).
 - For manual P2P, run two instances from `build/` with reciprocal `SSB64_NETPLAY_BIND` / `SSB64_NETPLAY_PEER` values and no bootstrap; confirm remote inputs still stage.
 - For bootstrap P2P, grep `SSB64 NetSync` / `NetPeer:` / `execution begin`; confirm input windows and fighter hashes evolve identically minute-to-minute unless you expect divergence at the reproduced stress gesture.
 
