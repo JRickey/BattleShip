@@ -122,7 +122,9 @@ For full-match debug replay files, `netinput.c` also keeps a separate replay fra
 | `syNetInputGetHistoryFrame()` | Read the resolved input actually published for a player/tick. |
 | `syNetInputGetPublishedFrame()` | Read the latest published input for a player. |
 | `syNetInputGetHistoryChecksum()` | Produce a lightweight checksum over resolved input history for validation. |
-| `syNetInputGetHistoryInputChecksum()` | Produce a source-independent checksum over published buttons/sticks for replay validation. |
+| `syNetInputSetPublishedChecksumLimit()` | Freeze the published-input checksum once exactly N ticks have been advanced (set by replay playback to the file's frame count). |
+| `syNetInputGetPublishedTickCount()` | Number of VS ticks advanced by `syNetInputFuncRead()` this session. |
+| `syNetInputGetPublishedInputChecksum()` | Source-independent checksum over every published frame of every advanced tick (frozen at the limit if one is set). Accumulated as ticks advance — never re-read from the 720-entry history ring. |
 | `syNetInputGetHistoryInputValueChecksumForPlayer()` | Source-independent checksum for one player across a contiguous tick span in `sSYNetInputHistory`. |
 | `syNetInputGetHistoryInputValueChecksumWindow()` | Per-player checksums plus a folded combined checksum for a tick window. |
 | `syNetInputSetRecordingEnabled()` | Enable or disable recording of resolved VS input frames. |
@@ -182,7 +184,7 @@ SSB64_REPLAY_PLAY=/tmp/test.ssb64r ./BattleShip
 
 `SSB64_REPLAY_RECORD_FRAMES` is optional and defaults to 1800 frames. Record mode still uses the normal VS menus; playback mode loads the file and jumps directly into VS battle using the saved metadata.
 
-Playback verification accumulates the source-independent input checksum one tick at a time from the frames `syNetInputFuncRead()` actually published (`syNetInputGetPublishedFrame()`), never from the 720-entry history ring, so it is valid for any replay length up to `SYNETINPUT_REPLAY_MAX_FRAMES`. The verify line also reports `continuous=` (0 if any tick was skipped, which is a FAIL). Set `SSB64_RIG_EXIT=1` to have the process exit with code 0 on PASS / 1 on FAIL right after the verify line, for scripted batch runs. See `docs/bugs/replay_verify_ring_window_2026-08-29.md`.
+Playback verification compares the file checksum against `syNetInputGetPublishedInputChecksum()`, which `syNetInputFuncRead()` accumulates at the same point it advances the VS tick (so a tick re-published while the P2P start barrier holds is counted once, exactly like the recorder) and freezes at the replay's frame count. It never reads the 720-entry history ring, so it is valid for any replay length up to `SYNETINPUT_REPLAY_MAX_FRAMES`. Set `SSB64_RIG_EXIT=1` to have the process exit right after the verdict for scripted batch runs: code 0 PASS, 1 FAIL, 2 INCOMPLETE (the match ended before the replay stream did). See `docs/bugs/replay_verify_ring_window_2026-08-29.md`.
 
 ## Debug P2P Netplay
 
@@ -246,7 +248,7 @@ Before adding sockets or rollback state restoration, use the saved-input path to
 2. Capture `sSYNetInputHistory` through `syNetInputGetHistoryFrame()`.
 3. Re-stage those samples with `syNetInputSetSavedInput()`.
 4. Set the relevant slots to `nSYNetInputSourceSaved`.
-5. Compare `syNetInputGetHistoryInputChecksum()` against the replay file checksum.
+5. Compare `syNetInputGetPublishedInputChecksum()` (with the limit set to the replay's frame count) against the replay file checksum.
 
 This verifies the input layer can reproduce the same per-tick controller stream before introducing rollback state rewind.
 
