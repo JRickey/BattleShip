@@ -91,9 +91,11 @@ slots neutral input):
 - Replay longer than the match (7200 frames, 1-minute time rule) →
   `result=INCOMPLETE`, exit 2.
 
-No human-recorded `SSB64_REPLAY_RECORD` file was round-tripped: every input file
-above was generated from metadata. That proves the ring defect and the verifier
-arithmetic; it does not by itself prove record→play with live controller input.
+Live round trip: a match recorded with `SSB64_REPLAY_RECORD` on the MSVC build
+(human Fox vs three CPUs, Kongo Jungle, 2 stocks, 1800 frames, P1 non-neutral on
+1067 of 1800 frames, `checksum=0x9E7DCC4E`) replays `result=PASS`, exit 0, on
+both MSVC and clang; the same file with one button flipped at tick 900 →
+`result=FAIL`, exit 1. Every other file above was generated from metadata.
 
 ## Audit hook
 
