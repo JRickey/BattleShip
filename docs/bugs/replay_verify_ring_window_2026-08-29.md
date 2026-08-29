@@ -1,7 +1,7 @@
 # Replay playback verify could never pass for replays longer than 720 frames
 
 **Date:** 2026-08-29
-**Status:** FIXED (decomp `port-patches`, `src/sys/netreplay.c`)
+**Status:** FIXED (decomp `port-patches`: `src/sys/netinput.c`, `src/sys/netinput.h`, `src/sys/netreplay.c`; BattleShip: `port/port_log.c`, `port/port_log.h`)
 **Class:** verification harness defect (false negative) — the oracle, not the game
 
 ## Symptom
@@ -59,8 +59,11 @@ If the match ends before the replay stream does (a synthetic or truncated file),
 instead of leaving the verdict unreported.
 
 New debug env `SSB64_RIG_EXIT=1` (parsed with `atoi`, like the other replay env vars)
-makes the process exit right after the verdict — 0 PASS, 1 FAIL, 2 INCOMPLETE — so
-batch runs can gate on the exit code. It calls a new `port_exit_process()`
+makes the process exit right after the verdict — 0 PASS, 1 FAIL, 2 INCOMPLETE, and
+3 LOADFAIL when `SSB64_REPLAY_PLAY` names a file that fails to open or validate
+(nothing would ever arm playback, so a batch run would otherwise sit at the title
+screen forever) — so batch runs can gate on the exit code. The loader also rejects
+`frame_count == 0`: a zero-frame file used to verify PASS immediately. It calls a new `port_exit_process()`
 (`port/port_log.c`): flush the log and all stdio streams, then terminate
 immediately — `_exit()` on POSIX, `TerminateProcess()` on Windows. Normal teardown
 from the game coroutine is not safe (render/audio threads are mid-frame), and on
@@ -90,6 +93,10 @@ slots neutral input):
   `result=FAIL`, exit 1.
 - Replay longer than the match (7200 frames, 1-minute time rule) →
   `result=INCOMPLETE`, exit 2.
+- `SSB64_REPLAY_PLAY` pointing at a missing file, and at a well-formed header with
+  `frame_count = 0` → `result=LOADFAIL`, exit 3 (both compilers). These two, the
+  loader check, and the Status file list came out of a review fan-out over the
+  submitted patch (GLM 5.3 Flash × 24 samples via OpenRouter, claims hand-verified).
 
 Live round trip: a match recorded with `SSB64_REPLAY_RECORD` on the MSVC build
 (human Fox vs three CPUs, Kongo Jungle, 2 stocks, 1800 frames, P1 non-neutral on

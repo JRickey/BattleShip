@@ -184,7 +184,7 @@ SSB64_REPLAY_PLAY=/tmp/test.ssb64r ./BattleShip
 
 `SSB64_REPLAY_RECORD_FRAMES` is optional and defaults to 1800 frames. Record mode still uses the normal VS menus; playback mode loads the file and jumps directly into VS battle using the saved metadata.
 
-Playback verification compares the file checksum against `syNetInputGetPublishedInputChecksum()`, which `syNetInputFuncRead()` accumulates at the same point it advances the VS tick (so a tick re-published while the P2P start barrier holds is counted once, exactly like the recorder) and freezes at the replay's frame count. It never reads the 720-entry history ring, so it is valid for any replay length up to `SYNETINPUT_REPLAY_MAX_FRAMES`. Set `SSB64_RIG_EXIT=1` to have the process exit right after the verdict for scripted batch runs: code 0 PASS, 1 FAIL, 2 INCOMPLETE (the match ended before the replay stream did). See `docs/bugs/replay_verify_ring_window_2026-08-29.md`.
+Playback verification compares the file checksum against `syNetInputGetPublishedInputChecksum()`, which `syNetInputFuncRead()` accumulates at the same point it advances the VS tick (so a tick re-published while the P2P start barrier holds is counted once, exactly like the recorder) and freezes at the replay's frame count. It never reads the 720-entry history ring, so it is valid for any replay length up to `SYNETINPUT_REPLAY_MAX_FRAMES`. Set `SSB64_RIG_EXIT=1` to have the process exit right after the verdict for scripted batch runs: code 0 PASS, 1 FAIL, 2 INCOMPLETE (the match ended before the replay stream did), 3 LOADFAIL (the file failed to open or validate; nothing armed playback). The loader rejects `frame_count == 0`. See `docs/bugs/replay_verify_ring_window_2026-08-29.md`.
 
 ## Debug P2P Netplay
 

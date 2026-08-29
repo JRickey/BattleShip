@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -54,6 +55,8 @@ void port_exit_process(int code)
 	 * killed thread held one of their locks (seen as STATUS_FAIL_FAST_EXCEPTION
 	 * at VS scene teardown). TerminateProcess skips all of that. */
 	TerminateProcess(GetCurrentProcess(), (UINT)code);
+	/* Only reached if TerminateProcess itself failed; never return into the game. */
+	_exit(code);
 #else
 	_exit(code);
 #endif
