@@ -71,9 +71,11 @@ degrades to the old question-mark behavior, never a garbage image.
   boot-time self-test (removed after use): all three derived backgrounds
   were **byte-identical** to an independent Python decode of the same o2r
   entries; derived icons visually matched the build-time LANCZOS PNGs.
-- JP note: `RelocFileTable.jp.cpp` names the same wallpaper files at ids
-  96–98, but the JP sprite offset was not separately verified — if it
-  differs, JP falls back to question marks (status quo ante).
+- JP verified: parsing `baserom.jp.z64` (reloc table @ 0x1ACAF0, 2107 files)
+  shows files 96 / 0x62 / 0x61 carry the same 300x220/44-bitmap RGBA16
+  wallpaper Sprite at 0x26c88, and decoding them confirms the same stage
+  mapping (FD starfield / Meta Crystal / Duel Zone). The derivation works
+  unmodified on JP builds.
 
 ## Related: "Bonus Stages" Toggle (issue #267)
 
