@@ -328,8 +328,10 @@ static std::shared_ptr<RelocFile> portLoadRelocResource(u32 file_id)
 	}
 
 	// Deblobbed bundles are synthesized from their typed o2r slices
-	// (docs/deblob.md); the archived parent is the fallback while one
-	// still ships (dropped at the archive:false flip).
+	// (docs/deblob.md). Parents ship with archive:false, so on synthesis
+	// failure the LoadResource below misses and the stale-archive handler
+	// prints its actionable delete-and-relaunch message — the synthesis
+	// error above it names the exact slice and invariant.
 	if (portGetSyntheticRelocSpec(file_id) != nullptr)
 	{
 		auto synthetic = portBuildSyntheticRelocResource(file_id);
@@ -337,8 +339,9 @@ static std::shared_ptr<RelocFile> portLoadRelocResource(u32 file_id)
 		{
 			return synthetic;
 		}
-		spdlog::warn("[deblob] synthesis failed for file_id {} — falling back to archived parent",
-		             file_id);
+		spdlog::error("[deblob] synthesis failed for file_id {} — no archived parent"
+		              " ships for deblobbed bundles; see the slice error above",
+		              file_id);
 	}
 
 	std::string path(gRelocFileTable[file_id]);

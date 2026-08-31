@@ -25,6 +25,9 @@ import struct
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from deblob_categories import DEBLOBBED_CATEGORIES, EMIT_ARCHIVE_FALSE
+
 # ============================================================================
 #  Constants
 # ============================================================================
@@ -476,12 +479,19 @@ def generate_yaml_header():
         "\n"
     )
 
-def generate_reloc_entry(name, rom_offset, rom_size, file_id, is_compressed, decompressed_size):
+def generate_reloc_entry(name, rom_offset, rom_size, file_id, is_compressed, decompressed_size,
+                         category=None):
     """Generate a single SSB64:RELOC YAML entry.
 
     The Torch SSB64:RELOC factory reads the relocation table from ROM directly
     using the file_id, so offset/size are kept for documentation but the factory
     derives all metadata from the table entry.
+
+    Deblobbed categories (tools/deblob_categories.py) get `archive: false`
+    once EMIT_ARCHIVE_FALSE is flipped: the bundle still parses (children
+    slice from it via ssb64_reloc_parent) but its whole-file blob stops
+    shipping — the port synthesizes it from the slices (docs/deblob.md).
+    Living here means RegenerateRelocYamls can never clobber the flag.
     """
     lines = []
     lines.append(f"{name}:")
@@ -490,6 +500,8 @@ def generate_reloc_entry(name, rom_offset, rom_size, file_id, is_compressed, dec
     lines.append(f"  size: 0x{rom_size:X}")
     lines.append(f"  symbol: {name}")
     lines.append(f"  file_id: {file_id}")
+    if EMIT_ARCHIVE_FALSE and category in DEBLOBBED_CATEGORIES:
+        lines.append(f"  archive: false")
     # Keep these as comments for human reference
     lines.append(f"  # compressed: {is_compressed}")
     lines.append(f"  # decompressed_size: 0x{decompressed_size:X}")
@@ -527,6 +539,7 @@ def write_yaml_files(files, id_to_name, output_dir):
                     file_id=f['id'],
                     is_compressed=f['is_compressed'],
                     decompressed_size=f['decompressed_size'],
+                    category=cat_name,
                 ))
             yf.write("\n")
 

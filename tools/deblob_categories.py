@@ -18,9 +18,8 @@ DEBLOBBED_CATEGORIES = {
     "fighters_main",
 }
 
-# Once the load-time synthesis path is proven (docs/deblob.md, invariant I5),
-# Phase 9 flips this on so generate_yamls.py emits `archive: false` for parent
-# entries in DEBLOBBED_CATEGORIES, dropping their whole-file blobs from the
-# o2r. Until then, slices and parent blobs coexist and the runtime ignores
-# the slices.
-EMIT_ARCHIVE_FALSE = False
+# Flipped 2026-08-31 (Phase 9) after the synthesis path passed synth_verify
+# 106/106: generate_yamls.py emits `archive: false` for parent entries in
+# DEBLOBBED_CATEGORIES, so their whole-file blobs stop shipping and the port
+# synthesizes them from their typed slices (docs/deblob.md).
+EMIT_ARCHIVE_FALSE = True
