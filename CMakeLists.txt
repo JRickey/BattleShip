@@ -1230,6 +1230,18 @@ if(EXISTS "${SSB64_BASEROM}")
         COMMENT "Extracting ${SSB64_VERSION} assets from ${SSB64_BASEROM} -> ${SSB64_O2R}"
     )
     add_custom_target(ExtractAssets DEPENDS ${SSB64_O2R})
+    # Deblob validation gate (docs/deblob.md): builds every deblobbed
+    # bundle through the real archive/factory/synthesis path and fails on
+    # any I5/I7/I9 violation. Mandatory local pre-merge for changes to
+    # torch/, yamls/, or the synthesis code (CI has no staged archive).
+    # Runs headless-ish (exits before the game boots; a window may flash).
+    add_custom_target(synth_verify
+        COMMAND ${CMAKE_COMMAND} -E env SSB64_SYNTH_SELFTEST=1 $<TARGET_FILE:ssb64>
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS ssb64
+        COMMENT "deblob synth_verify: synthesizing every deblobbed bundle (I5 gate)"
+        USES_TERMINAL
+    )
     # Baserom present (dev build): make the normal build also stage the
     # o2r next to the binary, so the flow is a true 3 commands —
     # configure, build, run — with no separate ExtractAssets step. The

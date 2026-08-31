@@ -847,6 +847,62 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	return relocFile;
 }
 
+// synth_verify harness (docs/deblob.md): build every spec'd bundle through
+// the real archive/factory/synthesis path; each build enforces I5/I7/I9
+// internally. Emits per-file verdicts as JSON for machine consumption and
+// returns the failure count.
+int portSyntheticRelocSelfTest()
+{
+	uint32_t pass = 0, fail = 0;
+	std::vector<std::pair<const char *, bool>> verdicts;
+	verdicts.reserve(gSyntheticRelocSpecCount);
+
+	for (uint32_t i = 0; i < gSyntheticRelocSpecCount; i++)
+	{
+		const auto &spec = gSyntheticRelocSpecs[i];
+		bool ok = portBuildSyntheticRelocResource(spec.file_id) != nullptr;
+		verdicts.emplace_back(spec.parent_path, ok);
+		ok ? pass++ : fail++;
+	}
+
+	FILE *f = fopen("debug_traces/synth_verify_results.json", "wb");
+	if (f == nullptr)
+	{
+		// debug_traces/ may not exist in a fresh working dir
+#ifdef _WIN32
+		(void)system("mkdir debug_traces >NUL 2>&1");
+#else
+		(void)system("mkdir -p debug_traces");
+#endif
+		f = fopen("debug_traces/synth_verify_results.json", "wb");
+	}
+	if (f != nullptr)
+	{
+		fprintf(f, "{\n \"pass\": %u,\n \"fail\": %u,\n \"files\": [\n", pass, fail);
+		for (size_t i = 0; i < verdicts.size(); i++)
+		{
+			fprintf(f, "  {\"path\": \"%s\", \"ok\": %s}%s\n",
+			        verdicts[i].first, verdicts[i].second ? "true" : "false",
+			        (i + 1 < verdicts.size()) ? "," : "");
+		}
+		fprintf(f, " ]\n}\n");
+		fclose(f);
+	}
+
+	spdlog::info("[deblob] synth_verify: {} pass, {} fail of {} specs",
+	             pass, fail, gSyntheticRelocSpecCount);
+	fprintf(stderr, "[deblob] synth_verify: %u pass, %u fail of %u specs\n",
+	        pass, fail, gSyntheticRelocSpecCount);
+	for (const auto &[path, ok] : verdicts)
+	{
+		if (!ok)
+		{
+			fprintf(stderr, "[deblob]   FAIL %s\n", path);
+		}
+	}
+	return (int)fail;
+}
+
 extern "C" int port_synth_reloc_get_intern_pairs(uint32_t file_id,
                                                  const uint32_t **pairs_out,
                                                  uint32_t *pair_count_out)

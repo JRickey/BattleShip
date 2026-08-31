@@ -1,10 +1,13 @@
 # Deblob System — Typed Asset Extraction + Load-Time Reconstruction
 
 **Status (2026-08-31): in progress on branch `deblob-asset-extraction`.**
-Phases landed: torch utilities (cherry-pick + JP restore), generator tools.
-Not yet landed: runtime synthesis, validation harness, `archive: false` flip.
-Until the flip, slices and parent blobs coexist in the o2r and the runtime
-ignores the slices entirely.
+Landed: torch utilities (byte-exact slice export), generator tools,
+generated artifacts (both regions), explicit-relocation loader, synthesis
+engine (fast path 106/106 byte-exact + relayout path smoke-tested with a
+grown-DL mod), `synth_verify` harness. Not yet landed: build/packaging
+integration, mod-mount cache eviction, the `archive: false` flip. Until
+the flip, slices and parent blobs coexist in the o2r; synthesis serves
+the slices with the archived parent as fallback.
 
 ## What this is
 
@@ -89,8 +92,12 @@ of these by ID, in the format
   byte-reproduces the ROM bundle.
 - **I5 vanilla round-trip** — fast-path synthesis equals the relocated-view
   reference byte-for-byte.
-- **I6 builder equivalence** — forced relayout of vanilla input equals the
-  fast path output.
+- **I6 builder equivalence** — the relayout machinery must not diverge
+  from the fast path. Realized structurally (both paths share the
+  patch-list / layout-table code; the fast path IS the layout table with
+  vanilla offsets) plus the grown-DL mod smoke test, rather than as a
+  forced byte-compare — vanilla padding makes a from-scratch repack
+  legitimately differ in offsets.
 - **I7 resolution totality** — every DL reference resolves (sibling hash /
   injected-pair literal) or fails fatally; never silent passthrough.
 - **I8 layout coherence** — size query and load observe one identical
@@ -108,9 +115,9 @@ of these by ID, in the format
 | Regenerate manifests + child yamls + specs | `python tools/generate_fighter_slices.py --version {us,jp}` |
 | Validate one bundle without writing | `python tools/generate_fighter_slices.py --only <Symbol> --check` |
 | Extract a bundle's raw bytes from ROM | `debug_tools/reloc_extract/reloc_extract.py extract <rom> <file_id> out.bin` |
-| Full vanilla byte-exactness gate | `cmake --build build --target synth_verify` *(Phase 7 — not yet landed)* |
-| Dump a synthesized bundle's bytes | `SSB64_DUMP_SYNTH_RELOC=1 SSB64_DUMP_SYNTH_RELOC_FILE_ID=<id>` *(Phase 5)* |
-| Dump synthesis decisions as JSON | `SSB64_SYNTH_INSPECT=<id>` *(Phase 5)* |
+| Full vanilla byte-exactness gate | `cmake --build build --target synth_verify` (ROM-independent: spec CRCs are the ROM-anchored truth via generator I4; results in `debug_traces/synth_verify_results.json`) |
+| Dump a synthesized bundle's bytes | `SSB64_DUMP_SYNTH_RELOC=1` (all) or `SSB64_DUMP_SYNTH_RELOC_FILE_ID=<id>` |
+| Dump synthesis decisions as JSON | `SSB64_SYNTH_INSPECT=<id>` → `debug_traces/synth_inspect_<id>.json` |
 
 Deblobbing another category later: add it to
 `tools/deblob_categories.py::DEBLOBBED_CATEGORIES`, regenerate, done — no

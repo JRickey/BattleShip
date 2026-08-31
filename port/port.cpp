@@ -1383,6 +1383,20 @@ int main(int argc, char* argv[]) {
 	(void)SDL_getenv("__ssb64_jni_warmup__");
 #endif
 
+	/* Deblob validation harness (docs/deblob.md, the synth_verify gate):
+	 * SSB64_SYNTH_SELFTEST=1 builds every spec'd bundle through the real
+	 * archive + factories + synthesis path and exits pass/fail before the
+	 * game boots. Each build enforces I5 (relocated-view CRC) and I7/I9
+	 * internally; results land in debug_traces/synth_verify_results.json.
+	 * ROM-independent: the spec CRCs are the ROM-anchored ground truth. */
+	if (const char *selftest = std::getenv("SSB64_SYNTH_SELFTEST");
+	    selftest && selftest[0] == '1') {
+		extern int portSyntheticRelocSelfTest();
+		int failures = portSyntheticRelocSelfTest();
+		PortShutdown();
+		_exit(failures == 0 ? 0 : 1);
+	}
+
 	// Wrap post-init (game boot + main loop + shutdown) in a top-level
 	// catch so uncaught C++ exceptions get logged as ssb64.log entries
 	// with type and what() before the process exits, instead of bubbling
