@@ -82,14 +82,22 @@ degrades to the old question-mark behavior, never a garbage image.
 The same issue asked for a way to hide the three stages entirely.
 `port/enhancements/BonusStages.cpp` adds `gEnhancements.BonusStagesEnabled`
 (LUS menu → Settings → Gameplay → "Bonus Stages", default ON). When off,
-`mnMapsCheckLocked()` reports the three gkinds as locked, which in one
-stroke: hides their icons, refuses page-jump landings (the bonus page
-becomes unreachable and `mnMapsMakeArrows` suppresses the right arrow via
-`mnMapsPageHasUnlockedSlot`), excludes them from random stage selection,
-and reroutes a restored cursor to page 0. Per the audit hook in
-`training_mode_extra_stage_scroll_2026-06-24.md`: here the visual gating
-and navigation gating are *intentionally* the same thing — the toggle must
-remove the page from navigation, not just blank the icons.
+`mnMapsCheckLocked()` reports every stage on page 1+ as locked — membership
+is derived from `dMNMapsPageGkinds` via `mnMapsGetPageForGkind`, not a
+hardcoded gkind list, so a future stage added to the bonus page honors the
+toggle automatically. Locked in one stroke: hides icons, refuses page-jump
+landings (the page becomes unreachable and `mnMapsMakeArrows` suppresses
+the right arrow via `mnMapsPageHasUnlockedSlot`), excludes them from random
+stage selection, and reroutes a restored cursor to page 0. The CVar is
+snapshotted per screen session in `mnMapsInitVars`
+(`sMNMapsBonusStagesEnabled`) — never read live mid-scene — so toggling
+from the overlay while the screen is open cannot half-apply (stale
+icons/arrows vs. live locks, frozen cursor, confirming a hidden stage);
+the change lands the next time the screen opens, matching the tooltip.
+Per the audit hook in `training_mode_extra_stage_scroll_2026-06-24.md`:
+here the visual gating and navigation gating are *intentionally* the same
+thing — the toggle must remove the page from navigation, not just blank
+the icons.
 
 ## Audit Hook
 
@@ -98,4 +106,13 @@ Android first-run PNG, o2r derivation). When adding a fourth stage, update
 all three manifests together: `STAGES` in `tools/derive_stage_assets.py`,
 `kAndroidCssStages` in `port/android_torch_bridge.cpp`, and `STAGE_TABLE`
 in `port/css_icons/port_css_stage_assets.cpp` (the latter now carries
-`wp_file_id`/`wp_sprite_off` for the o2r path).
+`wp_file_id`/`wp_sprite_off` for the o2r path). The Bonus Stages toggle
+needs no update — it keys off `dMNMapsPageGkinds` page membership.
+
+Known deferred cleanup: the o2r deriver in `port_css_stage_assets.cpp` and
+the Android deriver in `android_torch_bridge.cpp` are two copies of the
+same N64 sprite-decode knowledge (BE readers, RELOC pointer resolution,
+TMEM XOR4 un-swizzle, bilinear icon downscale). They should share one
+header under `port/`, but that refactor touches the Android-only TU and
+was deferred until an Android build can verify it — keep them in sync by
+hand until then.

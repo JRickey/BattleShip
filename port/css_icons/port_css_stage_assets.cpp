@@ -21,7 +21,10 @@
  * BattleShip.o2r, parsed and downscaled at runtime. Lookup order:
  *   1. <app-data>/assets/css_icons/<name><suffix>.png   (moddable override)
  *   2. same path relative to the real app bundle dir (portable builds)
- *   3. derive from the o2r wallpaper sprite (background + icon only)
+ *   3. derive from the o2r wallpaper sprite (background + icon only) —
+ *      but only when no PNG exists at all: a PNG that exists and fails to
+ *      load is a broken override, surfaced as the question-mark fallback
+ *      rather than silently papered over with the ROM-derived image.
  *
  * Nameplates have no o2r source (they are synthesized text, no ROM sprite
  * exists) — when the PNG is absent the getter returns NULL and mnmaps.c
@@ -67,7 +70,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -179,10 +181,14 @@ constexpr uint8_t  kSiz4b     = 0; /* G_IM_SIZ_4b   — IA4: 2 pixels/byte */
 enum AssetKind { kBackground = 0, kIcon = 1, kName = 2, kEmblem = 3, kAssetKindCount = 4 };
 
 struct CacheEntry {
-    Sprite   *sprite     = nullptr;
-    Bitmap   *bitmaps    = nullptr;  // pointer to first Bitmap in the array
-    uint8_t  *rgba16_buf = nullptr;  // heap-allocated RGBA16 BE pixel data
-    int       nbitmaps   = 0;
+    Sprite   *sprite       = nullptr;
+    Bitmap   *bitmaps      = nullptr;  // pointer to first Bitmap in the array
+    uint8_t  *rgba16_buf   = nullptr;  // heap-allocated RGBA16 BE pixel data
+    int       nbitmaps     = 0;
+    bool      derive_failed = false;   // o2r derivation failed once — don't
+                                       // re-parse/re-log on every CSS rebuild
+                                       // (the archive can't change mid-session;
+                                       // a PNG dropped in later is still probed)
 };
 
 // Flat 2D array: cache[gkind_index][asset_kind]
@@ -714,31 +720,42 @@ static void unswizzleRGBA16Strip(uint8_t *strip, int width, int height) {
     }
 }
 
-// Decode the stage's o2r wallpaper Sprite into a full row-major RGBA8888
-// image (se.bg_w x se.bg_h). Returns false on any validation failure.
-static bool deriveWallpaperRGBA8888(const StageEntry &se, std::vector<uint8_t> &rgba8) {
+// Decode the stage's o2r wallpaper Sprite into the final full-image RGBA16 BE
+// buffer (se.bg_w x se.bg_h, malloc'd — same contract as loadPNGAsRGBA16BE).
+// The unswizzled strip rows already ARE the target format, so the background
+// is a straight memcpy stitch of each strip's rendered rows — byte-identity
+// with the source texels is structural, not a property of a conversion
+// round-trip. Returns nullptr on any validation failure.
+static uint8_t *deriveWallpaperRGBA16(const StageEntry &se) {
     if (se.wp_file_id >= RELOC_FILE_COUNT) {
-        return false;
+        return nullptr;
     }
     auto ctx = Ship::Context::GetInstance();
     if (!ctx) {
-        return false;
+        return nullptr;
     }
     auto resource = ctx->GetResourceManager()->LoadResource(
         std::string(gRelocFileTable[se.wp_file_id]));
     if (!resource) {
         port_log("CSS stage assets: %s — reloc file %u (%s) not in archive\n",
                  se.name, se.wp_file_id, gRelocFileTable[se.wp_file_id]);
-        return false;
+        return nullptr;
     }
-    auto relocFile = std::static_pointer_cast<RelocFile>(resource);
+    // Guarded downcast, matching lbreloc_bridge.cpp: a shadowing archive (mod
+    // o2r, fromsource o2r) could serve this path as a different resource type.
+    auto relocFile = std::dynamic_pointer_cast<RelocFile>(resource);
+    if (!relocFile) {
+        port_log("CSS stage assets: %s — %s is not a RelocFile resource; skipping derivation\n",
+                 se.name, gRelocFileTable[se.wp_file_id]);
+        return nullptr;
+    }
     const std::vector<uint8_t> &data = relocFile->Data;
 
     const size_t so = se.wp_sprite_off;
     if (so + 68 > data.size()) {
         port_log("CSS stage assets: %s — sprite offset 0x%zX out of range (file %zu bytes)\n",
                  se.name, so, data.size());
-        return false;
+        return nullptr;
     }
     const uint8_t *sp = data.data() + so;
     const int w        = be_s16(sp + 0x04);
@@ -753,18 +770,23 @@ static bool deriveWallpaperRGBA8888(const StageEntry &se, std::vector<uint8_t> &
         port_log("CSS stage assets: %s — wallpaper sprite geometry mismatch "
                  "(%dx%d nbm=%d bmh=%d fmt=%d siz=%d); skipping derivation\n",
                  se.name, w, h, nbitmaps, bm_h, fmt, siz);
-        return false;
+        return nullptr;
     }
 
     const uint32_t bm_array = relocPtrToFileOff(sp + 0x34);
-    rgba8.clear();
-    rgba8.reserve((size_t)w * h * 4);
+    const size_t out_bytes = (size_t)w * h * 2u;
+    uint8_t *out = static_cast<uint8_t *>(std::malloc(out_bytes));
+    if (!out) {
+        return nullptr;
+    }
+    size_t out_off = 0;
 
     std::vector<uint8_t> strip;
     for (int i = 0; i < nbitmaps; ++i) {
         const size_t bm_off = (size_t)bm_array + (size_t)i * 16;
         if (bm_off + 16 > data.size()) {
-            return false;
+            std::free(out);
+            return nullptr;
         }
         const uint8_t *bm = data.data() + bm_off;
         const int bm_w    = be_s16(bm + 0x00);
@@ -772,39 +794,49 @@ static bool deriveWallpaperRGBA8888(const StageEntry &se, std::vector<uint8_t> &
         const uint32_t buf_off = relocPtrToFileOff(bm + 0x08);
 
         const size_t strip_bytes = (size_t)bm_w * (size_t)bm_rows * 2u;
+        const int rendered = std::min(bm_h, bm_rows);
+        const size_t rendered_bytes = (size_t)bm_w * (size_t)rendered * 2u;
         if (bm_w != w || bm_rows <= 0 ||
-            (size_t)buf_off + strip_bytes > data.size()) {
+            (size_t)buf_off + strip_bytes > data.size() ||
+            out_off + rendered_bytes > out_bytes) {
             port_log("CSS stage assets: %s — bitmap[%d] out of range/mismatch\n",
                      se.name, i);
-            return false;
+            std::free(out);
+            return nullptr;
         }
 
         strip.assign(data.data() + buf_off, data.data() + buf_off + strip_bytes);
         unswizzleRGBA16Strip(strip.data(), bm_w, bm_rows);
 
-        const int rendered = std::min(bm_h, bm_rows);
-        for (int row = 0; row < rendered; ++row) {
-            for (int x = 0; x < bm_w; ++x) {
-                const size_t off = ((size_t)row * bm_w + x) * 2u;
-                const uint16_t word =
-                    (uint16_t)((uint16_t)strip[off] << 8 | strip[off + 1]);
-                const uint8_t r5 = (uint8_t)((word >> 11) & 0x1F);
-                const uint8_t g5 = (uint8_t)((word >> 6) & 0x1F);
-                const uint8_t b5 = (uint8_t)((word >> 1) & 0x1F);
-                rgba8.push_back((uint8_t)((r5 << 3) | (r5 >> 2)));
-                rgba8.push_back((uint8_t)((g5 << 3) | (g5 >> 2)));
-                rgba8.push_back((uint8_t)((b5 << 3) | (b5 >> 2)));
-                rgba8.push_back((word & 1) ? 255 : 0);
-            }
-        }
+        std::memcpy(out + out_off, strip.data(), rendered_bytes);
+        out_off += rendered_bytes;
     }
 
-    if (rgba8.size() != (size_t)w * h * 4) {
+    if (out_off != out_bytes) {
         port_log("CSS stage assets: %s — assembled %zu bytes, expected %zu\n",
-                 se.name, rgba8.size(), (size_t)w * h * 4);
-        return false;
+                 se.name, out_off, out_bytes);
+        std::free(out);
+        return nullptr;
     }
-    return true;
+    return out;
+}
+
+// Expand an RGBA16 BE buffer to RGBA8888 (for the bilinear icon filter).
+static std::vector<uint8_t> expandRGBA16BEToRGBA8888(const uint8_t *rgba16, size_t npixels) {
+    std::vector<uint8_t> out;
+    out.reserve(npixels * 4);
+    for (size_t i = 0; i < npixels; ++i) {
+        const uint16_t word =
+            (uint16_t)((uint16_t)rgba16[i * 2] << 8 | rgba16[i * 2 + 1]);
+        const uint8_t r5 = (uint8_t)((word >> 11) & 0x1F);
+        const uint8_t g5 = (uint8_t)((word >> 6) & 0x1F);
+        const uint8_t b5 = (uint8_t)((word >> 1) & 0x1F);
+        out.push_back((uint8_t)((r5 << 3) | (r5 >> 2)));
+        out.push_back((uint8_t)((g5 << 3) | (g5 >> 2)));
+        out.push_back((uint8_t)((b5 << 3) | (b5 >> 2)));
+        out.push_back((word & 1) ? 255 : 0);
+    }
+    return out;
 }
 
 // Center-crop to the icon aspect ratio, then bilinear-downscale to 48x36.
@@ -859,13 +891,13 @@ static std::vector<uint8_t> downscaleIconBilinear(const std::vector<uint8_t> &sr
 // Derive the background or icon pixel buffer (RGBA16 BE, malloc'd — same
 // contract as loadPNGAsRGBA16BE) from the o2r wallpaper sprite.
 static uint8_t *deriveFromArchive(const StageEntry &se, AssetKind asset_kind) {
-    std::vector<uint8_t> rgba8;
-    if (!deriveWallpaperRGBA8888(se, rgba8)) {
-        return nullptr;
+    uint8_t *rgba16 = deriveWallpaperRGBA16(se);
+    if (!rgba16 || asset_kind == kBackground) {
+        return rgba16;
     }
-    if (asset_kind == kBackground) {
-        return convertToRGBA16BE(rgba8.data(), se.bg_w, se.bg_h);
-    }
+    const std::vector<uint8_t> rgba8 =
+        expandRGBA16BEToRGBA8888(rgba16, (size_t)se.bg_w * se.bg_h);
+    std::free(rgba16);
     const std::vector<uint8_t> icon8 = downscaleIconBilinear(rgba8, se.bg_w, se.bg_h);
     return convertToRGBA16BE(icon8.data(), kIconW, kIconH);
 }
@@ -873,27 +905,16 @@ static uint8_t *deriveFromArchive(const StageEntry &se, AssetKind asset_kind) {
 // ---------------------------------------------------------------------------
 // PNG override lookup.
 //
-// Probes the same directories PortLocateFile (port/port.cpp) does: the LUS
-// app directory first (SDL pref path on NON_PORTABLE release builds, cwd on
-// portable ones), then the real executable/bundle directory (where the CMake
-// POST_BUILD step stages dev-build PNGs, and where a portable build launched
-// from another cwd keeps its files). Returns "" when the PNG exists nowhere,
-// which routes background/icon requests to the o2r derivation above.
+// ssb64::LocateExistingFile probes the LUS app directory first (SDL pref
+// path on NON_PORTABLE release builds, cwd on portable ones), then the real
+// executable/bundle directory (where the CMake POST_BUILD step stages
+// dev-build PNGs, and where a portable build launched from another cwd keeps
+// its files). Returns "" when the PNG exists nowhere, which routes
+// background/icon requests to the o2r derivation above.
 // ---------------------------------------------------------------------------
 
 static std::string locateCssAssetPNG(const std::string &rel_path) {
-    namespace fs = std::filesystem;
-    std::error_code ec;
-
-    fs::path p1 = fs::path(Ship::Context::GetAppDirectoryPath()) / rel_path;
-    if (fs::exists(p1, ec)) {
-        return p1.lexically_normal().string();
-    }
-    fs::path p2 = fs::path(ssb64::RealAppBundlePath()) / rel_path;
-    if (fs::exists(p2, ec)) {
-        return p2.lexically_normal().string();
-    }
-    return std::string();
+    return ssb64::LocateExistingFile(rel_path);
 }
 
 // ---------------------------------------------------------------------------
@@ -961,16 +982,22 @@ static Sprite *getSprite(int gkind, AssetKind asset_kind) {
     // other CSS sprites use RGBA16. Pick the converter accordingly.
     uint8_t *pixels = nullptr;
     if (!full_path.empty()) {
+        // A PNG override exists on disk: it is authoritative. If it fails to
+        // load (corrupt, wrong size — already logged above), return NULL so
+        // the question mark surfaces the broken override instead of silently
+        // substituting the ROM-derived image under a modder's art.
         pixels = (asset_kind == kEmblem)
                      ? loadPNGAsIA4(full_path, expected_w, expected_h)
                      : loadPNGAsRGBA16BE(full_path, expected_w, expected_h);
-    }
-    if (!pixels && (asset_kind == kBackground || asset_kind == kIcon)) {
-        // No PNG override (the normal case on release builds, which cannot
+    } else if ((asset_kind == kBackground || asset_kind == kIcon) &&
+               !entry.derive_failed) {
+        // No PNG anywhere (the normal case on release builds, which cannot
         // ship ROM-derived files) — derive from the o2r wallpaper sprite.
         pixels = deriveFromArchive(se, asset_kind);
         if (pixels) {
             full_path = std::string(gRelocFileTable[se.wp_file_id]) + " (o2r-derived)";
+        } else {
+            entry.derive_failed = true;
         }
     }
     if (!pixels) {

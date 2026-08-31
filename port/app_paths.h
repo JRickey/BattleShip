@@ -18,4 +18,11 @@ namespace ssb64 {
 // Falls back to Ship::Context::GetAppBundlePath() if the OS query fails.
 std::string RealAppBundlePath();
 
+// Probe the LUS app-data directory, then the real executable/bundle
+// directory, for rel_path. Returns the first existing path (normalized),
+// or "" when the file exists in neither. This is the shared probe order
+// for optional runtime files (see PortLocateFile in port.cpp for the
+// variant that falls back to "./<name>" for open-and-report-error flows).
+std::string LocateExistingFile(const std::string& rel_path);
+
 } // namespace ssb64

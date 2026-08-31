@@ -450,7 +450,11 @@ file(GLOB_RECURSE SSB64_SRC_SYS     "decomp/src/sys/*.c"     "decomp/src/sys/*.h
 file(GLOB_RECURSE SSB64_SRC_WP      "decomp/src/wp/*.c"      "decomp/src/wp/*.h")
 
 # Port layer (C++ glue) — excludes port/stubs/ which is compiled as part of ssb64_game
-file(GLOB_RECURSE SSB64_SRC_PORT "port/*.cpp" "port/*.c" "port/*.h")
+# CONFIGURE_DEPENDS: new port TUs (e.g. a new port/enhancements/*.cpp whose
+# symbol a decomp TU references) must be picked up by already-configured build
+# dirs, or a plain `cmake --build` after pulling hits an undefined-reference
+# link error against a stale glob.
+file(GLOB_RECURSE SSB64_SRC_PORT CONFIGURE_DEPENDS "port/*.cpp" "port/*.c" "port/*.h")
 list(FILTER SSB64_SRC_PORT EXCLUDE REGEX "port/stubs/")
 # RelocFileTable.{us,jp}.cpp both define gRelocFileTable — compile only the
 # selected version's table (the rest are siblings for the other version).

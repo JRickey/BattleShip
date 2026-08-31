@@ -573,22 +573,12 @@ void UnmountMissingMods() {
 //      is wrong for any user that doesn't unzip into a "BattleShip"
 //      subdir matching their cwd.
 static std::string PortLocateFile(const std::string& basename) {
-	namespace fs = std::filesystem;
-	std::error_code ec;
-
-	const fs::path appDir(Ship::Context::GetAppDirectoryPath());
-	fs::path p1 = appDir / basename;
-	if (fs::exists(p1, ec)) {
-		return p1.lexically_normal().string();
-	}
-
-	const fs::path bundleDir(ssb64::RealAppBundlePath());
-	fs::path p2 = bundleDir / basename;
-	if (fs::exists(p2, ec)) {
-		return p2.lexically_normal().string();
-	}
-
-	return "./" + basename;
+	// Shared probe order lives in ssb64::LocateExistingFile (app_paths.cpp)
+	// so every optional-file lookup walks the same directories; this wrapper
+	// keeps the historical "./<name>" miss value so callers that open the
+	// path get a readable error message.
+	std::string found = ssb64::LocateExistingFile(basename);
+	return found.empty() ? "./" + basename : found;
 }
 
 /* ── Console "reset" command ─────────────────────────────────────────────
