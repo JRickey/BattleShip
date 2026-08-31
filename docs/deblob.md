@@ -1,13 +1,28 @@
 # Deblob System — Typed Asset Extraction + Load-Time Reconstruction
 
-**Status (2026-08-31): in progress on branch `deblob-asset-extraction`.**
-Landed: torch utilities (byte-exact slice export), generator tools,
-generated artifacts (both regions), explicit-relocation loader, synthesis
-engine (fast path 106/106 byte-exact + relayout path smoke-tested with a
-grown-DL mod), `synth_verify` harness. Not yet landed: build/packaging
-integration, mod-mount cache eviction, the `archive: false` flip. Until
-the flip, slices and parent blobs coexist in the o2r; synthesis serves
-the slices with the archived parent as fallback.
+**Status (2026-08-31): LIVE on branch `deblob-asset-extraction`.**
+All phases through the `archive: false` flip are landed: fighter parent
+blobs no longer ship, every fighter bundle is synthesized from its typed
+slices (fast path 106/106 byte-exact via `synth_verify`; relayout
+smoke-tested with grown-DL and broken-slice mod artifacts), and the
+recipe hash auto-re-extracts existing users' archives on upgrade.
+
+**Remaining follow-ups** (tracked, not blocking):
+- Sprite-region textures stay BLOB (typing needs a Sprite-struct walker —
+  see Classification below). Blob-granular replacement still works.
+- JP runtime validation: JP artifacts are generated and extraction is
+  verified, but no JP build has run `synth_verify` or booted yet.
+- Hires pack runtime spot-check with SSB Reloaded (covered in principle
+  by byte-exactness — identical bundle bytes ⇒ identical rgba8Crc keys —
+  but a played before/after `DumpMissRgba` diff hasn't been done).
+- Visual confirmation by a human (all gates here are structural).
+- Torch OTR encodings lose G_DL branch bits and unresolved-MOVEMEM
+  pointers (upstream macro design); fighter data doesn't use either
+  (I5-verified), but mod DLs relying on G_DL_NOPUSH will mis-round-trip.
+- CharacterEngine-style mods that LoadResource a parent path directly now
+  miss; they get `portRelocLoadFileFromBytesPrivateEx` +
+  `port_synth_reloc_get_intern_pairs` instead — needs a doc pass in
+  docs/modding.md when the first mod hits it.
 
 ## What this is
 
@@ -119,9 +134,29 @@ of these by ID, in the format
 | Dump a synthesized bundle's bytes | `SSB64_DUMP_SYNTH_RELOC=1` (all) or `SSB64_DUMP_SYNTH_RELOC_FILE_ID=<id>` |
 | Dump synthesis decisions as JSON | `SSB64_SYNTH_INSPECT=<id>` → `debug_traces/synth_inspect_<id>.json` |
 
+| Regenerate everything, both regions | `cmake --build build --target DeblobRegen` |
+| Build a mod test artifact | `python debug_tools/deblob_modkit.py grow-dl LinkModel dLinkModel_Gfx_0x1D88` |
+
 Deblobbing another category later: add it to
 `tools/deblob_categories.py::DEBLOBBED_CATEGORIES`, regenerate, done — no
 runtime, spec-schema, or CMake edits.
+
+## Replacing a character asset (mod quickstart)
+
+1. `unzip -l BattleShip.o2r | grep <Symbol>/` lists the slices; the
+   manifest (`yamls/us/reloc_fighters_main/manifests/<Symbol>.json`)
+   describes each one (kind, vanilla offset/size, what references it).
+2. Author a replacement resource in the same OTR format (a DL slice is a
+   torch-exported binary DisplayList, a texture is raw N64 texels behind
+   a Texture header, etc.) — sizes may differ from vanilla; the port
+   re-layouts the bundle and remaps every reference.
+3. Zip it at the identical path into a `.o2r`, drop it in `mods/`.
+   Last-mounted archive wins; a mods-menu rescan applies it without a
+   restart (next scene load).
+4. Constraints: references landing mid-slice are only valid for
+   prefix-preserving edits (the loader warns); a malformed slice fails
+   the whole bundle loudly rather than rendering garbage. Replaced
+   textures re-key for hires packs by design (their rgba8Crc changes).
 
 ## Classification (generator)
 
