@@ -457,6 +457,11 @@ list(FILTER SSB64_SRC_PORT EXCLUDE REGEX "port/stubs/")
 list(FILTER SSB64_SRC_PORT EXCLUDE REGEX "port/resource/RelocFileTable\\.(us|jp)\\.cpp$")
 list(APPEND SSB64_SRC_PORT
     ${CMAKE_CURRENT_SOURCE_DIR}/port/resource/RelocFileTable.${SSB64_VERSION}.cpp)
+# Same pattern for the generated deblob rebuild specs (docs/deblob.md):
+# both regions define gSyntheticRelocSpecs — compile the selected one only.
+list(FILTER SSB64_SRC_PORT EXCLUDE REGEX "port/bridge/ssb64_reloc_rebuild\\.(us|jp)\\.cpp$")
+list(APPEND SSB64_SRC_PORT
+    ${CMAKE_CURRENT_SOURCE_DIR}/port/bridge/ssb64_reloc_rebuild.${SSB64_VERSION}.cpp)
 # coroutine_test.cpp has its own main(); only built standalone when
 # SSB64_BUILD_COROUTINE_TEST=ON below. Never link it into the game.
 list(FILTER SSB64_SRC_PORT EXCLUDE REGEX "port/coroutine_test\\.cpp$")

@@ -1,0 +1,2172 @@
+{
+ "category": "fighters_main",
+ "content_hash": "b666e332912860dbf856ca15357f38b5d3dbf171",
+ "extern_file_ids": [],
+ "extern_slots": [],
+ "file_id": 312,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 12
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 13
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 14
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 15
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 16
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 17
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 18
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 19
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 20
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 21
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 22
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 24
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 25
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 26
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 27
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 28
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 29
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 30
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 31
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 32
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 33
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 34
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 35
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 36
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 37
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 38
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 39
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 40
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 41
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 42
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 43
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 44
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 46
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 47
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 48
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 49
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 50
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 51
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 52
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 53
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 54
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 55
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 56
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 57
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 58
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 59
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 60
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 61
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 62
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 63
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 64
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 65
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 66
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 68
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 69
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 70
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 71
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 72
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 73
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 74
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 75
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 76
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 77
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 78
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 79
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 80
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 81
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 82
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 83
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 84
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 85
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 86
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 87
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 88
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 90
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 91
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 92
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 93
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 94
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 95
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 96
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 97
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 98
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 99
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 100
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 101
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 102
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 103
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 104
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 105
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 106
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 107
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 108
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 109
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 89,
+   "target_offset_in_slice": 0,
+   "target_slice": 110
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 112
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 113
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 114
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 115
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 116
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 117
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 118
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 119
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 120
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 121
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 122
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 123
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 124
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 125
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 126
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 127
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 128
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 129
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 130
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 131
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 111,
+   "target_offset_in_slice": 0,
+   "target_slice": 132
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 134
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 135
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 136
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 137
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 138
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 139
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 140
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 141
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 142
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 143
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 144
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 145
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 146
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 147
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 148
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 149
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 150
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 151
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 152
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 153
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 133,
+   "target_offset_in_slice": 0,
+   "target_slice": 154
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 156
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 157
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 158
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 159
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 160
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 161
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 162
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 163
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 164
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 165
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 166
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 167
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 168
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 169
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 170
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 171
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 172
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 173
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 174
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 175
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 155,
+   "target_offset_in_slice": 0,
+   "target_slice": 176
+  }
+ ],
+ "parent_path": "reloc_fighters_main/NessShieldPose",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version jp",
+  "rom_sha1": "4b71f0e01878696733eefa9c80d11c147ecb4984",
+  "version": "jp"
+ },
+ "reloc_extern_offset": 65535,
+ "reloc_intern_offset": 321,
+ "relocated_view_crc32": 349974682,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 214,
+    "target": 0
+   },
+   {
+    "from_file_id": 214,
+    "target": 1280
+   },
+   {
+    "from_file_id": 214,
+    "target": 2592
+   },
+   {
+    "from_file_id": 214,
+    "target": 3920
+   },
+   {
+    "from_file_id": 214,
+    "target": 5264
+   },
+   {
+    "from_file_id": 214,
+    "target": 6656
+   },
+   {
+    "from_file_id": 214,
+    "target": 8144
+   },
+   {
+    "from_file_id": 214,
+    "target": 9568
+   },
+   {
+    "from_file_id": 214,
+    "target": 11168
+   },
+   {
+    "from_file_id": 216,
+    "target": 0
+   },
+   {
+    "from_file_id": 216,
+    "target": 1280
+   },
+   {
+    "from_file_id": 216,
+    "target": 2592
+   },
+   {
+    "from_file_id": 216,
+    "target": 3920
+   },
+   {
+    "from_file_id": 216,
+    "target": 5264
+   },
+   {
+    "from_file_id": 216,
+    "target": 6656
+   },
+   {
+    "from_file_id": 216,
+    "target": 8144
+   },
+   {
+    "from_file_id": 216,
+    "target": 9568
+   },
+   {
+    "from_file_id": 216,
+    "target": 11168
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0000",
+   "offset": 0,
+   "size": 1280
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0500",
+   "offset": 1280,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0570",
+   "offset": 1392,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0598",
+   "offset": 1432,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x05D8",
+   "offset": 1496,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x05FC",
+   "offset": 1532,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0654",
+   "offset": 1620,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x06A0",
+   "offset": 1696,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x06B8",
+   "offset": 1720,
+   "size": 44
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x06E4",
+   "offset": 1764,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0718",
+   "offset": 1816,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0770",
+   "offset": 1904,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x07B0",
+   "offset": 1968,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x07C8",
+   "offset": 1992,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x07F0",
+   "offset": 2032,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0848",
+   "offset": 2120,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x087C",
+   "offset": 2172,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x08D4",
+   "offset": 2260,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x08EC",
+   "offset": 2284,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0944",
+   "offset": 2372,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0978",
+   "offset": 2424,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x09D0",
+   "offset": 2512,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x09E8",
+   "offset": 2536,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0A20",
+   "offset": 2592,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0A90",
+   "offset": 2704,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0AB8",
+   "offset": 2744,
+   "size": 92
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0B14",
+   "offset": 2836,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0B2C",
+   "offset": 2860,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0B84",
+   "offset": 2948,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0BB4",
+   "offset": 2996,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0BCC",
+   "offset": 3020,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0BFC",
+   "offset": 3068,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0C38",
+   "offset": 3128,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0C90",
+   "offset": 3216,
+   "size": 72
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0CD8",
+   "offset": 3288,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0CF0",
+   "offset": 3312,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0D18",
+   "offset": 3352,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0D70",
+   "offset": 3440,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0DA4",
+   "offset": 3492,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0DFC",
+   "offset": 3580,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0E14",
+   "offset": 3604,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0E6C",
+   "offset": 3692,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0EA0",
+   "offset": 3744,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0EF8",
+   "offset": 3832,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0F1C",
+   "offset": 3868,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0F50",
+   "offset": 3920,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0FC0",
+   "offset": 4032,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x0FF4",
+   "offset": 4084,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x104C",
+   "offset": 4172,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1064",
+   "offset": 4196,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x10BC",
+   "offset": 4284,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x10F0",
+   "offset": 4336,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1120",
+   "offset": 4384,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1144",
+   "offset": 4420,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1180",
+   "offset": 4480,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x11D8",
+   "offset": 4568,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1208",
+   "offset": 4616,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x122C",
+   "offset": 4652,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1254",
+   "offset": 4692,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x12AC",
+   "offset": 4780,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x12E0",
+   "offset": 4832,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1338",
+   "offset": 4920,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1350",
+   "offset": 4944,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x13A8",
+   "offset": 5032,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x13DC",
+   "offset": 5084,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1434",
+   "offset": 5172,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x145C",
+   "offset": 5212,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1490",
+   "offset": 5264,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1500",
+   "offset": 5376,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1534",
+   "offset": 5428,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1570",
+   "offset": 5488,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1588",
+   "offset": 5512,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x15E0",
+   "offset": 5600,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1614",
+   "offset": 5652,
+   "size": 92
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1670",
+   "offset": 5744,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1688",
+   "offset": 5768,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x16C4",
+   "offset": 5828,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x171C",
+   "offset": 5916,
+   "size": 72
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1764",
+   "offset": 5988,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x178C",
+   "offset": 6028,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x17B4",
+   "offset": 6068,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x180C",
+   "offset": 6156,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1840",
+   "offset": 6208,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1898",
+   "offset": 6296,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x18B0",
+   "offset": 6320,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1908",
+   "offset": 6408,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x193C",
+   "offset": 6460,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1994",
+   "offset": 6548,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x19CC",
+   "offset": 6604,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1A00",
+   "offset": 6656,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1A70",
+   "offset": 6768,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1AA4",
+   "offset": 6820,
+   "size": 80
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1AF4",
+   "offset": 6900,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1B0C",
+   "offset": 6924,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1B64",
+   "offset": 7012,
+   "size": 72
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1BAC",
+   "offset": 7084,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1C04",
+   "offset": 7172,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1C1C",
+   "offset": 7196,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1C58",
+   "offset": 7256,
+   "size": 104
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1CC0",
+   "offset": 7360,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1D0C",
+   "offset": 7436,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1D34",
+   "offset": 7476,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1D5C",
+   "offset": 7516,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1DB4",
+   "offset": 7604,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1DE8",
+   "offset": 7656,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1E40",
+   "offset": 7744,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1E70",
+   "offset": 7792,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1EC8",
+   "offset": 7880,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1EFC",
+   "offset": 7932,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1F54",
+   "offset": 8020,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1F94",
+   "offset": 8084,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x1FD0",
+   "offset": 8144,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2040",
+   "offset": 8256,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2074",
+   "offset": 8308,
+   "size": 72
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x20BC",
+   "offset": 8380,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x20D4",
+   "offset": 8404,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x212C",
+   "offset": 8492,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x215C",
+   "offset": 8540,
+   "size": 44
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2188",
+   "offset": 8584,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x21A0",
+   "offset": 8608,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x21DC",
+   "offset": 8668,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2234",
+   "offset": 8756,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2268",
+   "offset": 8808,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x22A0",
+   "offset": 8864,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x22C8",
+   "offset": 8904,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2320",
+   "offset": 8992,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2354",
+   "offset": 9044,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x23AC",
+   "offset": 9132,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x23E8",
+   "offset": 9192,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2440",
+   "offset": 9280,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2474",
+   "offset": 9332,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x24CC",
+   "offset": 9420,
+   "size": 92
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2528",
+   "offset": 9512,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2560",
+   "offset": 9568,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x25D0",
+   "offset": 9680,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2604",
+   "offset": 9732,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x265C",
+   "offset": 9820,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2674",
+   "offset": 9844,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x26CC",
+   "offset": 9932,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2718",
+   "offset": 10008,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2730",
+   "offset": 10032,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2754",
+   "offset": 10068,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x27A0",
+   "offset": 10144,
+   "size": 148
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2834",
+   "offset": 10292,
+   "size": 96
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2894",
+   "offset": 10388,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x28E0",
+   "offset": 10464,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2908",
+   "offset": 10504,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2960",
+   "offset": 10592,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2994",
+   "offset": 10644,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x29EC",
+   "offset": 10732,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2A28",
+   "offset": 10792,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2A80",
+   "offset": 10880,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2AB4",
+   "offset": 10932,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2B0C",
+   "offset": 11020,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2B64",
+   "offset": 11108,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2BA0",
+   "offset": 11168,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2C10",
+   "offset": 11280,
+   "size": 44
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2C3C",
+   "offset": 11324,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2C6C",
+   "offset": 11372,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2C84",
+   "offset": 11396,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2CDC",
+   "offset": 11484,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2D0C",
+   "offset": 11532,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2D24",
+   "offset": 11556,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2D48",
+   "offset": 11592,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2D84",
+   "offset": 11652,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2DDC",
+   "offset": 11740,
+   "size": 72
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2E24",
+   "offset": 11812,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2E54",
+   "offset": 11860,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2E7C",
+   "offset": 11900,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2ED4",
+   "offset": 11988,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2F08",
+   "offset": 12040,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2F60",
+   "offset": 12128,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2F90",
+   "offset": 12176,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x2FE8",
+   "offset": 12264,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x301C",
+   "offset": 12316,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x3074",
+   "offset": 12404,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dNessShieldPose_blob_0x30A4",
+   "offset": 12452,
+   "size": 44
+  }
+ ],
+ "symbol": "NessShieldPose",
+ "vanilla_data_size": 12496
+}

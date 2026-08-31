@@ -1,0 +1,188 @@
+{
+ "category": "fighters_main",
+ "content_hash": "bad4dcddc7745e73bc6179fd8bb160d5d5355af9",
+ "extern_file_ids": [],
+ "extern_slots": [],
+ "file_id": 294,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 10,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 11,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  }
+ ],
+ "parent_path": "reloc_fighters_main/DkIcon",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version jp",
+  "rom_sha1": "4b71f0e01878696733eefa9c80d11c147ecb4984",
+  "version": "jp"
+ },
+ "reloc_extern_offset": 65535,
+ "reloc_intern_offset": 74,
+ "relocated_view_crc32": 2871435291,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 188,
+    "target": 96
+   },
+   {
+    "from_file_id": 188,
+    "target": 136
+   },
+   {
+    "from_file_id": 188,
+    "target": 176
+   },
+   {
+    "from_file_id": 188,
+    "target": 216
+   },
+   {
+    "from_file_id": 188,
+    "target": 256
+   },
+   {
+    "from_file_id": 188,
+    "target": 304
+   },
+   {
+    "from_file_id": 188,
+    "target": 760
+   },
+   {
+    "from_file_id": 190,
+    "target": 96
+   },
+   {
+    "from_file_id": 190,
+    "target": 136
+   },
+   {
+    "from_file_id": 190,
+    "target": 176
+   },
+   {
+    "from_file_id": 190,
+    "target": 216
+   },
+   {
+    "from_file_id": 190,
+    "target": 256
+   },
+   {
+    "from_file_id": 190,
+    "target": 304
+   },
+   {
+    "from_file_id": 190,
+    "target": 760
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "pad",
+   "name": "dDkIcon_pad_0x0000",
+   "offset": 0,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dDkIcon_blob_0x0008",
+   "offset": 8,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dDkIcon_blob_0x0060",
+   "offset": 96,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dDkIcon_blob_0x0088",
+   "offset": 136,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dDkIcon_blob_0x00B0",
+   "offset": 176,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dDkIcon_blob_0x00D8",
+   "offset": 216,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dDkIcon_blob_0x0100",
+   "offset": 256,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dDkIcon_blob_0x0120",
+   "offset": 288,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dDkIcon_blob_0x0130",
+   "offset": 304,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dDkIcon_blob_0x0188",
+   "offset": 392,
+   "size": 352
+  },
+  {
+   "kind": "blob",
+   "name": "dDkIcon_blob_0x02E8",
+   "offset": 744,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dDkIcon_blob_0x02F8",
+   "offset": 760,
+   "size": 72
+  }
+ ],
+ "symbol": "DkIcon",
+ "vanilla_data_size": 832
+}

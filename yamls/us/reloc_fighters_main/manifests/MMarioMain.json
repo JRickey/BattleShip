@@ -1,0 +1,271 @@
+{
+ "category": "fighters_main",
+ "content_hash": "2a64cc7b894333bb85306d548704ab31e2b744d3",
+ "extern_file_ids": [
+  205,
+  202,
+  356,
+  204,
+  300,
+  300,
+  300,
+  300,
+  300,
+  298,
+  298,
+  298,
+  298,
+  298,
+  298,
+  298,
+  298,
+  298
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 205,
+   "dep_word_offset": 14,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 202,
+   "dep_word_offset": 9,
+   "slot_offset_in_slice": 4,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 356,
+   "dep_word_offset": 386,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 204,
+   "dep_word_offset": 0,
+   "slot_offset_in_slice": 12,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 300,
+   "dep_word_offset": 1922,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 6
+  },
+  {
+   "dep_file_id": 300,
+   "dep_word_offset": 1922,
+   "slot_offset_in_slice": 16,
+   "slot_slice": 6
+  },
+  {
+   "dep_file_id": 300,
+   "dep_word_offset": 2868,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 300,
+   "dep_word_offset": 2880,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 300,
+   "dep_word_offset": 3006,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 60,
+   "slot_offset_in_slice": 740,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 360,
+   "slot_offset_in_slice": 744,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 644,
+   "slot_offset_in_slice": 748,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 928,
+   "slot_offset_in_slice": 752,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 1212,
+   "slot_offset_in_slice": 756,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 1512,
+   "slot_offset_in_slice": 760,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 1816,
+   "slot_offset_in_slice": 764,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 2104,
+   "slot_offset_in_slice": 768,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 2384,
+   "slot_offset_in_slice": 772,
+   "slot_slice": 9
+  }
+ ],
+ "file_id": 206,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 9,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 680,
+   "slot_slice": 9,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 684,
+   "slot_slice": 9,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 732,
+   "slot_slice": 9,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 736,
+   "slot_slice": 9,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 820,
+   "slot_slice": 9,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 828,
+   "slot_slice": 9,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 836,
+   "slot_slice": 9,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 844,
+   "slot_slice": 9,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  }
+ ],
+ "parent_path": "reloc_fighters_main/MMarioMain",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 0,
+ "reloc_intern_offset": 168,
+ "relocated_view_crc32": 1025319655,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "gap",
+   "name": "dMMarioMain_gap_0x0000",
+   "offset": 0,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMMarioMain_blob_0x0010",
+   "offset": 16,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dMMarioMain_blob_0x0018",
+   "offset": 24,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dMMarioMain_blob_0x0020",
+   "offset": 32,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dMMarioMain_blob_0x0060",
+   "offset": 96,
+   "size": 100
+  },
+  {
+   "kind": "blob",
+   "name": "dMMarioMain_blob_0x00C4",
+   "offset": 196,
+   "size": 4
+  },
+  {
+   "kind": "blob",
+   "name": "dMMarioMain_blob_0x00C8",
+   "offset": 200,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMMarioMain_blob_0x00E8",
+   "offset": 232,
+   "size": 432
+  },
+  {
+   "kind": "blob",
+   "name": "dMMarioMain_blob_0x0298",
+   "offset": 664,
+   "size": 4
+  },
+  {
+   "kind": "blob",
+   "name": "dMMarioMain_blob_0x029C",
+   "offset": 668,
+   "size": 852
+  }
+ ],
+ "symbol": "MMarioMain",
+ "vanilla_data_size": 1520
+}

@@ -1,0 +1,510 @@
+{
+ "category": "fighters_main",
+ "content_hash": "b3470ab7b5f1e8ca354a32f25e51ac7fe202d358",
+ "extern_file_ids": [
+  242,
+  347,
+  244,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  341,
+  343,
+  343,
+  343,
+  343,
+  343,
+  343,
+  343,
+  343,
+  343
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 242,
+   "dep_word_offset": 4,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 347,
+   "dep_word_offset": 512,
+   "slot_offset_in_slice": 4,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 244,
+   "dep_word_offset": 0,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 9580,
+   "slot_offset_in_slice": 12,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 9480,
+   "slot_offset_in_slice": 16,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 9580,
+   "slot_offset_in_slice": 64,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 9480,
+   "slot_offset_in_slice": 68,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 6396,
+   "slot_offset_in_slice": 4,
+   "slot_slice": 5
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 6356,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 5
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 6483,
+   "slot_offset_in_slice": 12,
+   "slot_slice": 5
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 2452,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 7
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 0,
+   "slot_offset_in_slice": 4,
+   "slot_slice": 7
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 2760,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 7
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 5412,
+   "slot_offset_in_slice": 16,
+   "slot_slice": 7
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 3340,
+   "slot_offset_in_slice": 20,
+   "slot_slice": 7
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 5720,
+   "slot_offset_in_slice": 24,
+   "slot_slice": 7
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 9804,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 9814,
+   "slot_offset_in_slice": 4,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 9824,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 9834,
+   "slot_offset_in_slice": 12,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 9844,
+   "slot_offset_in_slice": 16,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 9856,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 10
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 9978,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 10
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 6524,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 6608,
+   "slot_offset_in_slice": 16,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 7036,
+   "slot_offset_in_slice": 40,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 6972,
+   "slot_offset_in_slice": 48,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 6840,
+   "slot_offset_in_slice": 56,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 7304,
+   "slot_offset_in_slice": 72,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 7344,
+   "slot_offset_in_slice": 80,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 7036,
+   "slot_offset_in_slice": 104,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 6972,
+   "slot_offset_in_slice": 112,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 7104,
+   "slot_offset_in_slice": 128,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 7172,
+   "slot_offset_in_slice": 136,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 7220,
+   "slot_offset_in_slice": 152,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 7104,
+   "slot_offset_in_slice": 168,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 7172,
+   "slot_offset_in_slice": 176,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 341,
+   "dep_word_offset": 7220,
+   "slot_offset_in_slice": 192,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 343,
+   "dep_word_offset": 0,
+   "slot_offset_in_slice": 740,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 343,
+   "dep_word_offset": 320,
+   "slot_offset_in_slice": 744,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 343,
+   "dep_word_offset": 724,
+   "slot_offset_in_slice": 748,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 343,
+   "dep_word_offset": 1128,
+   "slot_offset_in_slice": 752,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 343,
+   "dep_word_offset": 1532,
+   "slot_offset_in_slice": 756,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 343,
+   "dep_word_offset": 1944,
+   "slot_offset_in_slice": 760,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 343,
+   "dep_word_offset": 2348,
+   "slot_offset_in_slice": 764,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 343,
+   "dep_word_offset": 2752,
+   "slot_offset_in_slice": 768,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 343,
+   "dep_word_offset": 3156,
+   "slot_offset_in_slice": 772,
+   "slot_slice": 12
+  }
+ ],
+ "file_id": 243,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 10,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 680,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 684,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 732,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 736,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 820,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 824,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 828,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 836,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 844,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 848,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 12
+  }
+ ],
+ "parent_path": "reloc_fighters_main/PikachuMain",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 0,
+ "reloc_intern_offset": 204,
+ "relocated_view_crc32": 766271714,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "gap",
+   "name": "dPikachuMain_gap_0x0000",
+   "offset": 0,
+   "size": 116
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuMain_blob_0x0074",
+   "offset": 116,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuMain_blob_0x007C",
+   "offset": 124,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuMain_blob_0x0084",
+   "offset": 132,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuMain_blob_0x00C4",
+   "offset": 196,
+   "size": 108
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuMain_blob_0x0130",
+   "offset": 304,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuMain_blob_0x0140",
+   "offset": 320,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuMain_blob_0x0148",
+   "offset": 328,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuMain_blob_0x0168",
+   "offset": 360,
+   "size": 432
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuMain_blob_0x0318",
+   "offset": 792,
+   "size": 20
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuMain_blob_0x032C",
+   "offset": 812,
+   "size": 12
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuMain_blob_0x0338",
+   "offset": 824,
+   "size": 216
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuMain_blob_0x0410",
+   "offset": 1040,
+   "size": 864
+  }
+ ],
+ "symbol": "PikachuMain",
+ "vanilla_data_size": 1904
+}

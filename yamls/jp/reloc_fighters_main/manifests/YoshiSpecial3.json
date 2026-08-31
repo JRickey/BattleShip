@@ -1,0 +1,203 @@
+{
+ "category": "fighters_main",
+ "content_hash": "67acfecfd2fee3b6b2b1b4b7bc979cc6a6adec5e",
+ "extern_file_ids": [],
+ "extern_slots": [],
+ "file_id": 314,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 5,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 140,
+   "slot_slice": 5,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 172,
+   "slot_slice": 5,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 6,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 144,
+   "slot_slice": 6,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 148,
+   "slot_slice": 6,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 392,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 396,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 520,
+   "slot_slice": 10,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 524,
+   "slot_slice": 10,
+   "target_offset_in_slice": 0,
+   "target_slice": 12
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 11,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 116,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 12
+  }
+ ],
+ "parent_path": "reloc_fighters_main/YoshiSpecial3",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version jp",
+  "rom_sha1": "4b71f0e01878696733eefa9c80d11c147ecb4984",
+  "version": "jp"
+ },
+ "reloc_extern_offset": 65535,
+ "reloc_intern_offset": 563,
+ "relocated_view_crc32": 2954312649,
+ "reports": {
+  "demotions": [
+   {
+    "fmt": null,
+    "height": null,
+    "load_siz": 2,
+    "offset": 48,
+    "reason": "ambiguous-texture",
+    "siz": null,
+    "size": 2048,
+    "texels": 1024,
+    "width": null
+   }
+  ],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 205,
+    "target": 2400
+   },
+   {
+    "from_file_id": 222,
+    "target": 2400
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "pad",
+   "name": "dYoshiSpecial3_pad_0x0000",
+   "offset": 0,
+   "size": 8
+  },
+  {
+   "colors": 16,
+   "kind": "lut",
+   "name": "dYoshiSpecial3_Lut_0x0008",
+   "offset": 8,
+   "size": 32
+  },
+  {
+   "kind": "pad",
+   "name": "dYoshiSpecial3_pad_0x0028",
+   "offset": 40,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dYoshiSpecial3_blob_0x0030",
+   "offset": 48,
+   "size": 2048
+  },
+  {
+   "count": 4,
+   "kind": "vtx",
+   "name": "dYoshiSpecial3_Vtx_0x0830",
+   "offset": 2096,
+   "size": 64
+  },
+  {
+   "count": 30,
+   "kind": "gfx",
+   "name": "dYoshiSpecial3_Gfx_0x0870",
+   "offset": 2160,
+   "size": 240
+  },
+  {
+   "kind": "blob",
+   "name": "dYoshiSpecial3_blob_0x0960",
+   "offset": 2400,
+   "size": 152
+  },
+  {
+   "kind": "blob",
+   "name": "dYoshiSpecial3_blob_0x09F8",
+   "offset": 2552,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dYoshiSpecial3_blob_0x0A08",
+   "offset": 2568,
+   "size": 400
+  },
+  {
+   "kind": "blob",
+   "name": "dYoshiSpecial3_blob_0x0B98",
+   "offset": 2968,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dYoshiSpecial3_blob_0x0BA8",
+   "offset": 2984,
+   "size": 528
+  },
+  {
+   "kind": "blob",
+   "name": "dYoshiSpecial3_blob_0x0DB8",
+   "offset": 3512,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dYoshiSpecial3_blob_0x0DF4",
+   "offset": 3572,
+   "size": 124
+  }
+ ],
+ "symbol": "YoshiSpecial3",
+ "vanilla_data_size": 3696
+}

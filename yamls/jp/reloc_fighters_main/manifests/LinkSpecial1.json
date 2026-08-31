@@ -1,0 +1,59 @@
+{
+ "category": "fighters_main",
+ "content_hash": "45a4e48c7e8f86c697ae9e22fca42ddd8b57ea9d",
+ "extern_file_ids": [
+  300,
+  300
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 300,
+   "dep_word_offset": 388,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 300,
+   "dep_word_offset": 432,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 0
+  }
+ ],
+ "file_id": 201,
+ "intern_slots": [],
+ "parent_path": "reloc_fighters_main/LinkSpecial1",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version jp",
+  "rom_sha1": "4b71f0e01878696733eefa9c80d11c147ecb4984",
+  "version": "jp"
+ },
+ "reloc_extern_offset": 0,
+ "reloc_intern_offset": 65535,
+ "relocated_view_crc32": 1036200355,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 200,
+    "target": 0
+   },
+   {
+    "from_file_id": 205,
+    "target": 0
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "blob",
+   "name": "dLinkSpecial1_blob_0x0000",
+   "offset": 0,
+   "size": 64
+  }
+ ],
+ "symbol": "LinkSpecial1",
+ "vanilla_data_size": 64
+}
