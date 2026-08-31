@@ -94,6 +94,7 @@ const char* AnalogRemapCVarName(int playerIndex);
 const char* AnalogRemapDeadzoneCVarName(int playerIndex);
 const char* AnalogRemapRangeCVarName(int playerIndex);
 const char* WidescreenCVarName();
+const char* BonusStagesCVarName();
 const char* CompRulesetCVarName();
 const char* NeutralSpawnsCVarName();
 const char* AutoZCancelCVarName();
