@@ -778,13 +778,25 @@ if (NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
     # USE_STATIC_CRT — opt in so the produced discord-rpc.lib uses the same
     # /MT[d] runtime, otherwise the final link fails with LNK2038.
     set(USE_STATIC_CRT ON CACHE BOOL "" FORCE)
+    # The bundled rapidjson-1.1.0 declares an ill-formed GenericStringRef
+    # operator= (assigns to a const member); clang 22+ rejects it outright.
+    # Upstream rapidjson removed the operator (rapidjson#1364) — drop the
+    # line at fetch time the same way.
     FetchContent_Declare(
         discord_rpc
         GIT_REPOSITORY https://github.com/discordapp/discord-rpc.git
         GIT_TAG        v3.4.0
         PATCH_COMMAND  ${CMAKE_COMMAND} -E rm -f .clang-format
+        COMMAND        ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/patch-discord-rapidjson.py
     )
     FetchContent_MakeAvailable(discord_rpc)
+    # rapidjson is downloaded by discord-rpc's own configure (inside
+    # MakeAvailable), after the FetchContent patch step ran — apply the
+    # clang-22 compat patch now that the file exists.
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/patch-discord-rapidjson.py
+        WORKING_DIRECTORY ${discord_rpc_SOURCE_DIR}
+        COMMAND_ERROR_IS_FATAL ANY)
     # Belt and suspenders: enforce the runtime-library property on the
     # produced target directly so it survives a future cmake_policy(CMP0091)
     # propagation behavior change.
