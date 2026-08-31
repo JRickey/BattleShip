@@ -17,15 +17,20 @@
 #include <zip.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cctype>
+#include <cstdlib>
 #include <cstring>
 #include <cstdio>
 #include <filesystem>
 #include <list>
+#include <memory>
+#include <mutex>
 #include <new>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -63,13 +68,21 @@ struct PackEntry {
     bool inZip() const noexcept { return !member.empty(); }
 };
 
-// Index of all parsed pack PNGs (loose + zip members). Lookup() reads it.
+// Guards gIndex, gLru, and gOpenZips: the game/render thread (Lookup) and the
+// background preload workers (issue #215) touch them concurrently. Decode work
+// stays outside the lock on the worker side; Lookup holds it for its whole
+// body, which only ever blocks a worker's brief insert.
+std::mutex gMutex;
+
+// Index of all parsed pack PNGs (loose + zip members). Lookup() and the
+// preload snapshot read it; decode failures erase from it. Guarded by gMutex.
 std::unordered_map<HashKey, PackEntry, HashKeyHasher> gIndex;
 
 // Open zip handles, keyed by .zip path, kept alive for the process so we don't
-// re-parse a pack's central directory on every first-decode. Single-threaded
-// (the hook runs on the game/render thread), so one shared handle per zip is
-// safe to reuse sequentially.
+// re-parse a pack's central directory on every first-decode. Guarded by gMutex
+// for the map itself; the handles are only ever *used* by the game/render
+// thread (preload workers open their own private handles — libzip handles are
+// not safe for concurrent use).
 std::unordered_map<std::string, zip_t*> gOpenZips;
 
 std::string gModsRoot;
@@ -150,33 +163,38 @@ uint32_t SourceTexelCrc(const uint8_t* src, int width, int height,
     return crc ^ 0xFFFFFFFFu;
 }
 
-// Decoded-RGBA LRU. Insert always succeeds (the just-inserted entry is at
-// the tail and is exempt from eviction); eviction only fires on subsequent
-// Insert() calls, never during a single Lookup() — so the pointer returned
-// from Lookup() is guaranteed valid through the immediately-following
-// UploadTexture call.
+// Decoded-RGBA LRU. Entries are shared_ptr so an eviction racing a consumer
+// can't free a texture out from under it: Lookup() pins its returned entry in
+// HiResPack::mLastReturned until the next Lookup call, and preload workers
+// insert concurrently without invalidating that pin. All methods require
+// gMutex held by the caller.
 class LruCache {
 public:
-    using Node = std::pair<HashKey, DecodedTexture>;
+    using TexPtr = std::shared_ptr<const DecodedTexture>;
+    using Node = std::pair<HashKey, TexPtr>;
 
     explicit LruCache(size_t budgetBytes) : mBudget(budgetBytes) {}
 
-    const DecodedTexture* Get(const HashKey& k) {
+    TexPtr Get(const HashKey& k) {
         auto it = mIndex.find(k);
         if (it == mIndex.end()) return nullptr;
         // Move the hit to MRU end.
         mList.splice(mList.end(), mList, it->second);
-        return &it->second->second;
+        return it->second->second;
     }
 
-    void Insert(const HashKey& k, DecodedTexture&& tex) {
+    bool Contains(const HashKey& k) const {
+        return mIndex.find(k) != mIndex.end();
+    }
+
+    void Insert(const HashKey& k, TexPtr tex) {
         // If the same key already lives in the cache, drop the older entry.
         if (auto it = mIndex.find(k); it != mIndex.end()) {
-            mBytes -= it->second->second.rgba.size();
+            mBytes -= it->second->second->rgba.size();
             mList.erase(it->second);
             mIndex.erase(it);
         }
-        size_t addBytes = tex.rgba.size();
+        size_t addBytes = tex->rgba.size();
         mList.emplace_back(k, std::move(tex));
         mIndex[k] = std::prev(mList.end());
         mBytes += addBytes;
@@ -205,12 +223,13 @@ public:
 
 private:
     // Evict from the LRU end (front) until back under budget. Never evict the
-    // tail (most-recently inserted) — Lookup returns a pointer into it that
-    // must stay valid through the immediately-following UploadTexture call.
+    // tail (most-recently inserted): a lone over-budget entry would otherwise
+    // be dropped immediately and re-decoded on every miss. (Consumer lifetime
+    // no longer depends on this — mLastReturned's shared_ptr pin covers it.)
     void EvictToBudget() {
         while (mBytes > mBudget && mList.size() > 1) {
             auto& front = mList.front();
-            mBytes -= front.second.rgba.size();
+            mBytes -= front.second->rgba.size();
             mIndex.erase(front.first);
             mList.pop_front();
         }
@@ -378,11 +397,13 @@ void ScanZip(const std::string& zipPath, PackStats& stats) {
 // the later (int)bytes.size() cast for stbi_load_from_memory can't overflow.
 constexpr uint64_t kMaxPackMemberBytes = 256ull * 1024ull * 1024ull;
 
-// Read a zip member fully into `out`. Returns false on any libzip error, an
-// out-of-range member size, or an allocation failure.
-bool ReadZipMember(const std::string& zipPath, const std::string& member,
-                   std::vector<uint8_t>& out) {
-    zip_t* z = OpenZipCached(zipPath);
+// Read a zip member fully into `out` from an already-open handle. Returns
+// false on any libzip error, an out-of-range member size, or an allocation
+// failure. The caller owns the handle (and its thread-safety): libzip handles
+// are not safe for concurrent use, so the game/render thread reads through
+// the shared gOpenZips handles while each preload worker opens its own.
+bool ReadZipMemberFrom(zip_t* z, const std::string& member,
+                       std::vector<uint8_t>& out) {
     if (z == nullptr) return false;
     zip_stat_t st;
     zip_stat_init(&st);
@@ -408,6 +429,129 @@ bool ReadZipMember(const std::string& zipPath, const std::string& member,
     return rd >= 0 && (zip_uint64_t)rd == st.size;
 }
 
+// Game/render-thread zip read through the shared process-lifetime handles.
+bool ReadZipMember(const std::string& zipPath, const std::string& member,
+                   std::vector<uint8_t>& out) {
+    return ReadZipMemberFrom(OpenZipCached(zipPath), member, out);
+}
+
+// Decode one pack entry to RGBA8. `zipHandle` is the caller's handle for
+// entry.container when entry.inZip() (workers pass their private handle; the
+// render thread passes the shared cached one). Returns nullptr on failure,
+// with `capExceeded` set when the decode succeeded but blew kMaxPackTexels.
+std::shared_ptr<DecodedTexture> DecodeEntry(const PackEntry& entry, zip_t* zipHandle,
+                                            bool* capExceeded) {
+    *capExceeded = false;
+    int w = 0, h = 0, ch = 0;
+    uint8_t* raw = nullptr;
+    if (entry.inZip()) {
+        // Decode straight from the zip member — no extraction to disk.
+        std::vector<uint8_t> bytes;
+        if (ReadZipMemberFrom(zipHandle, entry.member, bytes)) {
+            raw = stbi_load_from_memory(bytes.data(), (int)bytes.size(), &w, &h, &ch, 4);
+        }
+    } else {
+        raw = stbi_load(entry.container.c_str(), &w, &h, &ch, 4);
+    }
+    if (raw == nullptr || w <= 0 || h <= 0 || w > 65535 || h > 65535) {
+        if (raw) stbi_image_free(raw);
+        port_log("HiResPack: decode failed for %s%s%s (%s)\n",
+                 entry.container.c_str(), entry.inZip() ? " :: " : "",
+                 entry.inZip() ? entry.member.c_str() : "",
+                 stbi_failure_reason() ? stbi_failure_reason() : "?");
+        return nullptr;
+    }
+
+    // Mobile per-texture upscale cap (kMaxPackTexels = 0 → uncapped on
+    // desktop). A single oversize PNG would blow the LRU budget and balloon
+    // the uncompressed GPU upload, so reject it and fall back to the native
+    // texture.
+    if (kMaxPackTexels != 0 && (size_t)w * (size_t)h > kMaxPackTexels) {
+        stbi_image_free(raw);
+        port_log("HiResPack: %s decodes to %dx%d (> mobile %u-texel cap) — using native texture\n",
+                 entry.container.c_str(), w, h, (unsigned)kMaxPackTexels);
+        *capExceeded = true;
+        return nullptr;
+    }
+
+    auto tex = std::make_shared<DecodedTexture>();
+    tex->w = (uint16_t)w;
+    tex->h = (uint16_t)h;
+    tex->rgba.assign(raw, raw + (size_t)w * h * 4);
+    stbi_image_free(raw);
+    return tex;
+}
+
+// ── Background preload (issue #215) ──────────────────────────────────────
+//
+// StartPreload snapshots the index and hands it to a few worker threads that
+// decode entries into the LRU until it reaches its budget. First use of a
+// warmed texture then costs only the CRC + GPU upload instead of a blocking
+// disk read + PNG decode on the game/render thread. Workers stop on budget
+// exhaustion, work exhaustion, or StopPreload (joined via atexit so they
+// never outlive this TU's statics).
+std::atomic<bool> gPreloadStop{ false };
+std::atomic<size_t> gPreloadNext{ 0 };
+std::atomic<unsigned> gPreloadLive{ 0 };
+std::atomic<uint64_t> gPreloadWarmed{ 0 };
+std::vector<std::pair<HashKey, PackEntry>> gPreloadWork; // fixed after StartPreload
+std::vector<std::thread> gPreloadThreads;
+bool gPreloadStarted = false;
+
+void PreloadWorker() {
+    // Private zip handles — libzip handles can't be shared across threads.
+    std::unordered_map<std::string, zip_t*> localZips;
+    auto localZip = [&localZips](const std::string& path) -> zip_t* {
+        if (auto it = localZips.find(path); it != localZips.end()) return it->second;
+        int err = 0;
+        zip_t* z = zip_open(path.c_str(), ZIP_RDONLY, &err);
+        localZips[path] = z; // cache nullptr too so a broken zip isn't retried
+        return z;
+    };
+
+    while (!gPreloadStop.load(std::memory_order_relaxed)) {
+        size_t i = gPreloadNext.fetch_add(1, std::memory_order_relaxed);
+        if (i >= gPreloadWork.size()) break;
+        const auto& [key, entry] = gPreloadWork[i];
+
+        {
+            std::lock_guard<std::mutex> lk(gMutex);
+            if (gLru.Bytes() >= gLru.Budget()) break; // budget full — stop warming
+            if (gLru.Contains(key)) continue;         // already decoded (Lookup beat us)
+        }
+
+        bool capExceeded = false;
+        auto tex = DecodeEntry(entry, entry.inZip() ? localZip(entry.container) : nullptr,
+                               &capExceeded);
+
+        std::lock_guard<std::mutex> lk(gMutex);
+        if (tex == nullptr) {
+            // Same policy as Lookup: drop undecodable / over-cap entries so
+            // the render thread never wastes a miss on them.
+            gIndex.erase(key);
+            continue;
+        }
+        // Inserting past the budget would evict already-warm entries and
+        // thrash; leave the remainder cold instead.
+        if (gLru.Bytes() + tex->rgba.size() > gLru.Budget()) break;
+        if (!gLru.Contains(key)) {
+            gLru.Insert(key, std::move(tex));
+            gPreloadWarmed.fetch_add(1, std::memory_order_relaxed);
+        }
+    }
+
+    for (auto& [path, z] : localZips) {
+        if (z != nullptr) zip_close(z);
+    }
+
+    if (gPreloadLive.fetch_sub(1, std::memory_order_acq_rel) == 1) {
+        std::lock_guard<std::mutex> lk(gMutex);
+        port_log("HiResPack: preload done — %llu textures warmed, LRU=%zu/%zu MB\n",
+                 (unsigned long long)gPreloadWarmed.load(),
+                 gLru.Bytes() / (1024u * 1024u), gLru.Budget() / (1024u * 1024u));
+    }
+}
+
 } // namespace
 
 HiResPack& HiResPack::Get() {
@@ -420,6 +564,11 @@ const char* HiResPack::ModsRoot() const noexcept {
 }
 
 bool HiResPack::Init() {
+    // Wind down any preload from a prior Init before touching shared state
+    // (must happen outside the lock — workers block on gMutex to insert).
+    StopPreload();
+
+    std::lock_guard<std::mutex> lk(gMutex);
     mStats = {};
     gIndex.clear();
     gLru.Clear(); // drop decoded textures so a re-scan can't serve stale hits
@@ -496,10 +645,70 @@ bool HiResPack::Init() {
     return true;
 }
 
+void HiResPack::StartPreload() {
+    if (CVarGetInteger("gHiResTextures.Enabled", kHiResEnabledDefault) == 0) return;
+    if (CVarGetInteger("gHiResTextures.Preload", kHiResPreloadDefault) == 0) return;
+
+    unsigned workers;
+    {
+        std::lock_guard<std::mutex> lk(gMutex);
+        if (gPreloadStarted || gIndex.empty()) return;
+        gPreloadStarted = true;
+
+        gPreloadWork.assign(gIndex.begin(), gIndex.end());
+        // Deterministic warm order (matches the scan's alphabetical ordering)
+        // so which textures fit under the budget doesn't vary run to run.
+        std::sort(gPreloadWork.begin(), gPreloadWork.end(),
+                  [](const auto& a, const auto& b) {
+                      if (int c = a.second.container.compare(b.second.container)) return c < 0;
+                      return a.second.member < b.second.member;
+                  });
+
+        unsigned hw = std::thread::hardware_concurrency();
+        workers = (hw > 1) ? std::min(hw - 1, 4u) : 1u;
+        gPreloadStop.store(false);
+        gPreloadNext.store(0);
+        gPreloadWarmed.store(0);
+        gPreloadLive.store(workers);
+
+        port_log("HiResPack: preloading %zu pack textures on %u worker(s) "
+                 "(budget %zu MB)\n",
+                 gPreloadWork.size(), workers, gLru.Budget() / (1024u * 1024u));
+    }
+
+    // Joined before this TU's statics are destroyed: atexit handlers
+    // registered at runtime run ahead of destructors for objects constructed
+    // during static init (reverse order of registration).
+    static bool atexitRegistered = false;
+    if (!atexitRegistered) {
+        atexitRegistered = true;
+        std::atexit([] { HiResPack::Get().StopPreload(); });
+    }
+
+    gPreloadThreads.reserve(workers);
+    for (unsigned i = 0; i < workers; i++) {
+        gPreloadThreads.emplace_back(PreloadWorker);
+    }
+}
+
+void HiResPack::StopPreload() {
+    gPreloadStop.store(true);
+    for (auto& t : gPreloadThreads) {
+        if (t.joinable()) t.join();
+    }
+    gPreloadThreads.clear();
+    std::lock_guard<std::mutex> lk(gMutex);
+    gPreloadWork.clear();
+    gPreloadStarted = false; // allow a fresh StartPreload after a re-Init
+}
+
 const DecodedTexture* HiResPack::Lookup(uint8_t fmt, uint8_t siz,
                                          const uint8_t* rgba8,
                                          uint16_t width, uint16_t height) {
-    if (gIndex.empty() || rgba8 == nullptr || width == 0 || height == 0) return nullptr;
+    if (rgba8 == nullptr || width == 0 || height == 0) return nullptr;
+
+    std::lock_guard<std::mutex> lk(gMutex);
+    if (gIndex.empty()) return nullptr;
 
     mLookupStats.lookups++;
 
@@ -534,9 +743,10 @@ const DecodedTexture* HiResPack::Lookup(uint8_t fmt, uint8_t siz,
                  gLru.Bytes() / (1024u * 1024u));
     }
 
-    if (const DecodedTexture* hit = gLru.Get(key)) {
+    if (auto hit = gLru.Get(key)) {
         mLookupStats.hits++;
-        return hit;
+        mLastReturned = std::move(hit); // pin against concurrent preload eviction
+        return mLastReturned.get();
     }
 
     auto it = gIndex.find(key);
@@ -544,52 +754,24 @@ const DecodedTexture* HiResPack::Lookup(uint8_t fmt, uint8_t siz,
         return nullptr;
     }
 
+    // Decode on the spot (the preload workers haven't warmed this entry).
+    // gMutex is held through the decode: the only contention is a preload
+    // worker's brief insert, and holding it keeps `it` valid throughout.
     const PackEntry& entry = it->second;
-    int w = 0, h = 0, ch = 0;
-    uint8_t* raw = nullptr;
-    if (entry.inZip()) {
-        // Decode straight from the zip member — no extraction to disk.
-        std::vector<uint8_t> bytes;
-        if (ReadZipMember(entry.container, entry.member, bytes)) {
-            raw = stbi_load_from_memory(bytes.data(), (int)bytes.size(), &w, &h, &ch, 4);
-        }
-    } else {
-        raw = stbi_load(entry.container.c_str(), &w, &h, &ch, 4);
-    }
-    if (raw == nullptr || w <= 0 || h <= 0 || w > 65535 || h > 65535) {
-        if (raw) stbi_image_free(raw);
-        port_log("HiResPack: decode failed for %s%s%s (%s)\n",
-                 entry.container.c_str(), entry.inZip() ? " :: " : "",
-                 entry.inZip() ? entry.member.c_str() : "",
-                 stbi_failure_reason() ? stbi_failure_reason() : "?");
+    bool capExceeded = false;
+    auto tex = DecodeEntry(entry, entry.inZip() ? OpenZipCached(entry.container) : nullptr,
+                           &capExceeded);
+    if (tex == nullptr) {
         // Drop the entry so we don't keep retrying every cache miss.
         gIndex.erase(it);
-        mLookupStats.decodeFails++;
+        if (!capExceeded) mLookupStats.decodeFails++;
         return nullptr;
     }
 
-    // Mobile per-texture upscale cap (kMaxPackTexels = 0 → uncapped on desktop).
-    // A single oversize PNG would blow the LRU budget (the just-inserted tail is
-    // never evicted) and balloon the uncompressed GPU upload, so reject it and
-    // fall back to the native texture. Drop the index entry so we don't re-decode
-    // the same monster on every cache miss.
-    if (kMaxPackTexels != 0 && (size_t)w * (size_t)h > kMaxPackTexels) {
-        stbi_image_free(raw);
-        port_log("HiResPack: %s decodes to %dx%d (> mobile %u-texel cap) — using native texture\n",
-                 entry.container.c_str(), w, h, (unsigned)kMaxPackTexels);
-        gIndex.erase(it);
-        return nullptr;
-    }
-
-    DecodedTexture tex;
-    tex.w = (uint16_t)w;
-    tex.h = (uint16_t)h;
-    tex.rgba.assign(raw, raw + (size_t)w * h * 4);
-    stbi_image_free(raw);
-
+    mLastReturned = tex;
     gLru.Insert(key, std::move(tex));
     mLookupStats.hits++;
-    return gLru.Get(key);
+    return mLastReturned.get();
 }
 
 void HiResPack::MaybeDumpSource(uint8_t fmt, uint8_t siz,
