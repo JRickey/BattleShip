@@ -240,10 +240,12 @@ public class BootActivity extends ComponentActivity {
                     case 3:
                         // Torch bailed before configuring output — in practice
                         // an unrecognized ROM dump (SHA-1 not in config.yml).
-                        msg = "That ROM isn't a supported dump. BattleShip needs "
-                            + "Super Smash Bros. (U) v1.0 or the Japanese release, "
-                            + "in native big-endian .z64 format from a known-good "
-                            + "cartridge dump. Pick a different ROM file.";
+                        // Byte order is NOT the problem: Torch normalizes
+                        // .z64/.v64/.n64 in memory before hashing.
+                        msg = "That file isn't a supported ROM. BattleShip needs "
+                            + "Super Smash Bros. (U) v1.0 or the Japanese release "
+                            + "— any byte order (.z64/.v64/.n64) works. Re-dump "
+                            + "from a known-good cartridge or pick a different file.";
                         break;
                     case 4:
                         msg = "Couldn't write BattleShip.o2r — free up storage "

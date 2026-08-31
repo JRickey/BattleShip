@@ -8,7 +8,7 @@
 
 Not a path mismatch — Torch writes exactly where Phase 4.4 checks (`gDestinationDirectory / config["output"]["binary"]` = `externalFilesDir/BattleShip.o2r`).
 
-`Companion::Process()` has four log-and-`return;` bail-outs that throw nothing: config.yml missing, **ROM SHA-1 not in config.yml** (the overwhelmingly likely user trigger — v1.1/iQue/trimmed/byteswapped/headered dumps), no config node for the hash, bad `gbi:` value. The JNI bridge (`port/android_torch_bridge.cpp`) mapped only *exceptions* to non-zero codes and returned 0 unconditionally otherwise — so an unrecognized ROM reported success with no archive on disk.
+`Companion::Process()` has four log-and-`return;` bail-outs that throw nothing: config.yml missing, **ROM SHA-1 not in config.yml** (the overwhelmingly likely user trigger — v1.1/iQue/trimmed/headered/overdumped dumps), no config node for the hash, bad `gbi:` value. Byte order is *not* a trigger: `N64::Cartridge::Normalize` (`torch/src/n64/Cartridge.cpp`) converts .v64/.n64 to big-endian in memory **before** the SHA-1 is computed, on every platform including Android — all three endian variants are fully supported. The JNI bridge (`port/android_torch_bridge.cpp`) mapped only *exceptions* to non-zero codes and returned 0 unconditionally otherwise — so an unrecognized ROM reported success with no archive on disk.
 
 Compounding it, Torch's spdlog diagnostics (including `ROM not recognized. Got SHA-1: …` plus the supported-hash list) went to spdlog's default **stdout** sink, which Android discards for app processes — the one message explaining the failure was invisible even in logcat.
 
