@@ -147,6 +147,7 @@ step "Regenerating reloc codegen"
 # Each tool resolves its root via __file__, so absolute-path invocation is safe.
 python3 "$WT_DIR/tools/generate_reloc_stubs.py"
 ( cd "$WT_DIR" && python3 tools/generate_yamls.py )
+( cd "$WT_DIR" && python3 tools/generate_fighter_slices.py )
 ( cd "$WT_DIR" && python3 tools/generate_reloc_table.py )
 
 step "Encoding credits text"

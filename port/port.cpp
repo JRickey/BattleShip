@@ -25,6 +25,7 @@
 
 #include "resource/ResourceType.h"
 #include "resource/RelocFileFactory.h"
+#include "resource/SyntheticReloc.h"
 #include <ship/resource/factory/BlobFactory.h>
 #include <ship/resource/ResourceType.h>
 #include <fast/resource/ResourceType.h>
@@ -481,6 +482,7 @@ void MountModsDir() {
 		}
 	}
 
+	bool mounted_new = false;
 	auto try_mount = [&](const fs::path& p) {
 		const std::string path = p.generic_string();
 		if (existing.contains(path)) {
@@ -489,6 +491,7 @@ void MountModsDir() {
 		if (am->AddArchive(path)) {
 			port_log("SSB64: mounted mod archive -> %s\n", path.c_str());
 			existing.insert(path);
+			mounted_new = true;
 		} else {
 			port_log("SSB64: failed to mount mod archive -> %s\n", path.c_str());
 		}
@@ -518,6 +521,20 @@ void MountModsDir() {
 		}
 	};
 	walk(modsDir);
+
+	/* A newly mounted archive can override paths whose resources are
+	 * already cached — the VFS override binds at AddArchive time, but the
+	 * ResourceManager cache and the deblob synthesis cache (I8,
+	 * docs/deblob.md) would keep serving the old content until the next
+	 * process start. Drop both; resources reload on demand and deblobbed
+	 * bundles re-synthesize with the override on the next scene load.
+	 * At boot this runs before anything is cached, so it is free. */
+	if (mounted_new) {
+		if (auto rm = sContext ? sContext->GetResourceManager() : nullptr) {
+			rm->UnloadResources("*");
+		}
+		portSyntheticRelocEvictAll();
+	}
 }
 
 /* Unmount mod archives whose on-disk source no longer exists. MountModsDir

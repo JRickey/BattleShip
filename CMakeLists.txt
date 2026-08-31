@@ -284,8 +284,21 @@ set(SSB64_CREDITS_GENERATED_FILES
 add_custom_target(RegenerateRelocYamls
     BYPRODUCTS ${SSB64_RELOC_YAML_FILES}
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_yamls.py --version ${SSB64_VERSION}
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_fighter_slices.py --version ${SSB64_VERSION}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Regenerating reloc YAML configs (${SSB64_VERSION})"
+    COMMENT "Regenerating reloc YAML configs + deblob slice maps (${SSB64_VERSION})"
+)
+
+# One command per intent (docs/deblob.md): regenerate every deblob
+# artifact — parent yamls, child slice maps, manifests, rebuild specs —
+# for BOTH regions from their baseroms.
+add_custom_target(DeblobRegen
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_yamls.py --version us
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_fighter_slices.py --version us
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_yamls.py --version jp
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_fighter_slices.py --version jp
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Regenerating all deblob artifacts (both regions)"
 )
 
 add_custom_target(GenerateRelocArtifacts
@@ -570,7 +583,10 @@ if(NOT SSB64_TORCH_SHA)
 endif()
 file(SHA1 ${CMAKE_CURRENT_SOURCE_DIR}/config.yml SSB64_RECIPE_CONFIG_SHA1)
 set(SSB64_RECIPE_CONCAT "${SSB64_TORCH_SHA}:${SSB64_RECIPE_CONFIG_SHA1}")
-file(GLOB SSB64_RECIPE_YAMLS ${CMAKE_CURRENT_SOURCE_DIR}/yamls/${SSB64_VERSION}/*.yml)
+# GLOB_RECURSE: the deblob child yamls live in per-category subdirectories
+# (yamls/<v>/reloc_fighters_main/*.yml, docs/deblob.md) and must invalidate
+# the recipe hash — a stale archive missing slices would fail synthesis.
+file(GLOB_RECURSE SSB64_RECIPE_YAMLS ${CMAKE_CURRENT_SOURCE_DIR}/yamls/${SSB64_VERSION}/*.yml)
 list(SORT SSB64_RECIPE_YAMLS)
 foreach(_recipe_yaml ${SSB64_RECIPE_YAMLS})
     file(SHA1 ${_recipe_yaml} _recipe_yaml_sha1)
@@ -1224,7 +1240,11 @@ set(SSB64_O2R     ${SSB64_O2R_DIR}/BattleShip.o2r)
 if(EXISTS "${SSB64_BASEROM}")
     add_custom_command(
         OUTPUT ${SSB64_O2R}
+        # SSB64_RECIPE_YAMLS + config.yml: editing any extraction recipe
+        # (child slice maps included) re-extracts — previously a yaml edit
+        # silently left a stale archive.
         DEPENDS TorchExternal PrepareBuildInputs GenerateF3DO2R ${SSB64_BASEROM}
+                ${SSB64_RECIPE_YAMLS} ${CMAKE_SOURCE_DIR}/config.yml
         COMMAND ${CMAKE_COMMAND} -E make_directory ${SSB64_O2R_DIR}
         COMMAND ${TORCH_EXECUTABLE} o2r ${SSB64_BASEROM} -s ${CMAKE_SOURCE_DIR} -d ${SSB64_O2R_DIR}
         COMMENT "Extracting ${SSB64_VERSION} assets from ${SSB64_BASEROM} -> ${SSB64_O2R}"

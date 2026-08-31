@@ -143,7 +143,7 @@ cp "$TORCH_BIN"  "$APP/Contents/MacOS/torch"
 cp "$F3D_O2R"    "$APP/Contents/Resources/f3d.o2r"
 cp "$ROOT/gamecontrollerdb.txt" "$APP/Contents/Resources/gamecontrollerdb.txt"
 cp "$ROOT/config.yml" "$APP/Contents/Resources/config.yml"
-cp "$ROOT/yamls/$VER/"*.yml "$APP/Contents/Resources/yamls/$VER/"
+cp -R "$ROOT/yamls/$VER/." "$APP/Contents/Resources/yamls/$VER/"
 # Region-aware app icon: US uses assets/icon.icns, JP uses
 # assets/icon-jp.icns (added with the JP bifurcation so a user with
 # both .app bundles sees distinct icons in Finder / Dock). The bundle
