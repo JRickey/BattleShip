@@ -27,6 +27,12 @@
 #include "resource/RelocFileFactory.h"
 #include <ship/resource/factory/BlobFactory.h>
 #include <ship/resource/ResourceType.h>
+#include <fast/resource/ResourceType.h>
+#include <fast/resource/factory/DisplayListFactory.h>
+#include <fast/resource/factory/LightFactory.h>
+#include <fast/resource/factory/MatrixFactory.h>
+#include <fast/resource/factory/TextureFactory.h>
+#include <fast/resource/factory/VertexFactory.h>
 
 #include "app_paths.h"
 #include "bridge/audio_bridge.h"
@@ -1092,6 +1098,42 @@ static int PortInitImpl(int argc, char* argv[]) {
 		static_cast<uint32_t>(Ship::ResourceType::Blob),
 		0
 	);
+
+	/* Fast3D typed-asset factories for deblobbed reloc slices
+	 * (docs/deblob.md): the synthesis engine loads these resource types
+	 * and re-serializes them into the bundle's big-endian image. */
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryBinaryDisplayListV0>(),
+		RESOURCE_FORMAT_BINARY, "DisplayList",
+		static_cast<uint32_t>(Fast::ResourceType::DisplayList), 0);
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryXMLDisplayListV0>(),
+		RESOURCE_FORMAT_XML, "DisplayList",
+		static_cast<uint32_t>(Fast::ResourceType::DisplayList), 0);
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryBinaryLightV0>(),
+		RESOURCE_FORMAT_BINARY, "Light",
+		static_cast<uint32_t>(Fast::ResourceType::Light), 0);
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryBinaryMatrixV0>(),
+		RESOURCE_FORMAT_BINARY, "Matrix",
+		static_cast<uint32_t>(Fast::ResourceType::Matrix), 0);
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryBinaryTextureV0>(),
+		RESOURCE_FORMAT_BINARY, "Texture",
+		static_cast<uint32_t>(Fast::ResourceType::Texture), 0);
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryBinaryTextureV1>(),
+		RESOURCE_FORMAT_BINARY, "Texture",
+		static_cast<uint32_t>(Fast::ResourceType::Texture), 1);
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryBinaryVertexV0>(),
+		RESOURCE_FORMAT_BINARY, "Vertex",
+		static_cast<uint32_t>(Fast::ResourceType::Vertex), 0);
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryXMLVertexV0>(),
+		RESOURCE_FORMAT_XML, "Vertex",
+		static_cast<uint32_t>(Fast::ResourceType::Vertex), 0);
 
 	port_log("SSB64: Resource factories registered\n");
 

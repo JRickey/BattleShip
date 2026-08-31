@@ -28,6 +28,8 @@
 #include "resource/RelocFile.h"
 #include "resource/RelocFileTable.h"
 #include "resource/RelocPointerTable.h"
+#include "resource/SyntheticReloc.h"
+#include "ssb64_reloc_rebuild.h"
 #include "bridge/lbreloc_byteswap.h"
 
 extern "C" void port_aobj_register_halfswapped_range(void *base, unsigned long size);
@@ -323,6 +325,20 @@ static std::shared_ptr<RelocFile> portLoadRelocResource(u32 file_id)
 	{
 		spdlog::error("lbReloc bridge: no Ship::Context");
 		return nullptr;
+	}
+
+	// Deblobbed bundles are synthesized from their typed o2r slices
+	// (docs/deblob.md); the archived parent is the fallback while one
+	// still ships (dropped at the archive:false flip).
+	if (portGetSyntheticRelocSpec(file_id) != nullptr)
+	{
+		auto synthetic = portBuildSyntheticRelocResource(file_id);
+		if (synthetic)
+		{
+			return synthetic;
+		}
+		spdlog::warn("[deblob] synthesis failed for file_id {} — falling back to archived parent",
+		             file_id);
 	}
 
 	std::string path(gRelocFileTable[file_id]);
