@@ -339,7 +339,11 @@ struct SynthCacheEntry
 	std::vector<uint32_t> intern_pairs;     // flat (slot,target) pairs, layout coords
 };
 
-static std::unordered_map<uint32_t, SynthCacheEntry> sSynthCache;
+// Intentionally leaked: the cache holds Ship::IResource shared_ptrs, and
+// running their destructors during static teardown (after spdlog's own
+// statics are gone) SIGABRTs — same pattern PortShutdown documents for
+// the context. Process exit reclaims the memory.
+static auto &sSynthCache = *new std::unordered_map<uint32_t, SynthCacheEntry>();
 static std::mutex sSynthCacheMutex;
 
 void portSyntheticRelocEvictAll()
@@ -460,6 +464,48 @@ static void portDumpSynthBytesIfRequested(const SSB64SyntheticRelocSpec &spec, c
 	}
 }
 
+// Remap a vanilla u32-word offset into dependency file `dep_file_id` to
+// that file's CURRENT layout. Identity unless the dep is a deblobbed
+// bundle that relayouted (a mod resized one of its slices) — then the
+// vanilla offset is located in the dep's vanilla slice map and re-based
+// on the slice's new layout offset. Builds the dep first so its layout
+// exists (fighter dep graphs are acyclic: Main -> Model -> extern banks).
+static thread_local std::vector<uint32_t> sSynthBuildStack;
+
+static uint32_t portRemapDepWordOffset(uint16_t dep_file_id, uint32_t dep_word_off)
+{
+	const auto *depSpec = portGetSyntheticRelocSpec(dep_file_id);
+	if (depSpec == nullptr)
+	{
+		return dep_word_off;
+	}
+	for (uint32_t in_progress : sSynthBuildStack)
+	{
+		if (in_progress == dep_file_id)
+		{
+			return dep_word_off; // cycle guard: keep vanilla coords
+		}
+	}
+	if (!portBuildSyntheticRelocResource(dep_file_id))
+	{
+		return dep_word_off; // dep fell back to archived parent (vanilla)
+	}
+	std::lock_guard<std::mutex> lock(sSynthCacheMutex);
+	auto it = sSynthCache.find(dep_file_id);
+	if (it == sSynthCache.end())
+	{
+		return dep_word_off;
+	}
+	const uint32_t vanilla_byte = dep_word_off * 4;
+	int32_t slice = portFindVanillaSlice(*depSpec, vanilla_byte);
+	if (slice == kPatchLiteral)
+	{
+		return dep_word_off;
+	}
+	const uint32_t delta = vanilla_byte - depSpec->slices[slice].vanilla_offset;
+	return (it->second.layout_offsets[slice] + delta) / 4;
+}
+
 std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 {
 	const auto *specPtr = portGetSyntheticRelocSpec(file_id);
@@ -485,6 +531,14 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 		return nullptr;
 	}
 	auto rm = ctx->GetResourceManager();
+
+	// Recursion guard for cross-file remaps (portRemapDepWordOffset may
+	// build a dependency bundle mid-build).
+	struct BuildStackGuard
+	{
+		BuildStackGuard(uint32_t id) { sSynthBuildStack.push_back(id); }
+		~BuildStackGuard() { sSynthBuildStack.pop_back(); }
+	} build_guard(file_id);
 
 	// hash -> slice index map for DL reference resolution
 	std::unordered_map<uint64_t, uint32_t> hashToSlice;
@@ -586,28 +640,64 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	}
 
 	// --- layout ---
-	// Fast path requires every actual size to match the vanilla layout.
-	// The relayout path (variable-size mod slices) lands in Phase 6; until
-	// then a size mismatch is a hard, well-labeled failure.
+	// Fast path: every actual size matches the vanilla layout -> vanilla
+	// offsets verbatim (I5 byte-exact). Otherwise RELAYOUT: keep vanilla
+	// offsets up to the first resized slice, then pack forward with
+	// 16-byte alignment (satisfies Gfx=8, Vtx=16, TMEM DMA sources, and
+	// word-granular chain targets). Determinism note: vanilla inter-slice
+	// padding before the first resize is preserved so the forced-relayout
+	// gate (I6) can compare against the fast path.
 	SynthCacheEntry entry;
 	entry.layout_offsets.resize(spec.slice_count);
-	bool all_vanilla = true;
+	bool relayout = false;
+	uint32_t cursor = 0;
 	for (uint32_t i = 0; i < spec.slice_count; i++)
 	{
-		entry.layout_offsets[i] = spec.slices[i].vanilla_offset;
-		if (actual_sizes[i] != spec.slices[i].vanilla_size)
+		if (!relayout)
 		{
-			all_vanilla = false;
-			spdlog::error("[deblob] slice '{}' size 0x{:X} != vanilla 0x{:X}"
-			              " (variable-size replacement not yet supported — relayout lands next)",
-			              spec.slices[i].path, actual_sizes[i], spec.slices[i].vanilla_size);
+			entry.layout_offsets[i] = spec.slices[i].vanilla_offset;
+			if (actual_sizes[i] != spec.slices[i].vanilla_size)
+			{
+				relayout = true;
+				spdlog::info("[deblob] relayout: '{}' size 0x{:X} != vanilla 0x{:X} — "
+				             "repacking '{}' from slice {}",
+				             spec.slices[i].path, actual_sizes[i],
+				             spec.slices[i].vanilla_size, spec.parent_path, i);
+			}
+			cursor = entry.layout_offsets[i] + actual_sizes[i];
+		}
+		else
+		{
+			cursor = (cursor + 15u) & ~15u;
+			entry.layout_offsets[i] = cursor;
+			cursor += actual_sizes[i];
 		}
 	}
-	if (!all_vanilla)
-	{
-		return nullptr;
-	}
-	const uint32_t data_size = spec.vanilla_data_size;
+	const uint32_t data_size = relayout ? ((cursor + 7u) & ~7u)
+	                                    : spec.vanilla_data_size;
+
+	// I9 structural policy for resized slices: a reference or slot that
+	// lands at delta > 0 inside a slice is only meaningful when the
+	// replacement preserved that prefix — allow with a warning while the
+	// delta still fits, fail loudly when it does not.
+	auto check_delta = [&](uint32_t slice_idx, uint32_t delta, const char *what) -> bool {
+		if (delta == 0 || delta < actual_sizes[slice_idx])
+		{
+			if (relayout && delta != 0 &&
+			    actual_sizes[slice_idx] != spec.slices[slice_idx].vanilla_size)
+			{
+				spdlog::warn("[deblob] {} at +0x{:X} into resized slice '{}' — "
+				             "only valid for prefix-preserving replacements",
+				             what, delta, spec.slices[slice_idx].path);
+			}
+			return true;
+		}
+		spdlog::error("[deblob] I9 violated: {} at +0x{:X} exceeds resized slice"
+		              " '{}' (new size 0x{:X}) — diagnose: SSB64_SYNTH_INSPECT={}",
+		              what, delta, spec.slices[slice_idx].path,
+		              actual_sizes[slice_idx], spec.file_id);
+		return false;
+	};
 
 	// --- pass 2: blit + patch ---
 	auto relocFile = std::make_shared<RelocFile>(std::shared_ptr<Ship::ResourceInitData>());
@@ -663,6 +753,10 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 			// the seg-0x0E prefix restored for literal segment refs
 			for (const auto &p : scratch.patches)
 			{
+				if (!check_delta((uint32_t)p.target_slice, p.addend, "DL reference"))
+				{
+					return nullptr;
+				}
 				uint32_t value = entry.layout_offsets[p.target_slice] + p.addend;
 				if (p.seg0e)
 				{
@@ -684,6 +778,11 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	for (uint32_t i = 0; i < spec.intern_slot_count; i++)
 	{
 		const auto &s = spec.intern_slots[i];
+		if (!check_delta(s.slot_slice, s.slot_offset_in_slice, "intern slot position") ||
+		    !check_delta(s.target_slice, s.target_offset_in_slice, "intern slot target"))
+		{
+			return nullptr;
+		}
 		RelocExplicitInternSlot slot;
 		slot.SlotByteOff = entry.layout_offsets[s.slot_slice] + s.slot_offset_in_slice;
 		slot.TargetByteOff = entry.layout_offsets[s.target_slice] + s.target_offset_in_slice;
@@ -696,10 +795,17 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	for (uint32_t i = 0; i < spec.extern_slot_count; i++)
 	{
 		const auto &s = spec.extern_slots[i];
+		if (!check_delta(s.slot_slice, s.slot_offset_in_slice, "extern slot position"))
+		{
+			return nullptr;
+		}
 		RelocExplicitExternSlot slot;
 		slot.SlotByteOff = entry.layout_offsets[s.slot_slice] + s.slot_offset_in_slice;
 		slot.DepFileId = s.dep_file_id;
-		slot.DepWordOff = s.dep_word_offset;
+		// Cross-file fidelity: a dependency that is itself a relayouted
+		// deblobbed bundle moved its contents — remap the vanilla word
+		// offset through the dep's layout. Identity for unmodded deps.
+		slot.DepWordOff = portRemapDepWordOffset(s.dep_file_id, s.dep_word_offset);
 		relocFile->ExplicitExternSlots.push_back(slot);
 		// chain order == extern id order: lbRelocGetExternBytesNum walks
 		// this list to predict dependency allocation sizes
@@ -709,28 +815,35 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	// I5 vanilla gate (debug-grade here; synth_verify is the full gate):
 	// the fast-path output must equal the relocated view the generator
 	// hashed at extraction time.
-	uint32_t crc = portCrc32(relocFile->Data.data(), relocFile->Data.size());
 	entry.reloc = relocFile;
 	portDumpSynthInspect(spec, entry, actual_sizes, dl_scratch);
 	portDumpSynthBytesIfRequested(spec, *relocFile);
 
-	if (crc != spec.relocated_view_crc32)
+	if (!relayout)
 	{
-		// A wrong-byte bundle corrupts rendering and gameplay downstream;
-		// fail the build so the caller's fallback (archived parent) runs.
-		spdlog::error("[deblob] I5 violated: synthesized '{}' crc 0x{:08X} != spec 0x{:08X}"
-		              " — diagnose: SSB64_DUMP_SYNTH_RELOC_FILE_ID={} then compare with"
-		              " tools/generate_fighter_slices.py --only <Symbol> --check",
-		              spec.parent_path, crc, spec.relocated_view_crc32, spec.file_id);
-		return nullptr;
+		// I5 vanilla gate — only meaningful when no slice was replaced
+		// with a different size (a relayouted bundle is validated by the
+		// structural checks above instead).
+		uint32_t crc = portCrc32(relocFile->Data.data(), relocFile->Data.size());
+		if (crc != spec.relocated_view_crc32)
+		{
+			// Wrong bytes corrupt rendering and gameplay downstream; fail
+			// the build so the caller's fallback (archived parent) runs.
+			spdlog::error("[deblob] I5 violated: synthesized '{}' crc 0x{:08X} != spec 0x{:08X}"
+			              " — diagnose: SSB64_DUMP_SYNTH_RELOC_FILE_ID={} then compare with"
+			              " tools/generate_fighter_slices.py --only <Symbol> --check",
+			              spec.parent_path, crc, spec.relocated_view_crc32, spec.file_id);
+			return nullptr;
+		}
 	}
 
 	{
 		std::lock_guard<std::mutex> lock(sSynthCacheMutex);
 		sSynthCache.emplace(file_id, std::move(entry));
 	}
-	spdlog::info("[deblob] synthesized '{}' from {} slices ({} bytes, crc ok)",
-	             spec.parent_path, spec.slice_count, data_size);
+	spdlog::info("[deblob] synthesized '{}' from {} slices ({} bytes{})",
+	             spec.parent_path, spec.slice_count, data_size,
+	             relayout ? ", RELAYOUT" : ", crc ok");
 	return relocFile;
 }
 
