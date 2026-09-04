@@ -20,9 +20,13 @@
 #include "SyntheticReloc.h"
 #include "RelocFile.h"
 #include "RelocFileTable.h"
+#include "../app_paths.h"
 #include "../bridge/ssb64_reloc_rebuild.h"
 
 #include <cstring>
+#include <deque>
+#include <filesystem>
+#include <functional>
 #include <mutex>
 #include <unordered_map>
 #include <vector>
@@ -31,6 +35,8 @@
 
 #include <ship/Context.h>
 #include <ship/resource/ResourceManager.h>
+#include <ship/resource/archive/Archive.h>
+#include <ship/resource/archive/ArchiveManager.h>
 #include <ship/resource/type/Blob.h>
 #include <ship/utils/StrHash64.h>
 #include <fast/resource/type/DisplayList.h>
@@ -162,7 +168,9 @@ static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
                                  const SSB64SyntheticRelocSpec &spec,
                                  const std::unordered_map<uint64_t, uint32_t> &hashToSlice,
                                  const char *slice_path, uint32_t vanilla_size,
-                                 SynthDl &out)
+                                 SynthDl &out,
+                                 const std::function<int32_t(const char *)> &resolvePath,
+                                 bool vanilla)
 {
 	out.words.reserve(dl.Instructions.size() * 2);
 	bool skipArtificialBranchEnd = false;
@@ -171,6 +179,12 @@ static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
 		auto it = hashToSlice.find(portReadHash64(hashCmd));
 		if (it == hashToSlice.end())
 		{
+			const char *path = Ship::Context::GetInstance()->GetResourceManager()
+			    ->GetArchiveManager()->HashToCString(portReadHash64(hashCmd));
+			if (path && (slice_out = resolvePath(path)) >= 0)
+			{
+				return true;
+			}
 			// I7: resolution must be total — an unresolved non-injected
 			// hash is a fatal load error, never a silent passthrough.
 			spdlog::error("[deblob] I7 violated: unresolved reference hash 0x{:016X} in '{}'"
@@ -188,6 +202,37 @@ static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
 		const uint32_t w0 = static_cast<uint32_t>(cmd.words.w0);
 		const uint32_t w1 = static_cast<uint32_t>(cmd.words.w1);
 		const uint8_t opcode = static_cast<uint8_t>(w0 >> 24);
+
+		if (opcode == G_VTX_OTR_FILEPATH || opcode == G_DL_OTR_FILEPATH ||
+		    opcode == G_SETTIMG_OTR_FILEPATH)
+		{
+			// XML commands retain host-sized pointers to factory-owned strings.
+			const char *path = reinterpret_cast<const char *>(cmd.words.w1);
+			bool owned = false;
+			for (const char *str : dl.Strings) owned |= str == path;
+			if (!owned || !path) return false;
+			int32_t target = resolvePath(path);
+			if (target < 0) return false;
+			uint32_t addend = 0;
+			if (opcode == G_VTX_OTR_FILEPATH)
+			{
+				if (++i >= dl.Instructions.size()) return false;
+				const auto &args = dl.Instructions[i];
+				uint32_t count = static_cast<uint32_t>(args.words.w0);
+				uint32_t start = static_cast<uint32_t>(args.words.w1) >> 16;
+				if (count == 0 || count > 32 || start + count > 32) return false;
+				addend = (static_cast<uint32_t>(args.words.w1) & 0xFFFF) * sizeof(Vtx);
+				out.words.push_back(0x01000000u | (count << 12) | ((start + count) << 1));
+			}
+			else
+			{
+				out.words.push_back((opcode == G_DL_OTR_FILEPATH ? 0xDE000000u : 0xFD000000u) |
+				                    (w0 & 0x00FFFFFFu));
+			}
+			out.patches.push_back({(uint32_t)out.words.size(), target, addend, false});
+			out.words.push_back(0);
+			continue;
+		}
 
 		if (skipArtificialBranchEnd && opcode == 0xDF)
 		{
@@ -317,7 +362,7 @@ static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
 	// Torch appends a G_ENDDL terminator to count-delimited joint DLs so
 	// LUS's factory can read them; drop it when the reconstruction lands
 	// exactly one command past the vanilla slice (byte-exact fast path).
-	if (out.words.size() >= 2 &&
+	if (vanilla && out.words.size() >= 2 &&
 	    out.words.size() * sizeof(uint32_t) == (size_t)vanilla_size + 8 &&
 	    out.words[out.words.size() - 2] == 0xDF000000u &&
 	    out.words.back() == 0)
@@ -434,8 +479,15 @@ static void portDumpSynthInspect(const SSB64SyntheticRelocSpec &spec,
 			first = false;
 		}
 	}
-	fprintf(f, "\n ],\n \"intern_slot_count\": %u,\n \"extern_slot_count\": %u\n}\n",
-	        spec.intern_slot_count, spec.extern_slot_count);
+	fprintf(f, "\n ],\n \"intern_slots\": [");
+	for (size_t i = 0; i < entry.reloc->ExplicitInternSlots.size(); i++)
+	{
+		const auto &slot = entry.reloc->ExplicitInternSlots[i];
+		fprintf(f, "%s{\"slot\": %u, \"target\": %u}", i ? "," : "",
+		        slot.SlotByteOff, slot.TargetByteOff);
+	}
+	fprintf(f, "],\n \"intern_slot_count\": %zu,\n \"extern_slot_count\": %zu\n}\n",
+	        entry.reloc->ExplicitInternSlots.size(), entry.reloc->ExplicitExternSlots.size());
 	fclose(f);
 	spdlog::info("[deblob] wrote synthesis inspect JSON to {}", path);
 }
@@ -513,7 +565,11 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	{
 		return nullptr;
 	}
-	const auto &spec = *specPtr;
+	// Append mod dependencies without changing the ROM-derived spec.
+	std::deque<std::string> extraPaths;
+	std::vector<SSB64SyntheticSlice> slices(specPtr->slices, specPtr->slices + specPtr->slice_count);
+	auto spec = *specPtr;
+	spec.slices = slices.data();
 
 	{
 		std::lock_guard<std::mutex> lock(sSynthCacheMutex);
@@ -552,10 +608,44 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	std::vector<std::shared_ptr<Ship::IResource>> resources(spec.slice_count);
 	std::vector<uint32_t> actual_sizes(spec.slice_count, 0);
 	std::vector<SynthDl> dl_scratch(spec.slice_count);
+	std::vector<bool> replaced(spec.slice_count, false);
+	bool hasReplacements = false;
+	const std::string baseArchivePath = ssb64::LocateExistingFile(SSB64_O2R_NAME);
+	auto resolvePath = [&](const char *path) -> int32_t {
+		const uint64_t hash = CRC64(path);
+		auto found = hashToSlice.find(hash);
+		if (found != hashToSlice.end()) return (int32_t)found->second;
+		std::shared_ptr<Ship::IResource> resource;
+		try { resource = rm->LoadResource(path); }
+		catch (const std::exception &e) {
+			spdlog::error("[deblob] mod dependency '{}' failed: {}", path, e.what());
+			return -1;
+		}
+		SSB64SyntheticSliceKind kind;
+		if (std::dynamic_pointer_cast<Fast::DisplayList>(resource)) kind = SSB64SyntheticSliceKind::DisplayList;
+		else if (std::dynamic_pointer_cast<Fast::Vertex>(resource)) kind = SSB64SyntheticSliceKind::Vertex;
+		else if (std::dynamic_pointer_cast<Fast::Texture>(resource)) kind = SSB64SyntheticSliceKind::Texture;
+		else {
+			spdlog::error("[deblob] missing or unsupported mod dependency '{}'", path);
+			return -1;
+		}
+		uint32_t index = (uint32_t)slices.size();
+		extraPaths.emplace_back(path);
+		slices.push_back({extraPaths.back().c_str(), spec.vanilla_data_size, 0, kind});
+		spec.slices = slices.data();
+		spec.slice_count = (uint32_t)slices.size();
+		resources.push_back(resource);
+		actual_sizes.push_back(0);
+		dl_scratch.emplace_back();
+		replaced.push_back(true);
+		hasReplacements = true;
+		hashToSlice.emplace(hash, index);
+		return (int32_t)index;
+	};
 
 	for (uint32_t i = 0; i < spec.slice_count; i++)
 	{
-		const auto &slice = spec.slices[i];
+		const auto slice = spec.slices[i];
 		std::shared_ptr<Ship::IResource> resource;
 		try
 		{
@@ -578,6 +668,13 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 			return nullptr;
 		}
 		resources[i] = resource;
+		const auto init = resource->GetInitData();
+		const auto archive = init && init->Parent ? init->Parent :
+		    rm->GetArchiveManager()->GetArchiveFromFile(init ? init->Path : slice.path);
+		std::error_code archiveError;
+		replaced[i] = replaced[i] || (init && init->IsCustom) ||
+		    (archive && !std::filesystem::equivalent(archive->GetPath(), baseArchivePath, archiveError));
+		hasReplacements |= replaced[i];
 
 		switch (slice.kind)
 		{
@@ -628,11 +725,14 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 				spdlog::error("[deblob] slice '{}' is not a DisplayList", slice.path);
 				return nullptr;
 			}
-			if (!portUnOtrDisplayList(*dl, spec, hashToSlice, slice.path,
-			                          slice.vanilla_size, dl_scratch[i]))
+			// Resolution can append slices and reallocate dl_scratch.
+			SynthDl decoded;
+			if (!portUnOtrDisplayList(*dl, *specPtr, hashToSlice, slice.path,
+			                          slice.vanilla_size, decoded, resolvePath, !replaced[i]))
 			{
 				return nullptr;
 			}
+			dl_scratch[i] = std::move(decoded);
 			actual_sizes[i] = (uint32_t)(dl_scratch[i].words.size() * sizeof(uint32_t));
 			break;
 		}
@@ -680,10 +780,11 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	// lands at delta > 0 inside a slice is only meaningful when the
 	// replacement preserved that prefix — allow with a warning while the
 	// delta still fits, fail loudly when it does not.
-	auto check_delta = [&](uint32_t slice_idx, uint32_t delta, const char *what) -> bool {
-		if (delta == 0 || delta < actual_sizes[slice_idx])
+	auto check_delta = [&](uint32_t slice_idx, uint32_t delta, const char *what,
+	                       bool inherited = true) -> bool {
+		if (delta < actual_sizes[slice_idx])
 		{
-			if (relayout && delta != 0 &&
+			if (inherited && relayout && delta != 0 &&
 			    actual_sizes[slice_idx] != spec.slices[slice_idx].vanilla_size)
 			{
 				spdlog::warn("[deblob] {} at +0x{:X} into resized slice '{}' — "
@@ -753,9 +854,20 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 			// the seg-0x0E prefix restored for literal segment refs
 			for (const auto &p : scratch.patches)
 			{
-				if (!check_delta((uint32_t)p.target_slice, p.addend, "DL reference"))
+				if (!check_delta((uint32_t)p.target_slice, p.addend, "DL reference", !replaced[i]))
 				{
 					return nullptr;
+				}
+				if ((scratch.words[p.word_index - 1] >> 24) == 0x01)
+				{
+					const uint32_t count = (scratch.words[p.word_index - 1] >> 12) & 0xFF;
+					if (spec.slices[p.target_slice].kind != SSB64SyntheticSliceKind::Vertex ||
+					    count * sizeof(Vtx) > actual_sizes[p.target_slice] - p.addend)
+					{
+						spdlog::error("[deblob] vertex load exceeds or mistypes resource '{}' in '{}'",
+						              spec.slices[p.target_slice].path, slice.path);
+						return nullptr;
+					}
 				}
 				uint32_t value = entry.layout_offsets[p.target_slice] + p.addend;
 				if (p.seg0e)
@@ -778,6 +890,11 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	for (uint32_t i = 0; i < spec.intern_slot_count; i++)
 	{
 		const auto &s = spec.intern_slots[i];
+		if (replaced[s.slot_slice] &&
+		    spec.slices[s.slot_slice].kind == SSB64SyntheticSliceKind::DisplayList)
+		{
+			continue;
+		}
 		if (!check_delta(s.slot_slice, s.slot_offset_in_slice, "intern slot position") ||
 		    !check_delta(s.target_slice, s.target_offset_in_slice, "intern slot target"))
 		{
@@ -795,6 +912,11 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	for (uint32_t i = 0; i < spec.extern_slot_count; i++)
 	{
 		const auto &s = spec.extern_slots[i];
+		if (replaced[s.slot_slice] &&
+		    spec.slices[s.slot_slice].kind == SSB64SyntheticSliceKind::DisplayList)
+		{
+			continue;
+		}
 		if (!check_delta(s.slot_slice, s.slot_offset_in_slice, "extern slot position"))
 		{
 			return nullptr;
@@ -812,6 +934,60 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 		relocFile->ExternFileIds.push_back(s.dep_file_id);
 	}
 
+	// A replacement owns its command layout, including every pointer field.
+	// Never apply the vanilla list's slot positions to these instructions.
+	for (uint32_t i = 0; i < spec.slice_count; i++)
+	{
+		if (!replaced[i] || spec.slices[i].kind != SSB64SyntheticSliceKind::DisplayList) continue;
+		const auto &scratch = dl_scratch[i];
+		for (const auto &p : scratch.patches)
+		{
+			if (p.seg0e) continue; // Segment references are resolved by the renderer.
+			RelocExplicitInternSlot slot;
+			slot.SlotByteOff = entry.layout_offsets[i] + p.word_index * sizeof(uint32_t);
+			slot.TargetByteOff = entry.layout_offsets[p.target_slice] + p.addend;
+			relocFile->ExplicitInternSlots.push_back(slot);
+			entry.intern_pairs.push_back(slot.SlotByteOff);
+			entry.intern_pairs.push_back(slot.TargetByteOff);
+		}
+		// Binary mods may retain unresolved external descriptors. Recover
+		// their identity from the exact descriptor, not its old position.
+		for (size_t w = 1; w < scratch.words.size(); w += 2)
+		{
+			uint32_t op = scratch.words[w - 1] >> 24;
+			if (op != 0x01 && op != 0xDE && op != 0xFD && op != 0xDC) continue;
+			bool patched = false;
+			for (const auto &p : scratch.patches) patched |= p.word_index == w;
+			if (patched) continue;
+			const uint32_t value = scratch.words[w];
+			const SSB64RelocExternSlot *external = nullptr;
+			for (uint32_t e = 0; e < spec.extern_slot_count; e++)
+			{
+				const auto &s = spec.extern_slots[e];
+				if (s.slot_slice != i) continue;
+				uint32_t next = 0xFFFF;
+				if (e + 1 < spec.extern_slot_count) {
+					const auto &n = spec.extern_slots[e + 1];
+					next = (spec.slices[n.slot_slice].vanilla_offset + n.slot_offset_in_slice) / 4;
+				}
+				if (value == ((next << 16) | s.dep_word_offset)) external = &s;
+			}
+			if (external) {
+				RelocExplicitExternSlot slot;
+				slot.SlotByteOff = entry.layout_offsets[i] + (uint32_t)w * sizeof(uint32_t);
+				slot.DepFileId = external->dep_file_id;
+				slot.DepWordOff = portRemapDepWordOffset(external->dep_file_id, external->dep_word_offset);
+				relocFile->ExplicitExternSlots.push_back(slot);
+				relocFile->ExternFileIds.push_back(slot.DepFileId);
+			}
+			else if (value != 0 && ((value >> 24) == 0 || (value >> 24) > 15)) {
+				spdlog::error("[deblob] unresolved literal pointer 0x{:08X} in '{}' at +0x{:X}; use an asset reference",
+				              value, spec.slices[i].path, w * sizeof(uint32_t));
+				return nullptr;
+			}
+		}
+	}
+
 	// I5 vanilla gate (debug-grade here; synth_verify is the full gate):
 	// the fast-path output must equal the relocated view the generator
 	// hashed at extraction time.
@@ -819,11 +995,10 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	portDumpSynthInspect(spec, entry, actual_sizes, dl_scratch);
 	portDumpSynthBytesIfRequested(spec, *relocFile);
 
-	if (!relayout)
+	if (!hasReplacements && !relayout)
 	{
-		// I5 vanilla gate — only meaningful when no slice was replaced
-		// with a different size (a relayouted bundle is validated by the
-		// structural checks above instead).
+		// Mod content may intentionally differ even when its size matches.
+		// Keep the ROM-anchored CRC gate for unmodified archive resources.
 		uint32_t crc = portCrc32(relocFile->Data.data(), relocFile->Data.size());
 		if (crc != spec.relocated_view_crc32)
 		{
