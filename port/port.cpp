@@ -596,22 +596,12 @@ void UnmountMissingMods() {
 //      is wrong for any user that doesn't unzip into a "BattleShip"
 //      subdir matching their cwd.
 static std::string PortLocateFile(const std::string& basename) {
-	namespace fs = std::filesystem;
-	std::error_code ec;
-
-	const fs::path appDir(Ship::Context::GetAppDirectoryPath());
-	fs::path p1 = appDir / basename;
-	if (fs::exists(p1, ec)) {
-		return p1.lexically_normal().string();
-	}
-
-	const fs::path bundleDir(ssb64::RealAppBundlePath());
-	fs::path p2 = bundleDir / basename;
-	if (fs::exists(p2, ec)) {
-		return p2.lexically_normal().string();
-	}
-
-	return "./" + basename;
+	// Shared probe order lives in ssb64::LocateExistingFile (app_paths.cpp)
+	// so every optional-file lookup walks the same directories; this wrapper
+	// keeps the historical "./<name>" miss value so callers that open the
+	// path get a readable error message.
+	std::string found = ssb64::LocateExistingFile(basename);
+	return found.empty() ? "./" + basename : found;
 }
 
 /* ── Console "reset" command ─────────────────────────────────────────────
@@ -719,6 +709,11 @@ static int PortInitImpl(int argc, char* argv[]) {
 	// Assets → Mods menu, takes effect next cache miss. US-only (see
 	// CMakeLists.txt — JP builds drop port/hires/ entirely).
 	ssb64::hires::HiResPack::Get().Init();
+	// Warm the decoded-texture cache on background threads (issue #215) so
+	// first use of a pack texture doesn't stall the game/render thread on a
+	// synchronous PNG decode. Gated by gHiResTextures.Preload (default on
+	// for desktop, off on Android).
+	ssb64::hires::HiResPack::Get().StartPreload();
 	ssb64_hires_register();
 #endif
 

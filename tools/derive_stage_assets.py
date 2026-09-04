@@ -31,7 +31,7 @@ Adding a new stage:
 import struct
 import sys
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 
 # ---------------------------------------------------------------------------
 # Import the VPK0 decoder and RELOC extractor from the existing debug tool.
@@ -42,6 +42,12 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 _REPO_ROOT   = _SCRIPT_DIR.parent
 sys.path.insert(0, str(_REPO_ROOT / "debug_tools" / "reloc_extract"))
 from reloc_extract import extract_file  # type: ignore  # noqa: E402
+
+# Nameplate rendering is shared with the ROM-free baked pipeline (the CMake
+# nameplate custom commands call render_nameplates.py directly) so the dev
+# PNG and the baked release fallback can never drift.
+sys.path.insert(0, str(_SCRIPT_DIR))
+from render_nameplates import NAME_W, NAME_H, render_name_png  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Stage manifest.
@@ -101,16 +107,9 @@ STAGES = [
 ]
 
 # ---------------------------------------------------------------------------
-# Nameplate PNG dimensions — derived from ROM IA4 nameplate sprites in
-# reloc file 30 (MNMaps), e.g. PeachsCastleText at offset 0x1f8:
-#   width=96, height=10, bmfmt=4 (G_IM_FMT_IA), bmsiz=0 (G_IM_SIZ_4b=IA4)
-# The SObj caller forces red=green=blue=0x00 (black), so only the alpha channel
-# matters at runtime.  The PNG is stored as RGBA with black opaque pixels on a
-# transparent background.
+# Nameplate dimensions/rendering live in tools/render_nameplates.py (shared
+# with the ROM-free baked pipeline); NAME_W/NAME_H/render_name_png imported.
 # ---------------------------------------------------------------------------
-NAME_W = 96
-NAME_H = 10
-
 # CSS thumbnail dimensions — same for all stage icons (matches N64 CSS format).
 ICON_W = 48
 ICON_H = 36
@@ -408,44 +407,6 @@ def ia4_to_rgba8888(raw: bytes, width: int, height: int) -> bytes:
 # matches the ROM IA4 nameplates (same canvas dimensions, same 1-bit alpha
 # style — the SObj caller forces all color channels to black at draw time).
 # ---------------------------------------------------------------------------
-
-
-def render_name_png(text: str, output_path: Path) -> None:
-    """
-    Render text as a black-on-transparent nameplate PNG at NAME_W x NAME_H.
-
-    Font: PIL's built-in bitmap font (no external TTF dependency).  The
-    natural size (8px tall glyphs) fits cleanly in a 10-row canvas with one
-    row of padding at top and bottom.  Anti-aliasing is off by construction
-    (bitmap font), so the output is pure 1-bit alpha — pixel-art style
-    matching the ROM's IA4 nameplates.
-    """
-    font = ImageFont.load_default()
-
-    # Measure on a scratch image (avoid drawing to destination before centering).
-    probe = Image.new("RGBA", (NAME_W * 4, NAME_H * 2), (0, 0, 0, 0))
-    probe_draw = ImageDraw.Draw(probe)
-    bbox = probe_draw.textbbox((0, 0), text, font=font)
-    text_w = bbox[2] - bbox[0]
-    text_h = bbox[3] - bbox[1]
-
-    # Center horizontally; place baseline so text is vertically centered.
-    x = (NAME_W - text_w) // 2 - bbox[0]
-    y = (NAME_H - text_h) // 2 - bbox[1]
-
-    # Draw on the real canvas.
-    img = Image.new("RGBA", (NAME_W, NAME_H), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-    draw.text((x, y), text, font=font, fill=(0, 0, 0, 255))
-
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    img.save(output_path)
-
-    filesize = output_path.stat().st_size
-    print(
-        f"[{text}] Saved nameplate: {output_path} ({NAME_W}x{NAME_H}, {filesize} bytes)",
-        file=sys.stderr,
-    )
 
 
 # ---------------------------------------------------------------------------

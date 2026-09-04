@@ -37,6 +37,17 @@ struct bitmap;
 typedef struct sprite Sprite;
 typedef struct bitmap Bitmap;
 
+// libultraship fast/interpreter.cpp. The interpreter's SETTIMG/G_VTX low-VA
+// guards drop addresses <= 0x0FFFFFFF that aren't inside a loaded module —
+// and deliberately exclude the main image, because a non-PIE build's own VA
+// range numerically overlaps stale N64-segment leftovers. Our baked arrow
+// arrays live in exactly that main-image .rodata range on non-PIE builds
+// (PIE/CI builds load high and never trip the guard), so each array must be
+// registered as trusted or its SETTIMG is silently dropped and the arrow
+// renders whatever texture was previously bound (garbled strip on the CSS).
+// See docs/bugs/css_arrow_low_va_guard_2026-09-04.md.
+extern "C" void gfxRegisterTrustedLowVARange(const void *base, size_t size);
+
 namespace {
 
 /* Arrow sprite constants — same format for both right and left variants. */
@@ -137,6 +148,10 @@ static Sprite *buildSpriteFor(int variant, const uint8_t *pixels)
 static Sprite *getOrBuild(int variant, const uint8_t *pixels, const char *label)
 {
     std::lock_guard<std::mutex> guard(sCacheMutex);
+    // Idempotent; must cover every draw, not just the first build, in case the
+    // interpreter side ever gains a reset. Cheap (two tiny ranges).
+    gfxRegisterTrustedLowVARange(kArrowRGBA16, sizeof(kArrowRGBA16));
+    gfxRegisterTrustedLowVARange(kArrowLeftRGBA16, sizeof(kArrowLeftRGBA16));
     if (sCachedSprite[variant]) {
         /* Re-register on every entry — scene-boundary cleanups clear the
          * fixup tracking sets. Insertion is idempotent. */

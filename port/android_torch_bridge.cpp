@@ -18,6 +18,9 @@
 #include "libvpk0/vpk0.h"
 #include "n64graphics/n64graphics.h"
 
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/android_sink.h"
+
 #include <android/log.h>
 #include <jni.h>
 
@@ -441,13 +444,21 @@ extern "C" {
  *                    Torch's Cartridge::open() does plain fopen(2).
  * @param src_dir     Absolute path to the directory containing config.yml,
  *                    the US yaml files, and any other torch-config files.
- *                    On Android this is filesDir + "/torch_data/", which
- *                    the first-run flow extracts from APK assets.
+ *                    BootActivity passes getExternalFilesDir(null), where
+ *                    AssetExtractor stages them from APK assets on first run.
  * @param dst_dir     Absolute path where Torch will write BattleShip.o2r.
- *                    Typically the app's externalFilesDir.
+ *                    Typically the app's externalFilesDir (same dir as
+ *                    src_dir in the current flow).
  *
  * @return  0 on success, non-zero on failure (see android logcat tag
- *          "ssb64.torch" for the failure reason).
+ *          "ssb64.torch" for the failure reason):
+ *          -1/-2 bad arguments / ROM file missing,
+ *           1/2  exception during extraction,
+ *           3    Torch bailed before configuring output — the ROM is not a
+ *                supported dump (SHA-1 not in config.yml) or the staged
+ *                config/yamls are missing,
+ *           4    Torch finished but the archive was never written (disk
+ *                full / write failure).
  *
  * Thread-safety: Companion uses a singleton (Companion::Instance), so
  * concurrent calls are NOT supported. The first-run flow is single-shot
@@ -462,6 +473,21 @@ int torch_extract_o2r(const char *rom_path, const char *src_dir, const char *dst
     }
 
     LOGI("torch_extract_o2r: rom=%s src=%s dst=%s", rom_path, src_dir, dst_dir);
+
+    // Route Torch's spdlog diagnostics to logcat. spdlog's default logger is
+    // a stdout sink and Android discards app stdout, so without this the one
+    // message that explains a first-run failure ("ROM not recognized. Got
+    // SHA-1: ..." + the supported hashes) is invisible. One-shot: the named
+    // logger can only be registered once per process.
+    static bool spdlog_routed = false;
+    if (!spdlog_routed) {
+        spdlog_routed = true;
+        try {
+            spdlog::set_default_logger(spdlog::android_logger_mt("torch", LOG_TAG));
+        } catch (const std::exception &e) {
+            LOGE("torch_extract_o2r: could not route spdlog to logcat: %s", e.what());
+        }
+    }
 
     try {
         // Defensive: confirm the ROM exists before Torch's exception path
@@ -484,13 +510,34 @@ int torch_extract_o2r(const char *rom_path, const char *src_dir, const char *dst
 
         instance->Init(ExportType::Binary);
 
-        LOGI("torch_extract_o2r: extraction completed");
+        // Companion::Process() has several log-and-return early exits that
+        // throw nothing (unrecognized ROM SHA-1, missing config.yml, bad
+        // config node) — "no exception" is NOT success. It assigns
+        // gConfig.outputPath just before opening the archive writer, so an
+        // empty path means it bailed before ever configuring output.
+        const std::string out_path = instance->GetOutputPath();
+
         // Unlike main.cpp's o2r subcommand (where the process exits right
         // after), the game Activity runs in this same process — leaving the
         // singleton alive would leak the full ROM copy (~64 MB on a phone)
         // into the game's heap. Extraction is one-shot, so tear it down.
         Companion::Instance = nullptr;
         delete instance;
+
+        if (out_path.empty()) {
+            LOGE("torch_extract_o2r: Torch aborted before configuring output — "
+                 "the ROM is not a supported dump (SHA-1 mismatch), or "
+                 "config.yml/yamls are missing under %s", src_dir);
+            return 3;
+        }
+        std::error_code out_ec;
+        if (!std::filesystem::exists(out_path, out_ec) || out_ec) {
+            LOGE("torch_extract_o2r: Torch finished but %s was not written "
+                 "(disk full or write failure)", out_path.c_str());
+            return 4;
+        }
+
+        LOGI("torch_extract_o2r: extraction completed (%s)", out_path.c_str());
         derive_android_css_stage_assets(rom_path, dst_dir);
         return 0;
     } catch (const std::exception &e) {

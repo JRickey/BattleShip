@@ -1060,6 +1060,15 @@ void PortMenu::AddMenuSettings() {
             "Disables stage specific hazards such as moving platforms, tornadoes, Arwings, wind, etc."
             "Does not take effect mid-battle, only between battles.")
                      .DefaultValue(false));
+    AddWidget(path, "Bonus Stages", WIDGET_CVAR_CHECKBOX)
+        .CVar(ssb64::enhancements::BonusStagesCVarName())
+        .RaceDisable(false)
+        .Options(CheckboxOptions()
+                     .Tooltip("Shows the port-added bonus stage page (Final Destination, "
+                              "Metal Cavern, Battlefield) on the VS / Training stage select "
+                              "screen. Turn off for the original stage roster. Takes effect "
+                              "the next time the stage select screen opens.")
+                     .DefaultValue(true));
     AddWidget(path, "Debug", WIDGET_SEPARATOR_TEXT);
     AddWidget(path, "Hitbox View", WIDGET_CVAR_COMBOBOX)
         .CVar(enhancements::HitboxViewCVarName())
@@ -1377,6 +1386,23 @@ void PortMenu::AddMenuAssets() {
                                             "and substitutes a matching PNG from the mods/ index at the pack's higher "
                                             "resolution.")
                      .DefaultValue(ssb64::hires::kHiResEnabledDefault != 0));
+    AddWidget(path, "Preload Pack at Boot", WIDGET_CVAR_CHECKBOX)
+        .CVar("gHiResTextures.Preload")
+        .RaceDisable(false)
+        .Options(CheckboxOptions().Tooltip("Decodes the pack into RAM on background threads at startup so first use "
+                                            "of a texture doesn't stutter on a synchronous PNG decode. Warms up to "
+                                            "the cache budget below. Takes effect on next launch.")
+                     .DefaultValue(ssb64::hires::kHiResPreloadDefault != 0));
+    AddWidget(path, "Decoded Cache Budget (MB)", WIDGET_CVAR_SLIDER_INT)
+        .CVar("gHiResTextures.CacheBudgetMB")
+        .RaceDisable(false)
+        .Options(IntSliderOptions()
+                     .Tooltip("RAM budget for decoded pack textures. A large HD pack whose working set "
+                              "exceeds this re-decodes evicted textures on the render thread (stutter) — "
+                              "raise it if you have RAM to spare. Takes effect on next launch.")
+                     .Min(ssb64::hires::kMinLruBudgetMB)
+                     .Max(4096)
+                     .DefaultValue(ssb64::hires::kDefaultLruBudgetMB));
 #if defined(__ANDROID__)
     AddWidget(path,
               "Mobile note: decoded textures are uncompressed in RAM and on the GPU. "
