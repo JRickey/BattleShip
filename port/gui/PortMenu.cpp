@@ -1060,6 +1060,15 @@ void PortMenu::AddMenuSettings() {
             "Disables stage specific hazards such as moving platforms, tornadoes, Arwings, wind, etc."
             "Does not take effect mid-battle, only between battles.")
                      .DefaultValue(false));
+    AddWidget(path, "Bonus Stages", WIDGET_CVAR_CHECKBOX)
+        .CVar(ssb64::enhancements::BonusStagesCVarName())
+        .RaceDisable(false)
+        .Options(CheckboxOptions()
+                     .Tooltip("Shows the port-added bonus stage page (Final Destination, "
+                              "Metal Cavern, Battlefield) on the VS / Training stage select "
+                              "screen. Turn off for the original stage roster. Takes effect "
+                              "the next time the stage select screen opens.")
+                     .DefaultValue(true));
     AddWidget(path, "Debug", WIDGET_SEPARATOR_TEXT);
     AddWidget(path, "Hitbox View", WIDGET_CVAR_COMBOBOX)
         .CVar(enhancements::HitboxViewCVarName())
