@@ -5,9 +5,9 @@ render_nameplates.py — Render a stage-select nameplate PNG from a text string.
 Usage:
     python3 tools/render_nameplates.py <TEXT> <output.png>
 
-Renders <TEXT> as black-on-transparent 96x10 pixel-art text (PIL's built-in
-bitmap font, pure 1-bit alpha), matching the ROM's IA4 nameplate sprite
-dimensions. This is PURE TEXT RENDERING — no ROM data is involved — so the
+Renders <TEXT> as black-on-transparent 96x10 pixel-art text using the
+embedded 5x7 pixel font below (pure 1-bit alpha by construction), matching
+the ROM's IA4 nameplate sprite dimensions. This is PURE TEXT RENDERING — no ROM data is involved — so the
 output is legal to bake into shipped binaries (see the CMake nameplate
 custom commands, which pipe these PNGs through png_to_c_array.py into
 headers used by port/css_icons/port_css_stage_assets.cpp as the release
@@ -30,42 +30,97 @@ NAME_W = 96
 NAME_H = 10
 
 
+# ---------------------------------------------------------------------------
+# Embedded 5x7 pixel font (classic HD44780-style letterforms, public domain
+# shapes). Rendering from a hand-defined bitmap keeps the output pure 1-bit
+# by construction — the runtime converts the PNG to RGBA16 whose alpha is a
+# single bit, and any anti-aliased rendering (which modern Pillow's
+# load_default() produces) gets shredded by that threshold into broken
+# glyphs (observed: METAL CAVERN's R rendering as "P."). A bitmap font is
+# also deterministic across Pillow versions. 'I' is 3 wide so
+# "FINAL DESTINATION" (the widest current string, 93 px) fits the 96 px
+# canvas. Extend FONT when a new stage name needs more characters.
+# ---------------------------------------------------------------------------
+FONT = {
+    "A": ["01110", "10001", "10001", "11111", "10001", "10001", "10001"],
+    "B": ["11110", "10001", "10001", "11110", "10001", "10001", "11110"],
+    "C": ["01110", "10001", "10000", "10000", "10000", "10001", "01110"],
+    "D": ["11100", "10010", "10001", "10001", "10001", "10010", "11100"],
+    "E": ["11111", "10000", "10000", "11110", "10000", "10000", "11111"],
+    "F": ["11111", "10000", "10000", "11110", "10000", "10000", "10000"],
+    "G": ["01110", "10001", "10000", "10111", "10001", "10001", "01111"],
+    "H": ["10001", "10001", "10001", "11111", "10001", "10001", "10001"],
+    "I": ["111", "010", "010", "010", "010", "010", "111"],
+    "J": ["00111", "00010", "00010", "00010", "00010", "10010", "01100"],
+    "K": ["10001", "10010", "10100", "11000", "10100", "10010", "10001"],
+    "L": ["10000", "10000", "10000", "10000", "10000", "10000", "11111"],
+    "M": ["10001", "11011", "10101", "10101", "10001", "10001", "10001"],
+    "N": ["10001", "11001", "10101", "10011", "10001", "10001", "10001"],
+    "O": ["01110", "10001", "10001", "10001", "10001", "10001", "01110"],
+    "P": ["11110", "10001", "10001", "11110", "10000", "10000", "10000"],
+    "Q": ["01110", "10001", "10001", "10001", "10101", "10010", "01101"],
+    "R": ["11110", "10001", "10001", "11110", "10100", "10010", "10001"],
+    "S": ["01111", "10000", "10000", "01110", "00001", "00001", "11110"],
+    "T": ["11111", "00100", "00100", "00100", "00100", "00100", "00100"],
+    "U": ["10001", "10001", "10001", "10001", "10001", "10001", "01110"],
+    "V": ["10001", "10001", "10001", "10001", "10001", "01010", "00100"],
+    "W": ["10001", "10001", "10001", "10101", "10101", "10101", "01010"],
+    "X": ["10001", "10001", "01010", "00100", "01010", "10001", "10001"],
+    "Y": ["10001", "10001", "01010", "00100", "00100", "00100", "00100"],
+    "Z": ["11111", "00001", "00010", "00100", "01000", "10000", "11111"],
+    "'": ["01", "01", "10", "00", "00", "00", "00"],
+    ".": ["00", "00", "00", "00", "00", "00", "11"],
+    " ": ["000", "000", "000", "000", "000", "000", "000"],
+}
+GLYPH_H = 7
+TRACKING = 1  # blank columns between glyphs
+
+
+def measure_text(text: str) -> int:
+    width = 0
+    for i, ch in enumerate(text):
+        if ch not in FONT:
+            raise ValueError(f"render_nameplates: no glyph for {ch!r} — extend FONT")
+        width += len(FONT[ch][0])
+        if i != len(text) - 1:
+            width += TRACKING
+    return width
+
+
 def render_name_png(text: str, output_path: Path) -> None:
     """
-    Render text as a black-on-transparent nameplate PNG at NAME_W x NAME_H.
-
-    Font: PIL's built-in bitmap font (no external TTF dependency).  The
-    natural size (8px tall glyphs) fits cleanly in a 10-row canvas with one
-    row of padding at top and bottom.  Anti-aliasing is off by construction
-    (bitmap font), so the output is pure 1-bit alpha — pixel-art style
-    matching the ROM's IA4 nameplates.
+    Render text as black-on-transparent NAME_W x NAME_H pixel-art, using the
+    embedded 5x7 font: pure 1-bit alpha, exactly centered in the canvas
+    (the runtime anchors the sprite so the canvas center sits on the plate
+    pill's center).
     """
-    from PIL import Image, ImageDraw, ImageFont
+    from PIL import Image
 
-    font = ImageFont.load_default()
+    text_w = measure_text(text)
+    if text_w > NAME_W:
+        raise ValueError(
+            f"render_nameplates: {text!r} is {text_w}px wide — exceeds the "
+            f"{NAME_W}px nameplate canvas; shorten it or narrow glyphs")
 
-    # Measure on a scratch image (avoid drawing to destination before centering).
-    probe = Image.new("RGBA", (NAME_W * 4, NAME_H * 2), (0, 0, 0, 0))
-    probe_draw = ImageDraw.Draw(probe)
-    bbox = probe_draw.textbbox((0, 0), text, font=font)
-    text_w = bbox[2] - bbox[0]
-    text_h = bbox[3] - bbox[1]
+    x = (NAME_W - text_w) // 2
+    y = (NAME_H - GLYPH_H) // 2
 
-    # Center horizontally; place baseline so text is vertically centered.
-    x = (NAME_W - text_w) // 2 - bbox[0]
-    y = (NAME_H - text_h) // 2 - bbox[1]
-
-    # Draw on the real canvas.
     img = Image.new("RGBA", (NAME_W, NAME_H), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-    draw.text((x, y), text, font=font, fill=(0, 0, 0, 255))
+    for ch in text:
+        rows = FONT[ch]
+        for ry, row in enumerate(rows):
+            for rx, bit in enumerate(row):
+                if bit == "1":
+                    img.putpixel((x + rx, y + ry), (0, 0, 0, 255))
+        x += len(rows[0]) + TRACKING
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     img.save(output_path)
 
     filesize = output_path.stat().st_size
     print(
-        f"[{text}] Saved nameplate: {output_path} ({NAME_W}x{NAME_H}, {filesize} bytes)",
+        f"[{text}] Saved nameplate: {output_path} ({NAME_W}x{NAME_H}, "
+        f"ink {text_w}px, {filesize} bytes)",
         file=sys.stderr,
     )
 
