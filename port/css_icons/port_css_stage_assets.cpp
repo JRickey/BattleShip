@@ -90,6 +90,19 @@ struct bitmap;
 typedef struct sprite Sprite;
 typedef struct bitmap Bitmap;
 
+// libultraship fast/interpreter.cpp. The interpreter's SETTIMG low-VA guard
+// drops texture-set commands for addresses <= 0x0FFFFFFF outside a loaded
+// module — a heuristic against stale N64-segment tokens. Our pixel buffers
+// are plain mallocs, and on a session whose brk heap hasn't grown past
+// 256 MB they land BELOW that threshold: the guard then silently drops
+// their SETTIMGs and the CSS renders stale garbage (and a stale bound
+// texture can later crash the signature probe). Whether a given run is
+// affected depends purely on how much the heap grew before the CSS opened
+// (an asset re-extraction at boot pushes it well past the threshold, a
+// warm start does not) — so EVERY synthetic pixel buffer must be
+// registered as trusted at creation, not just the baked .rodata arrays.
+extern "C" void gfxRegisterTrustedLowVARange(const void *base, size_t size);
+
 namespace {
 
 // ---------------------------------------------------------------------------
@@ -379,6 +392,8 @@ static Sprite *buildBackgroundSprite(const StageEntry &se,
     portMarkSyntheticSprite(sp, bm0, (unsigned int)nbitmaps, buf_ptrs);
     std::free(buf_ptrs);
 
+    gfxRegisterTrustedLowVARange(rgba16_buf, (size_t)w * h * 2);
+
     entry->sprite     = sp;
     entry->bitmaps    = bm0;
     entry->rgba16_buf = rgba16_buf;
@@ -441,6 +456,8 @@ static Sprite *buildIconSprite(uint8_t *rgba16_buf, CacheEntry *entry)
 
     void *buf_ptrs[1] = { rgba16_buf };
     portMarkSyntheticSprite(sp, bm, (unsigned int)nbitmaps, buf_ptrs);
+
+    gfxRegisterTrustedLowVARange(rgba16_buf, (size_t)w * h * 2);
 
     entry->sprite     = sp;
     entry->bitmaps    = bm;
@@ -523,6 +540,8 @@ static Sprite *buildNameSprite(uint8_t *rgba16_buf, CacheEntry *entry)
     void *buf_ptrs[1] = { rgba16_buf };
     portMarkSyntheticSprite(sp, bm, (unsigned int)nbitmaps, buf_ptrs);
 
+    gfxRegisterTrustedLowVARange(rgba16_buf, (size_t)w * h * 2);
+
     entry->sprite     = sp;
     entry->bitmaps    = bm;
     entry->rgba16_buf = rgba16_buf;
@@ -604,6 +623,8 @@ static Sprite *buildEmblemSprite(uint8_t *ia4_buf, CacheEntry *entry)
 
     void *buf_ptrs[1] = { ia4_buf };
     portMarkSyntheticSprite(sp, bm, (unsigned int)nbitmaps, buf_ptrs);
+
+    gfxRegisterTrustedLowVARange(ia4_buf, (size_t)w * h / 2);
 
     entry->sprite     = sp;
     entry->bitmaps    = bm;
