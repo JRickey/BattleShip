@@ -235,12 +235,39 @@ public class BootActivity extends ComponentActivity {
             }
 
             if (rc != 0) {
-                runOnUi(() -> showError(
-                    "ROM extraction failed (code " + rc + "). Logcat tag " +
-                    "ssb64.torch has the detailed error."));
+                final String msg;
+                switch (rc) {
+                    case 3:
+                        // Torch bailed before configuring output — in practice
+                        // an unrecognized ROM dump (SHA-1 not in config.yml).
+                        // Byte order is NOT the problem: Torch normalizes
+                        // .z64/.v64/.n64 in memory before hashing.
+                        msg = "That file isn't a supported ROM. BattleShip needs "
+                            + "Super Smash Bros. (U) v1.0 or the Japanese release "
+                            + "— any byte order (.z64/.v64/.n64) works. Re-dump "
+                            + "from a known-good cartridge or pick a different file.";
+                        break;
+                    case 4:
+                        msg = "Couldn't write BattleShip.o2r — free up storage "
+                            + "space and try again.";
+                        break;
+                    default:
+                        msg = "ROM extraction failed (code " + rc + "). Logcat "
+                            + "tag ssb64.torch has the detailed error.";
+                        break;
+                }
+                runOnUi(() -> {
+                    showError(msg);
+                    // A bad ROM pick is recoverable — let the user try another
+                    // file instead of dead-ending on the error text.
+                    if (rc == 3) mPickButton.setVisibility(View.VISIBLE);
+                });
                 return;
             }
             if (!AssetExtractor.haveExtractedRom(BootActivity.this)) {
+                // Should be unreachable now that the bridge verifies the
+                // archive on disk before returning 0; kept as a last-resort
+                // assertion.
                 runOnUi(() -> showError(
                     "Torch returned success but BattleShip.o2r is not in " +
                     extDir));

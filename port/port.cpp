@@ -696,6 +696,11 @@ static int PortInitImpl(int argc, char* argv[]) {
 	// Assets → Mods menu, takes effect next cache miss. US-only (see
 	// CMakeLists.txt — JP builds drop port/hires/ entirely).
 	ssb64::hires::HiResPack::Get().Init();
+	// Warm the decoded-texture cache on background threads (issue #215) so
+	// first use of a pack texture doesn't stall the game/render thread on a
+	// synchronous PNG decode. Gated by gHiResTextures.Preload (default on
+	// for desktop, off on Android).
+	ssb64::hires::HiResPack::Get().StartPreload();
 	ssb64_hires_register();
 #endif
 

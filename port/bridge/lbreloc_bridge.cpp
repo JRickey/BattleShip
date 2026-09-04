@@ -98,6 +98,7 @@ extern void scManagerRunPrintGObjStatus(void);
 extern void portResetPackedDisplayListCache(void);
 extern void port_log(const char *fmt, ...);
 extern void gmColScriptsLinkRelocTargets(void);
+extern void scSubsysMotionLinkRelocTargets(void);
 
 // DL-source range registry (see port/port_dl_ranges.h).
 void port_dl_range_register(const void *base, size_t size, const char *label);
@@ -1400,6 +1401,7 @@ void lbRelocInitSetup(LBRelocSetup *setup)
 	 * Persistent file tokens stay valid across scene cycles. No wholesale
 	 * reset here. */
 	gmColScriptsLinkRelocTargets();
+	scSubsysMotionLinkRelocTargets();
 	portResetPackedDisplayListCache();
 	sPortRelocFileRanges.clear();
 

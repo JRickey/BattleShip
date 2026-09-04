@@ -32,6 +32,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <memory>
 #include <vector>
 
 namespace ssb64::hires {
@@ -72,6 +73,18 @@ inline constexpr int kMinLruBudgetMB = 16;
 inline constexpr uint32_t kMaxPackTexels = 2048u * 2048u; // 16 MB RGBA8
 #else
 inline constexpr uint32_t kMaxPackTexels = 0u;
+#endif
+
+// Preload (gHiResTextures.Preload CVar) default: background-decode the pack
+// into the LRU at boot so first use of a texture doesn't stall the game/render
+// thread on a synchronous PNG decode (issue #215). Off by default on Android —
+// preloading front-loads the pack's whole decoded working set, which is
+// exactly the allocation pattern the opt-in kHiResEnabledDefault guards
+// against on phones.
+#if defined(__ANDROID__)
+inline constexpr int kHiResPreloadDefault = 0;
+#else
+inline constexpr int kHiResPreloadDefault = 1;
 #endif
 
 struct DecodedTexture {
@@ -120,16 +133,30 @@ public:
      * "Open mods folder" UI button. Empty before Init(). */
     const char* ModsRoot() const noexcept;
 
+    /* Start background preload workers that decode the indexed pack PNGs
+     * into the LRU until the cache budget fills (issue #215) — first use of
+     * a preloaded texture then skips the synchronous disk read + PNG decode
+     * that otherwise stalls the game/render thread. Call once after Init();
+     * no-op if the gHiResTextures.Preload or .Enabled CVars are off or the
+     * index is empty. Threads stop on budget exhaustion, work exhaustion,
+     * or StopPreload(). */
+    void StartPreload();
+
+    /* Signal preload workers to stop and join them. Safe to call at any
+     * time (including with no preload running); registered via atexit so
+     * workers never outlive the module's statics. */
+    void StopPreload();
+
     /* Hash the decoded RGBA8 image (CRC32-IEEE over `width*height*4` bytes)
      * and return a substitute decoded RGBA8 buffer if the pack contains a
-     * matching PNG. Decode of the pack PNG is lazy + memoized; a small LRU
-     * caps total decoded RAM at kDefaultLruBudgetMB (512 MB desktop / 128 MB
-     * Android, overridable via the gHiResTextures.CacheBudgetMB CVar). The
-     * returned pointer is owned by
-     * the LRU and stays valid through the calling frame's UploadTexture
-     * (eviction only fires on subsequent Lookup() calls that miss the
-     * cache, never during this call). Returns nullptr on miss / decode
-     * failure.
+     * matching PNG. Decode of the pack PNG is lazy + memoized (or already
+     * warm from StartPreload's background workers); a small LRU caps total
+     * decoded RAM at kDefaultLruBudgetMB (512 MB desktop / 128 MB Android,
+     * overridable via the gHiResTextures.CacheBudgetMB CVar). The returned
+     * pointer stays valid through the calling frame's UploadTexture: Lookup
+     * holds a reference to the returned texture until the next Lookup call,
+     * so a concurrent preload insert evicting the entry cannot free it out
+     * from under the caller. Returns nullptr on miss / decode failure.
      *
      * Format-independent and byte-layout-independent: the input buffer is
      * the exact tightly-packed RGBA8 image the GPU is about to receive, so
@@ -163,6 +190,12 @@ private:
 
     PackStats mStats{};
     LookupStats mLookupStats{};
+
+    /* Pins the texture returned by the most recent Lookup() so LRU eviction
+     * (from a background preload insert) can't free it before the caller's
+     * UploadTexture runs. Only touched under the module lock; only the
+     * game/render thread calls Lookup. */
+    std::shared_ptr<const DecodedTexture> mLastReturned;
 };
 
 } // namespace ssb64::hires
