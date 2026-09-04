@@ -50,6 +50,12 @@
 
 #ifdef PORT
 
+/* This TU's include chain reaches windows.h (via libultraship.h) without
+ * NOMINMAX; the min()/max() macros mangle the std::min/std::max calls in
+ * the derivation and bilinear code into MSVC C2589. Same guard as
+ * libultraship's interpreter.cpp. */
+#define NOMINMAX
+
 #include "port_css_stage_assets.h"
 
 #include "../app_paths.h"
