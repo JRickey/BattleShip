@@ -852,12 +852,17 @@ if (NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
     # operator= (assigns to a const member); clang 22+ rejects it outright.
     # Upstream rapidjson removed the operator (rapidjson#1364) — drop the
     # line at fetch time the same way.
+    # NOTE: the rapidjson patch script must NOT be a PATCH_COMMAND here.
+    # It would be ineffective anyway (rapidjson is downloaded later by
+    # discord-rpc's own configure — see the execute_process below), and
+    # FetchContent serializes PATCH_COMMAND args into a generated CMake
+    # file where a backslashed Windows ${Python3_EXECUTABLE} path becomes
+    # an invalid escape sequence, failing the whole configure on MSVC CI.
     FetchContent_Declare(
         discord_rpc
         GIT_REPOSITORY https://github.com/discordapp/discord-rpc.git
         GIT_TAG        v3.4.0
         PATCH_COMMAND  ${CMAKE_COMMAND} -E rm -f .clang-format
-        COMMAND        ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/patch-discord-rapidjson.py
     )
     FetchContent_MakeAvailable(discord_rpc)
     # rapidjson is downloaded by discord-rpc's own configure (inside
