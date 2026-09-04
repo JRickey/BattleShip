@@ -375,6 +375,49 @@ set(SSB64_CSS_ARROW_PNG       ${CMAKE_CURRENT_SOURCE_DIR}/port/assets/css_icons/
 set(SSB64_CSS_ARROW_LEFT_PNG  ${CMAKE_CURRENT_SOURCE_DIR}/port/assets/css_icons/arrow_left.png)
 set(SSB64_CSS_ARROW_H         ${SSB64_CSS_GEN_DIR}/arrow_data.h)
 set(SSB64_CSS_ARROW_LEFT_H    ${SSB64_CSS_GEN_DIR}/arrow_left_data.h)
+
+# Baked nameplate headers for the port-introduced stages. Rendered from text
+# strings only (tools/render_nameplates.py — NO ROM data), so unlike the
+# stage icons these are legal to compile into shipped binaries. They are the
+# release fallback for portCSSGetStageNameSprite when no
+# assets/css_icons/<name>_name.png override exists; keep the strings in sync
+# with STAGES in tools/derive_stage_assets.py.
+set(SSB64_CSS_NAMEPLATES
+    "final_destination|FINAL DESTINATION|nameFinalDestination"
+    "metal_cavern|METAL CAVERN|nameMetalCavern"
+    "battlefield|BATTLEFIELD|nameBattlefield")
+set(SSB64_CSS_NAMEPLATE_HEADERS "")
+foreach(entry IN LISTS SSB64_CSS_NAMEPLATES)
+    string(REPLACE "|" ";" fields "${entry}")
+    list(GET fields 0 np_stem)
+    list(GET fields 1 np_text)
+    list(GET fields 2 np_symbol)
+    set(np_png ${SSB64_CSS_GEN_DIR}/${np_stem}_name.png)
+    set(np_h   ${SSB64_CSS_GEN_DIR}/${np_stem}_name_data.h)
+    add_custom_command(
+        OUTPUT ${np_png}
+        COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tools/render_nameplates.py
+                ${np_text}
+                ${np_png}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tools/render_nameplates.py
+        COMMENT "Rendering nameplate PNG (${np_text})"
+        VERBATIM
+    )
+    add_custom_command(
+        OUTPUT ${np_h}
+        COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tools/png_to_c_array.py
+                ${np_png}
+                ${np_h}
+                ${np_symbol}
+        DEPENDS ${np_png}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tools/png_to_c_array.py
+        COMMENT "Baking nameplate -> ${np_h}"
+        VERBATIM
+    )
+    list(APPEND SSB64_CSS_NAMEPLATE_HEADERS ${np_h})
+endforeach()
 add_custom_command(
     OUTPUT ${SSB64_CSS_ARROW_PNG}
     COMMAND ${Python3_EXECUTABLE}
@@ -491,12 +534,14 @@ endif()
 if (NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
     list(APPEND SSB64_SRC_PORT ${SSB64_ICON_GEN})
 endif()
-# Arrow baked headers — added as sources so CMake schedules their generation
-# before any port TU compilation.  Stage background/icon PNGs are disk-loaded
-# at runtime; no baked headers for those.
+# Arrow + nameplate baked headers — added as sources so CMake schedules their
+# generation before any port TU compilation.  Stage background/icon PNGs are
+# ROM-derived and therefore disk-loaded/o2r-derived at runtime; no baked
+# headers for those.
 list(APPEND SSB64_SRC_PORT
     ${SSB64_CSS_ARROW_H}
     ${SSB64_CSS_ARROW_LEFT_H}
+    ${SSB64_CSS_NAMEPLATE_HEADERS}
 )
 
 # Debug tools (GBI trace + Acmd trace systems)

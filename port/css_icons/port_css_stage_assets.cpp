@@ -27,10 +27,11 @@
  *      rather than silently papered over with the ROM-derived image.
  *
  * Nameplates have no o2r source (they are synthesized text, no ROM sprite
- * exists) — when the PNG is absent the getter returns NULL and mnmaps.c
- * falls back to rendering the stage name with the in-game subtitle font.
- * Emblems likewise stay PNG-only (and are currently skipped by
- * mnMapsMakeEmblem anyway).
+ * exists) — instead they fall back to nameplate pixels BAKED INTO THE
+ * BINARY (generated from text strings at build time — no ROM data — see
+ * tools/render_nameplates.py and the CMake nameplate commands), so release
+ * plates are pixel-identical to dev-build PNG plates. Emblems stay
+ * PNG-only (and are currently skipped by mnMapsMakeEmblem anyway).
  *
  * Sprite construction mirrors the old port_css_fd_background.cpp /
  * port_css_fd_icon.cpp pattern:
@@ -63,6 +64,13 @@
 // stb_image's implementation lives in libultraship's stb_impl.c.
 // Only include the header to pick up declarations.
 #include <stb_image.h>
+
+// Baked 96x10 RGBA16 nameplate data, generated at build time from text
+// strings only (tools/render_nameplates.py + png_to_c_array.py — no ROM
+// data, so legal to ship). Release fallback when no PNG override exists.
+#include "final_destination_name_data.h"
+#include "metal_cavern_name_data.h"
+#include "battlefield_name_data.h"
 
 #include <libultraship/libultraship.h>
 
@@ -123,6 +131,11 @@ struct StageEntry {
     // the same sprite out of the same file at build time.
     uint32_t    wp_file_id;
     uint32_t    wp_sprite_off;
+
+    // Baked nameplate pixels (96x10 RGBA16 BE, compiled in from the
+    // generated <stem>_name_data.h). Release fallback for kName when no
+    // PNG override exists; NULL for a stage without a baked plate.
+    const uint8_t *baked_name;
 };
 
 static constexpr StageEntry STAGE_TABLE[] = {
@@ -137,6 +150,7 @@ static constexpr StageEntry STAGE_TABLE[] = {
         true,/* has_name_png: synthesized 96x10 nameplate */
         true,/* has_emblem_png: upscaled 64x48 emblem from MasterHand icon */
         96, 0x26c88, /* wallpaper: reloc file 96 (StageLastFile1), dStageLastBackground */
+        kNameFinalDestinationRGBA16,
     },
     {
         /* nGRKindMetal = 13 — Meta Crystal (Metal Cavern in the port CSS).
@@ -149,6 +163,7 @@ static constexpr StageEntry STAGE_TABLE[] = {
         true,  /* synthesized "METAL CAVERN" nameplate */
         false, /* no emblem — same skip path as FD until IA4 render is fixed */
         0x62, 0x26c88, /* wallpaper: reloc file 0x62 — Meta Crystal stage data */
+        kNameMetalCavernRGBA16,
     },
     {
         /* nGRKindZako = 14 — Duel Zone (Battlefield in the port CSS).
@@ -159,9 +174,11 @@ static constexpr StageEntry STAGE_TABLE[] = {
         true,  /* synthesized "BATTLEFIELD" nameplate */
         false, /* no emblem */
         0x61, 0x26c88, /* wallpaper: reloc file 0x61 — Duel Zone stage data */
+        kNameBattlefieldRGBA16,
     },
     // { next_gkind, "next_name", bg_w, bg_h, bg_nbitmaps, bg_bm_h, bg_bm_hreal,
-    //   bg_ndisplist, has_name_png, has_emblem_png, wp_file_id, wp_sprite_off },
+    //   bg_ndisplist, has_name_png, has_emblem_png, wp_file_id, wp_sprite_off,
+    //   baked_name },
 };
 
 static constexpr int kStageCount = (int)(sizeof(STAGE_TABLE) / sizeof(STAGE_TABLE[0]));
@@ -445,6 +462,13 @@ static Sprite *buildIconSprite(uint8_t *rgba16_buf, CacheEntry *entry)
 
 static constexpr int kNameW  = 96;
 static constexpr int kNameH  = 10;
+
+static_assert(kNameFinalDestinationWidth == kNameW && kNameFinalDestinationHeight == kNameH,
+              "baked FD nameplate dims drifted from the 96x10 sprite contract");
+static_assert(kNameMetalCavernWidth == kNameW && kNameMetalCavernHeight == kNameH,
+              "baked Metal Cavern nameplate dims drifted from the 96x10 sprite contract");
+static_assert(kNameBattlefieldWidth == kNameW && kNameBattlefieldHeight == kNameH,
+              "baked Battlefield nameplate dims drifted from the 96x10 sprite contract");
 
 static Sprite *buildNameSprite(uint8_t *rgba16_buf, CacheEntry *entry)
 {
@@ -998,6 +1022,17 @@ static Sprite *getSprite(int gkind, AssetKind asset_kind) {
             full_path = std::string(gRelocFileTable[se.wp_file_id]) + " (o2r-derived)";
         } else {
             entry.derive_failed = true;
+        }
+    } else if (asset_kind == kName && se.baked_name != nullptr) {
+        // No PNG override — use the compiled-in nameplate (rendered from a
+        // text string at build time; the normal case on release builds).
+        // Heap copy so the cache owns a mutable, high-VA buffer like every
+        // other pixel source.
+        const size_t nbytes = (size_t)kNameW * kNameH * 2;
+        pixels = static_cast<uint8_t *>(std::malloc(nbytes));
+        if (pixels) {
+            std::memcpy(pixels, se.baked_name, nbytes);
+            full_path = std::string(se.name) + "_name (baked)";
         }
     }
     if (!pixels) {
