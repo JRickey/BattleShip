@@ -665,7 +665,9 @@ void HiResPack::StartPreload() {
                   });
 
         unsigned hw = std::thread::hardware_concurrency();
-        workers = (hw > 1) ? std::min(hw - 1, 4u) : 1u;
+        /* Parenthesized so windows.h's min() macro can't mangle it (MSVC
+         * C2589 without NOMINMAX in this TU's include chain). */
+        workers = (hw > 1) ? (std::min)(hw - 1, 4u) : 1u;
         gPreloadStop.store(false);
         gPreloadNext.store(0);
         gPreloadWarmed.store(0);
