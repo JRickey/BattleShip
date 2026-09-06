@@ -155,7 +155,10 @@ Copy-Item $TorchExe      (Join-Path $StageDir "torch.exe")
 Copy-Item $F3DO2R        (Join-Path $StageDir "f3d.o2r")
 Copy-Item (Join-Path $Root "gamecontrollerdb.txt") $StageDir
 Copy-Item (Join-Path $Root "config.yml") $StageDir
-Copy-Item (Join-Path $Root "yamls\$Ver\*.yml") (Join-Path $StageDir "yamls\$Ver")
+# -Recurse: deblob child slice maps + manifests live in subdirectories
+# (yamls\<v>\reloc_fighters_main\, docs/deblob.md) and must ship, or
+# first-run extraction produces a slice-less archive.
+Copy-Item (Join-Path $Root "yamls\$Ver\*") (Join-Path $StageDir "yamls\$Ver") -Recurse
 # Standalone .ico for shortcut/installer use — the icon is also embedded
 # directly in BattleShip.exe via port/ssb64.rc, so Explorer picks it up
 # without this file. Keep it bundled for future installer work.

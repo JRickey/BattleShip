@@ -1,0 +1,2268 @@
+{
+ "category": "fighters_main",
+ "content_hash": "de9dd3ece220c5bf9d76fc5c7310ed9655c21fec",
+ "extern_file_ids": [],
+ "extern_slots": [],
+ "file_id": 343,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 40,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 12
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 13
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 14
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 15
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 16
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 17
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 18
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 19
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 20
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 21
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 22
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 23
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 25
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 26
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 27
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 28
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 29
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 30
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 31
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 32
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 33
+  },
+  {
+   "slot_offset_in_slice": 40,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 34
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 35
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 36
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 37
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 38
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 39
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 40
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 41
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 42
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 43
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 44
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 45
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 46
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 48
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 49
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 50
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 51
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 52
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 53
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 54
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 55
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 56
+  },
+  {
+   "slot_offset_in_slice": 40,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 57
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 58
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 59
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 60
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 61
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 62
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 63
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 64
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 65
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 66
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 67
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 68
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 69
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 71
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 72
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 73
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 74
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 75
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 76
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 77
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 78
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 79
+  },
+  {
+   "slot_offset_in_slice": 40,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 80
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 81
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 82
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 83
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 84
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 85
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 86
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 87
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 88
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 89
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 90
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 91
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 92
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 94
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 95
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 96
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 97
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 98
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 99
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 100
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 101
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 102
+  },
+  {
+   "slot_offset_in_slice": 40,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 103
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 104
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 105
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 106
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 107
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 108
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 109
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 110
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 111
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 112
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 113
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 114
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 93,
+   "target_offset_in_slice": 0,
+   "target_slice": 115
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 117
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 118
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 119
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 120
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 121
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 122
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 123
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 124
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 125
+  },
+  {
+   "slot_offset_in_slice": 40,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 126
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 127
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 128
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 129
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 130
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 131
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 132
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 133
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 134
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 135
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 136
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 137
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 116,
+   "target_offset_in_slice": 0,
+   "target_slice": 138
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 140
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 141
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 142
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 143
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 144
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 145
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 146
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 147
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 148
+  },
+  {
+   "slot_offset_in_slice": 40,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 149
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 150
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 151
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 152
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 153
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 154
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 155
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 156
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 157
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 158
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 159
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 160
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 139,
+   "target_offset_in_slice": 0,
+   "target_slice": 161
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 163
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 164
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 165
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 166
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 167
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 168
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 169
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 170
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 171
+  },
+  {
+   "slot_offset_in_slice": 40,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 172
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 173
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 174
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 175
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 176
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 177
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 178
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 179
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 180
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 181
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 182
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 183
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 162,
+   "target_offset_in_slice": 0,
+   "target_slice": 184
+  }
+ ],
+ "parent_path": "reloc_fighters_main/PikachuShieldPose",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 65535,
+ "reloc_intern_offset": 320,
+ "relocated_view_crc32": 3022335492,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 243,
+    "target": 0
+   },
+   {
+    "from_file_id": 243,
+    "target": 1280
+   },
+   {
+    "from_file_id": 243,
+    "target": 2896
+   },
+   {
+    "from_file_id": 243,
+    "target": 4512
+   },
+   {
+    "from_file_id": 243,
+    "target": 6128
+   },
+   {
+    "from_file_id": 243,
+    "target": 7776
+   },
+   {
+    "from_file_id": 243,
+    "target": 9392
+   },
+   {
+    "from_file_id": 243,
+    "target": 11008
+   },
+   {
+    "from_file_id": 243,
+    "target": 12624
+   },
+   {
+    "from_file_id": 245,
+    "target": 0
+   },
+   {
+    "from_file_id": 245,
+    "target": 1280
+   },
+   {
+    "from_file_id": 245,
+    "target": 2896
+   },
+   {
+    "from_file_id": 245,
+    "target": 4512
+   },
+   {
+    "from_file_id": 245,
+    "target": 6128
+   },
+   {
+    "from_file_id": 245,
+    "target": 7776
+   },
+   {
+    "from_file_id": 245,
+    "target": 9392
+   },
+   {
+    "from_file_id": 245,
+    "target": 11008
+   },
+   {
+    "from_file_id": 245,
+    "target": 12624
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0000",
+   "offset": 0,
+   "size": 1280
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0500",
+   "offset": 1280,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0570",
+   "offset": 1392,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0594",
+   "offset": 1428,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x05C4",
+   "offset": 1476,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0610",
+   "offset": 1552,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x065C",
+   "offset": 1628,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x06A8",
+   "offset": 1704,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0700",
+   "offset": 1792,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x074C",
+   "offset": 1868,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0798",
+   "offset": 1944,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x07BC",
+   "offset": 1980,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0808",
+   "offset": 2056,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0854",
+   "offset": 2132,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x08A0",
+   "offset": 2208,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x08F8",
+   "offset": 2296,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x092C",
+   "offset": 2348,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0984",
+   "offset": 2436,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x09B8",
+   "offset": 2488,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0A10",
+   "offset": 2576,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0A68",
+   "offset": 2664,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0A9C",
+   "offset": 2716,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0AF4",
+   "offset": 2804,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0B18",
+   "offset": 2840,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0B50",
+   "offset": 2896,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0BC0",
+   "offset": 3008,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0BE4",
+   "offset": 3044,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0C14",
+   "offset": 3092,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0C60",
+   "offset": 3168,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0CAC",
+   "offset": 3244,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0CF8",
+   "offset": 3320,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0D50",
+   "offset": 3408,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0D84",
+   "offset": 3460,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0DD0",
+   "offset": 3536,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0DF4",
+   "offset": 3572,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0E40",
+   "offset": 3648,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0E8C",
+   "offset": 3724,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0ED8",
+   "offset": 3800,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0F30",
+   "offset": 3888,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0F7C",
+   "offset": 3964,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x0FD4",
+   "offset": 4052,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1008",
+   "offset": 4104,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1060",
+   "offset": 4192,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x10B8",
+   "offset": 4280,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x10EC",
+   "offset": 4332,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1144",
+   "offset": 4420,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1168",
+   "offset": 4456,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x11A0",
+   "offset": 4512,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1210",
+   "offset": 4624,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1234",
+   "offset": 4660,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1268",
+   "offset": 4712,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x12B4",
+   "offset": 4788,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1300",
+   "offset": 4864,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x134C",
+   "offset": 4940,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x13A4",
+   "offset": 5028,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x13F0",
+   "offset": 5104,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x143C",
+   "offset": 5180,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1460",
+   "offset": 5216,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x14AC",
+   "offset": 5292,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x14F8",
+   "offset": 5368,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1544",
+   "offset": 5444,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x159C",
+   "offset": 5532,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x15D0",
+   "offset": 5584,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1628",
+   "offset": 5672,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x165C",
+   "offset": 5724,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x16B4",
+   "offset": 5812,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x170C",
+   "offset": 5900,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1740",
+   "offset": 5952,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1798",
+   "offset": 6040,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x17BC",
+   "offset": 6076,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x17F0",
+   "offset": 6128,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1860",
+   "offset": 6240,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1884",
+   "offset": 6276,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x18B8",
+   "offset": 6328,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1904",
+   "offset": 6404,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1950",
+   "offset": 6480,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x199C",
+   "offset": 6556,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x19F4",
+   "offset": 6644,
+   "size": 72
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1A3C",
+   "offset": 6716,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1A88",
+   "offset": 6792,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1AAC",
+   "offset": 6828,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1AF8",
+   "offset": 6904,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1B44",
+   "offset": 6980,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1B90",
+   "offset": 7056,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1BE8",
+   "offset": 7144,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1C34",
+   "offset": 7220,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1C8C",
+   "offset": 7308,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1CC0",
+   "offset": 7360,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1D18",
+   "offset": 7448,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1D70",
+   "offset": 7536,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1DA4",
+   "offset": 7588,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1DFC",
+   "offset": 7676,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1E20",
+   "offset": 7712,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1E60",
+   "offset": 7776,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1ED0",
+   "offset": 7888,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1EF4",
+   "offset": 7924,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1F28",
+   "offset": 7976,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1F74",
+   "offset": 8052,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x1FC0",
+   "offset": 8128,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x200C",
+   "offset": 8204,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2064",
+   "offset": 8292,
+   "size": 72
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x20AC",
+   "offset": 8364,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x20F8",
+   "offset": 8440,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x211C",
+   "offset": 8476,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2168",
+   "offset": 8552,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x21B4",
+   "offset": 8628,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2200",
+   "offset": 8704,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2258",
+   "offset": 8792,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x228C",
+   "offset": 8844,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x22E4",
+   "offset": 8932,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2318",
+   "offset": 8984,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2370",
+   "offset": 9072,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x23C8",
+   "offset": 9160,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x23FC",
+   "offset": 9212,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2454",
+   "offset": 9300,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2478",
+   "offset": 9336,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x24B0",
+   "offset": 9392,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2520",
+   "offset": 9504,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2544",
+   "offset": 9540,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2578",
+   "offset": 9592,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x25C4",
+   "offset": 9668,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2610",
+   "offset": 9744,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x265C",
+   "offset": 9820,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x26B4",
+   "offset": 9908,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x26E4",
+   "offset": 9956,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2730",
+   "offset": 10032,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2754",
+   "offset": 10068,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x27A0",
+   "offset": 10144,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x27EC",
+   "offset": 10220,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2838",
+   "offset": 10296,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2890",
+   "offset": 10384,
+   "size": 72
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x28D8",
+   "offset": 10456,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2930",
+   "offset": 10544,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2964",
+   "offset": 10596,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x29BC",
+   "offset": 10684,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2A14",
+   "offset": 10772,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2A48",
+   "offset": 10824,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2AA0",
+   "offset": 10912,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2AC4",
+   "offset": 10948,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2B00",
+   "offset": 11008,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2B70",
+   "offset": 11120,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2B94",
+   "offset": 11156,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2BC8",
+   "offset": 11208,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2C14",
+   "offset": 11284,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2C60",
+   "offset": 11360,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2CAC",
+   "offset": 11436,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2D04",
+   "offset": 11524,
+   "size": 68
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2D48",
+   "offset": 11592,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2D94",
+   "offset": 11668,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2DB8",
+   "offset": 11704,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2E04",
+   "offset": 11780,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2E50",
+   "offset": 11856,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2E9C",
+   "offset": 11932,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2EF4",
+   "offset": 12020,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2F28",
+   "offset": 12072,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2F80",
+   "offset": 12160,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x2FB4",
+   "offset": 12212,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x300C",
+   "offset": 12300,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x3064",
+   "offset": 12388,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x3098",
+   "offset": 12440,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x30F0",
+   "offset": 12528,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x3114",
+   "offset": 12564,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x3150",
+   "offset": 12624,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x31C0",
+   "offset": 12736,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x31E4",
+   "offset": 12772,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x3214",
+   "offset": 12820,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x3254",
+   "offset": 12884,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x3294",
+   "offset": 12948,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x32D4",
+   "offset": 13012,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x332C",
+   "offset": 13100,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x3378",
+   "offset": 13176,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x33B8",
+   "offset": 13240,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x33DC",
+   "offset": 13276,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x341C",
+   "offset": 13340,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x345C",
+   "offset": 13404,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x349C",
+   "offset": 13468,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x34F4",
+   "offset": 13556,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x3528",
+   "offset": 13608,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x3580",
+   "offset": 13696,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x35B4",
+   "offset": 13748,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x360C",
+   "offset": 13836,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x3664",
+   "offset": 13924,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x3698",
+   "offset": 13976,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x36F0",
+   "offset": 14064,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuShieldPose_blob_0x3714",
+   "offset": 14100,
+   "size": 44
+  }
+ ],
+ "symbol": "PikachuShieldPose",
+ "vanilla_data_size": 14144
+}

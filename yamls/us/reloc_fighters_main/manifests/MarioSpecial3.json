@@ -1,0 +1,162 @@
+{
+ "category": "fighters_main",
+ "content_hash": "90bb7ec937f0d97b2be70355c82a3a152dfee331",
+ "extern_file_ids": [],
+ "extern_slots": [],
+ "file_id": 297,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 4,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 5,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 5,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 6,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 132,
+   "slot_slice": 9,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 172,
+   "slot_slice": 9,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  }
+ ],
+ "parent_path": "reloc_fighters_main/MarioSpecial3",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 65535,
+ "reloc_intern_offset": 54,
+ "relocated_view_crc32": 641586522,
+ "reports": {
+  "demotions": [
+   {
+    "fmt": null,
+    "height": null,
+    "load_siz": 2,
+    "offset": 88,
+    "reason": "ambiguous-texture",
+    "siz": null,
+    "size": 128,
+    "texels": 64,
+    "width": null
+   }
+  ],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 204,
+    "target": 216
+   },
+   {
+    "from_file_id": 204,
+    "target": 424
+   },
+   {
+    "from_file_id": 222,
+    "target": 216
+   },
+   {
+    "from_file_id": 222,
+    "target": 424
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "pad",
+   "name": "dMarioSpecial3_pad_0x0000",
+   "offset": 0,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioSpecial3_blob_0x0008",
+   "offset": 8,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioSpecial3_blob_0x0030",
+   "offset": 48,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioSpecial3_blob_0x0058",
+   "offset": 88,
+   "size": 128
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioSpecial3_blob_0x00D8",
+   "offset": 216,
+   "size": 4
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioSpecial3_blob_0x00DC",
+   "offset": 220,
+   "size": 12
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioSpecial3_blob_0x00E8",
+   "offset": 232,
+   "size": 120
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioSpecial3_blob_0x0160",
+   "offset": 352,
+   "size": 8
+  },
+  {
+   "count": 4,
+   "kind": "vtx",
+   "name": "dMarioSpecial3_Vtx_0x0168",
+   "offset": 360,
+   "size": 64
+  },
+  {
+   "count": 29,
+   "kind": "gfx",
+   "name": "dMarioSpecial3_Gfx_0x01A8",
+   "offset": 424,
+   "size": 232
+  }
+ ],
+ "symbol": "MarioSpecial3",
+ "vanilla_data_size": 656
+}

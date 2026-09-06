@@ -1,0 +1,224 @@
+{
+ "category": "fighters_main",
+ "content_hash": "e24b83c7456a0d1e6ce5851f5d8413619470fac2",
+ "extern_file_ids": [
+  210,
+  286,
+  286,
+  320,
+  309,
+  309,
+  309,
+  309,
+  309,
+  309,
+  309,
+  309,
+  309
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 210,
+   "dep_word_offset": 27,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 286,
+   "dep_word_offset": 2908,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 6
+  },
+  {
+   "dep_file_id": 286,
+   "dep_word_offset": 2908,
+   "slot_offset_in_slice": 16,
+   "slot_slice": 6
+  },
+  {
+   "dep_file_id": 320,
+   "dep_word_offset": 174,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 0,
+   "slot_offset_in_slice": 740,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 308,
+   "slot_offset_in_slice": 744,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 608,
+   "slot_offset_in_slice": 748,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 916,
+   "slot_offset_in_slice": 752,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 1224,
+   "slot_offset_in_slice": 756,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 1528,
+   "slot_offset_in_slice": 760,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 1832,
+   "slot_offset_in_slice": 764,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 2144,
+   "slot_offset_in_slice": 768,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 2452,
+   "slot_offset_in_slice": 772,
+   "slot_slice": 8
+  }
+ ],
+ "file_id": 212,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 680,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 684,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 732,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 736,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 820,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 828,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 836,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 844,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  }
+ ],
+ "parent_path": "reloc_fighters_main/NCaptainMain",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version jp",
+  "rom_sha1": "4b71f0e01878696733eefa9c80d11c147ecb4984",
+  "version": "jp"
+ },
+ "reloc_extern_offset": 0,
+ "reloc_intern_offset": 334,
+ "relocated_view_crc32": 2363909858,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "pad",
+   "name": "dNCaptainMain_pad_0x0000",
+   "offset": 0,
+   "size": 4
+  },
+  {
+   "kind": "blob",
+   "name": "dNCaptainMain_blob_0x0004",
+   "offset": 4,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dNCaptainMain_blob_0x000C",
+   "offset": 12,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dNCaptainMain_blob_0x0014",
+   "offset": 20,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dNCaptainMain_blob_0x0054",
+   "offset": 84,
+   "size": 104
+  },
+  {
+   "kind": "blob",
+   "name": "dNCaptainMain_blob_0x00BC",
+   "offset": 188,
+   "size": 4
+  },
+  {
+   "kind": "blob",
+   "name": "dNCaptainMain_blob_0x00C0",
+   "offset": 192,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dNCaptainMain_blob_0x00E0",
+   "offset": 224,
+   "size": 432
+  },
+  {
+   "kind": "blob",
+   "name": "dNCaptainMain_blob_0x0290",
+   "offset": 656,
+   "size": 864
+  }
+ ],
+ "symbol": "NCaptainMain",
+ "vanilla_data_size": 1520
+}

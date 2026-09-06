@@ -284,8 +284,21 @@ set(SSB64_CREDITS_GENERATED_FILES
 add_custom_target(RegenerateRelocYamls
     BYPRODUCTS ${SSB64_RELOC_YAML_FILES}
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_yamls.py --version ${SSB64_VERSION}
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_fighter_slices.py --version ${SSB64_VERSION}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Regenerating reloc YAML configs (${SSB64_VERSION})"
+    COMMENT "Regenerating reloc YAML configs + deblob slice maps (${SSB64_VERSION})"
+)
+
+# One command per intent (docs/deblob.md): regenerate every deblob
+# artifact — parent yamls, child slice maps, manifests, rebuild specs —
+# for BOTH regions from their baseroms.
+add_custom_target(DeblobRegen
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_yamls.py --version us
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_fighter_slices.py --version us
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_yamls.py --version jp
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_fighter_slices.py --version jp
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Regenerating all deblob artifacts (both regions)"
 )
 
 add_custom_target(GenerateRelocArtifacts
@@ -504,6 +517,11 @@ list(FILTER SSB64_SRC_PORT EXCLUDE REGEX "port/stubs/")
 list(FILTER SSB64_SRC_PORT EXCLUDE REGEX "port/resource/RelocFileTable\\.(us|jp)\\.cpp$")
 list(APPEND SSB64_SRC_PORT
     ${CMAKE_CURRENT_SOURCE_DIR}/port/resource/RelocFileTable.${SSB64_VERSION}.cpp)
+# Same pattern for the generated deblob rebuild specs (docs/deblob.md):
+# both regions define gSyntheticRelocSpecs — compile the selected one only.
+list(FILTER SSB64_SRC_PORT EXCLUDE REGEX "port/bridge/ssb64_reloc_rebuild\\.(us|jp)\\.cpp$")
+list(APPEND SSB64_SRC_PORT
+    ${CMAKE_CURRENT_SOURCE_DIR}/port/bridge/ssb64_reloc_rebuild.${SSB64_VERSION}.cpp)
 # coroutine_test.cpp has its own main(); only built standalone when
 # SSB64_BUILD_COROUTINE_TEST=ON below. Never link it into the game.
 list(FILTER SSB64_SRC_PORT EXCLUDE REGEX "port/coroutine_test\\.cpp$")
@@ -614,7 +632,10 @@ if(NOT SSB64_TORCH_SHA)
 endif()
 file(SHA1 ${CMAKE_CURRENT_SOURCE_DIR}/config.yml SSB64_RECIPE_CONFIG_SHA1)
 set(SSB64_RECIPE_CONCAT "${SSB64_TORCH_SHA}:${SSB64_RECIPE_CONFIG_SHA1}")
-file(GLOB SSB64_RECIPE_YAMLS ${CMAKE_CURRENT_SOURCE_DIR}/yamls/${SSB64_VERSION}/*.yml)
+# GLOB_RECURSE: the deblob child yamls live in per-category subdirectories
+# (yamls/<v>/reloc_fighters_main/*.yml, docs/deblob.md) and must invalidate
+# the recipe hash — a stale archive missing slices would fail synthesis.
+file(GLOB_RECURSE SSB64_RECIPE_YAMLS ${CMAKE_CURRENT_SOURCE_DIR}/yamls/${SSB64_VERSION}/*.yml)
 list(SORT SSB64_RECIPE_YAMLS)
 foreach(_recipe_yaml ${SSB64_RECIPE_YAMLS})
     file(SHA1 ${_recipe_yaml} _recipe_yaml_sha1)
@@ -827,6 +848,16 @@ if (NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
     # USE_STATIC_CRT — opt in so the produced discord-rpc.lib uses the same
     # /MT[d] runtime, otherwise the final link fails with LNK2038.
     set(USE_STATIC_CRT ON CACHE BOOL "" FORCE)
+    # The bundled rapidjson-1.1.0 declares an ill-formed GenericStringRef
+    # operator= (assigns to a const member); clang 22+ rejects it outright.
+    # Upstream rapidjson removed the operator (rapidjson#1364) — drop the
+    # line at fetch time the same way.
+    # NOTE: the rapidjson patch script must NOT be a PATCH_COMMAND here.
+    # It would be ineffective anyway (rapidjson is downloaded later by
+    # discord-rpc's own configure — see the execute_process below), and
+    # FetchContent serializes PATCH_COMMAND args into a generated CMake
+    # file where a backslashed Windows ${Python3_EXECUTABLE} path becomes
+    # an invalid escape sequence, failing the whole configure on MSVC CI.
     FetchContent_Declare(
         discord_rpc
         GIT_REPOSITORY https://github.com/discordapp/discord-rpc.git
@@ -834,6 +865,13 @@ if (NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
         PATCH_COMMAND  ${CMAKE_COMMAND} -E rm -f .clang-format
     )
     FetchContent_MakeAvailable(discord_rpc)
+    # rapidjson is downloaded by discord-rpc's own configure (inside
+    # MakeAvailable), after the FetchContent patch step ran — apply the
+    # clang-22 compat patch now that the file exists.
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/patch-discord-rapidjson.py
+        WORKING_DIRECTORY ${discord_rpc_SOURCE_DIR}
+        COMMAND_ERROR_IS_FATAL ANY)
     # Belt and suspenders: enforce the runtime-library property on the
     # produced target directly so it survives a future cmake_policy(CMP0091)
     # propagation behavior change.
@@ -1256,12 +1294,28 @@ set(SSB64_O2R     ${SSB64_O2R_DIR}/BattleShip.o2r)
 if(EXISTS "${SSB64_BASEROM}")
     add_custom_command(
         OUTPUT ${SSB64_O2R}
+        # SSB64_RECIPE_YAMLS + config.yml: editing any extraction recipe
+        # (child slice maps included) re-extracts — previously a yaml edit
+        # silently left a stale archive.
         DEPENDS TorchExternal PrepareBuildInputs GenerateF3DO2R ${SSB64_BASEROM}
+                ${SSB64_RECIPE_YAMLS} ${CMAKE_SOURCE_DIR}/config.yml
         COMMAND ${CMAKE_COMMAND} -E make_directory ${SSB64_O2R_DIR}
         COMMAND ${TORCH_EXECUTABLE} o2r ${SSB64_BASEROM} -s ${CMAKE_SOURCE_DIR} -d ${SSB64_O2R_DIR}
         COMMENT "Extracting ${SSB64_VERSION} assets from ${SSB64_BASEROM} -> ${SSB64_O2R}"
     )
     add_custom_target(ExtractAssets DEPENDS ${SSB64_O2R})
+    # Deblob validation gate (docs/deblob.md): builds every deblobbed
+    # bundle through the real archive/factory/synthesis path and fails on
+    # any I5/I7/I9 violation. Mandatory local pre-merge for changes to
+    # torch/, yamls/, or the synthesis code (CI has no staged archive).
+    # Runs headless-ish (exits before the game boots; a window may flash).
+    add_custom_target(synth_verify
+        COMMAND ${CMAKE_COMMAND} -E env SSB64_SYNTH_SELFTEST=1 $<TARGET_FILE:ssb64>
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS ssb64
+        COMMENT "deblob synth_verify: synthesizing every deblobbed bundle (I5 gate)"
+        USES_TERMINAL
+    )
     # Baserom present (dev build): make the normal build also stage the
     # o2r next to the binary, so the flow is a true 3 commands —
     # configure, build, run — with no separate ExtractAssets step. The

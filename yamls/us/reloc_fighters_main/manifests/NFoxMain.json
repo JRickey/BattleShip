@@ -1,0 +1,224 @@
+{
+ "category": "fighters_main",
+ "content_hash": "87610814e65dea9c11123ed6b8d2939978226f06",
+ "extern_file_ids": [
+  208,
+  303,
+  303,
+  345,
+  314,
+  314,
+  314,
+  314,
+  314,
+  314,
+  314,
+  314,
+  314
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 208,
+   "dep_word_offset": 0,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 303,
+   "dep_word_offset": 2942,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 6
+  },
+  {
+   "dep_file_id": 303,
+   "dep_word_offset": 2942,
+   "slot_offset_in_slice": 16,
+   "slot_slice": 6
+  },
+  {
+   "dep_file_id": 345,
+   "dep_word_offset": 174,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 72,
+   "slot_offset_in_slice": 740,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 392,
+   "slot_offset_in_slice": 744,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 692,
+   "slot_offset_in_slice": 748,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 996,
+   "slot_offset_in_slice": 752,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 1296,
+   "slot_offset_in_slice": 756,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 1600,
+   "slot_offset_in_slice": 760,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 1900,
+   "slot_offset_in_slice": 764,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 2204,
+   "slot_offset_in_slice": 768,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 2500,
+   "slot_offset_in_slice": 772,
+   "slot_slice": 8
+  }
+ ],
+ "file_id": 211,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 680,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 684,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 732,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 736,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 820,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 828,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 836,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 844,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  }
+ ],
+ "parent_path": "reloc_fighters_main/NFoxMain",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 0,
+ "reloc_intern_offset": 336,
+ "relocated_view_crc32": 2151584643,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "pad",
+   "name": "dNFoxMain_pad_0x0000",
+   "offset": 0,
+   "size": 4
+  },
+  {
+   "kind": "blob",
+   "name": "dNFoxMain_blob_0x0004",
+   "offset": 4,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dNFoxMain_blob_0x000C",
+   "offset": 12,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dNFoxMain_blob_0x0014",
+   "offset": 20,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dNFoxMain_blob_0x0054",
+   "offset": 84,
+   "size": 108
+  },
+  {
+   "kind": "blob",
+   "name": "dNFoxMain_blob_0x00C0",
+   "offset": 192,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dNFoxMain_blob_0x00C8",
+   "offset": 200,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dNFoxMain_blob_0x00E8",
+   "offset": 232,
+   "size": 432
+  },
+  {
+   "kind": "blob",
+   "name": "dNFoxMain_blob_0x0298",
+   "offset": 664,
+   "size": 856
+  }
+ ],
+ "symbol": "NFoxMain",
+ "vanilla_data_size": 1520
+}

@@ -1,0 +1,76 @@
+{
+ "category": "fighters_main",
+ "content_hash": "eaf3237e06f5774ecc9347ea0f9b9762353838fd",
+ "extern_file_ids": [],
+ "extern_slots": [],
+ "file_id": 205,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 0,
+   "target_offset_in_slice": 0,
+   "target_slice": 0
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 3,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  }
+ ],
+ "parent_path": "reloc_fighters_main/MMarioMainMotion",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 65535,
+ "reloc_intern_offset": 6,
+ "relocated_view_crc32": 1012366079,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 206,
+    "target": 56
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "blob",
+   "name": "dMMarioMainMotion_blob_0x0000",
+   "offset": 0,
+   "size": 28
+  },
+  {
+   "kind": "blob",
+   "name": "dMMarioMainMotion_blob_0x001C",
+   "offset": 28,
+   "size": 28
+  },
+  {
+   "kind": "blob",
+   "name": "dMMarioMainMotion_blob_0x0038",
+   "offset": 56,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dMMarioMainMotion_blob_0x0060",
+   "offset": 96,
+   "size": 224
+  }
+ ],
+ "symbol": "MMarioMainMotion",
+ "vanilla_data_size": 320
+}

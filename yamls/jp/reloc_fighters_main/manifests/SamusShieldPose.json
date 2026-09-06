@@ -1,0 +1,1776 @@
+{
+ "category": "fighters_main",
+ "content_hash": "94a142c7c99d767830fffb2567c5bccadfd91020",
+ "extern_file_ids": [],
+ "extern_slots": [],
+ "file_id": 297,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 0
+  },
+  {
+   "slot_offset_in_slice": 136,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 224,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 268,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 312,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 444,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 532,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 576,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 664,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 708,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 796,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 884,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 928,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 12
+  },
+  {
+   "slot_offset_in_slice": 1016,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 13
+  },
+  {
+   "slot_offset_in_slice": 1060,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 14
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 17
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 18
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 19
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 20
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 21
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 22
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 23
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 24
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 25
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 26
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 27
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 28
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 29
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 30
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 31
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 32,
+   "target_offset_in_slice": 0,
+   "target_slice": 33
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 32,
+   "target_offset_in_slice": 0,
+   "target_slice": 34
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 32,
+   "target_offset_in_slice": 0,
+   "target_slice": 35
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 32,
+   "target_offset_in_slice": 0,
+   "target_slice": 36
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 32,
+   "target_offset_in_slice": 0,
+   "target_slice": 37
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 32,
+   "target_offset_in_slice": 0,
+   "target_slice": 38
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 32,
+   "target_offset_in_slice": 0,
+   "target_slice": 39
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 32,
+   "target_offset_in_slice": 0,
+   "target_slice": 40
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 32,
+   "target_offset_in_slice": 0,
+   "target_slice": 41
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 32,
+   "target_offset_in_slice": 0,
+   "target_slice": 42
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 32,
+   "target_offset_in_slice": 0,
+   "target_slice": 43
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 32,
+   "target_offset_in_slice": 0,
+   "target_slice": 44
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 32,
+   "target_offset_in_slice": 0,
+   "target_slice": 45
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 32,
+   "target_offset_in_slice": 0,
+   "target_slice": 46
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 32,
+   "target_offset_in_slice": 0,
+   "target_slice": 47
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 49
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 50
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 51
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 52
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 53
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 54
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 55
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 56
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 57
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 58
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 59
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 60
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 61
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 62
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 63
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 65
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 66
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 67
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 68
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 69
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 70
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 71
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 72
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 73
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 74
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 75
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 76
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 77
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 78
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 79
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 81
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 82
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 83
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 84
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 85
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 86
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 87
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 88
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 89
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 90
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 91
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 92
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 93
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 94
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 95
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 96,
+   "target_offset_in_slice": 0,
+   "target_slice": 97
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 96,
+   "target_offset_in_slice": 0,
+   "target_slice": 98
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 96,
+   "target_offset_in_slice": 0,
+   "target_slice": 99
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 96,
+   "target_offset_in_slice": 0,
+   "target_slice": 100
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 96,
+   "target_offset_in_slice": 0,
+   "target_slice": 101
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 96,
+   "target_offset_in_slice": 0,
+   "target_slice": 102
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 96,
+   "target_offset_in_slice": 0,
+   "target_slice": 103
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 96,
+   "target_offset_in_slice": 0,
+   "target_slice": 104
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 96,
+   "target_offset_in_slice": 0,
+   "target_slice": 105
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 96,
+   "target_offset_in_slice": 0,
+   "target_slice": 106
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 96,
+   "target_offset_in_slice": 0,
+   "target_slice": 107
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 96,
+   "target_offset_in_slice": 0,
+   "target_slice": 108
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 96,
+   "target_offset_in_slice": 0,
+   "target_slice": 109
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 96,
+   "target_offset_in_slice": 0,
+   "target_slice": 110
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 96,
+   "target_offset_in_slice": 0,
+   "target_slice": 111
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 112,
+   "target_offset_in_slice": 0,
+   "target_slice": 113
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 112,
+   "target_offset_in_slice": 0,
+   "target_slice": 114
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 112,
+   "target_offset_in_slice": 0,
+   "target_slice": 115
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 112,
+   "target_offset_in_slice": 0,
+   "target_slice": 116
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 112,
+   "target_offset_in_slice": 0,
+   "target_slice": 117
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 112,
+   "target_offset_in_slice": 0,
+   "target_slice": 118
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 112,
+   "target_offset_in_slice": 0,
+   "target_slice": 119
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 112,
+   "target_offset_in_slice": 0,
+   "target_slice": 120
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 112,
+   "target_offset_in_slice": 0,
+   "target_slice": 121
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 112,
+   "target_offset_in_slice": 0,
+   "target_slice": 122
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 112,
+   "target_offset_in_slice": 0,
+   "target_slice": 123
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 112,
+   "target_offset_in_slice": 0,
+   "target_slice": 124
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 112,
+   "target_offset_in_slice": 0,
+   "target_slice": 125
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 112,
+   "target_offset_in_slice": 0,
+   "target_slice": 126
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 112,
+   "target_offset_in_slice": 0,
+   "target_slice": 127
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 128,
+   "target_offset_in_slice": 0,
+   "target_slice": 129
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 128,
+   "target_offset_in_slice": 0,
+   "target_slice": 130
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 128,
+   "target_offset_in_slice": 0,
+   "target_slice": 131
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 128,
+   "target_offset_in_slice": 0,
+   "target_slice": 132
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 128,
+   "target_offset_in_slice": 0,
+   "target_slice": 133
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 128,
+   "target_offset_in_slice": 0,
+   "target_slice": 134
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 128,
+   "target_offset_in_slice": 0,
+   "target_slice": 135
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 128,
+   "target_offset_in_slice": 0,
+   "target_slice": 136
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 128,
+   "target_offset_in_slice": 0,
+   "target_slice": 137
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 128,
+   "target_offset_in_slice": 0,
+   "target_slice": 138
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 128,
+   "target_offset_in_slice": 0,
+   "target_slice": 139
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 128,
+   "target_offset_in_slice": 0,
+   "target_slice": 140
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 128,
+   "target_offset_in_slice": 0,
+   "target_slice": 141
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 128,
+   "target_offset_in_slice": 0,
+   "target_slice": 142
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 128,
+   "target_offset_in_slice": 0,
+   "target_slice": 143
+  }
+ ],
+ "parent_path": "reloc_fighters_main/SamusShieldPose",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version jp",
+  "rom_sha1": "4b71f0e01878696733eefa9c80d11c147ecb4984",
+  "version": "jp"
+ },
+ "reloc_extern_offset": 65535,
+ "reloc_intern_offset": 83,
+ "relocated_view_crc32": 3774274552,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 192,
+    "target": 240
+   },
+   {
+    "from_file_id": 192,
+    "target": 1392
+   },
+   {
+    "from_file_id": 192,
+    "target": 2464
+   },
+   {
+    "from_file_id": 192,
+    "target": 3552
+   },
+   {
+    "from_file_id": 192,
+    "target": 4624
+   },
+   {
+    "from_file_id": 192,
+    "target": 5712
+   },
+   {
+    "from_file_id": 192,
+    "target": 6800
+   },
+   {
+    "from_file_id": 192,
+    "target": 7904
+   },
+   {
+    "from_file_id": 192,
+    "target": 8976
+   },
+   {
+    "from_file_id": 194,
+    "target": 240
+   },
+   {
+    "from_file_id": 194,
+    "target": 1392
+   },
+   {
+    "from_file_id": 194,
+    "target": 2464
+   },
+   {
+    "from_file_id": 194,
+    "target": 3552
+   },
+   {
+    "from_file_id": 194,
+    "target": 4624
+   },
+   {
+    "from_file_id": 194,
+    "target": 5712
+   },
+   {
+    "from_file_id": 194,
+    "target": 6800
+   },
+   {
+    "from_file_id": 194,
+    "target": 7904
+   },
+   {
+    "from_file_id": 194,
+    "target": 8976
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0000",
+   "offset": 0,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0010",
+   "offset": 16,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0020",
+   "offset": 32,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0030",
+   "offset": 48,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0040",
+   "offset": 64,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0050",
+   "offset": 80,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0060",
+   "offset": 96,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0070",
+   "offset": 112,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0080",
+   "offset": 128,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0090",
+   "offset": 144,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x00A0",
+   "offset": 160,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x00B0",
+   "offset": 176,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x00C0",
+   "offset": 192,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x00D0",
+   "offset": 208,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x00E0",
+   "offset": 224,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x00F0",
+   "offset": 240,
+   "size": 1152
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0570",
+   "offset": 1392,
+   "size": 100
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x05D4",
+   "offset": 1492,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0604",
+   "offset": 1540,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0634",
+   "offset": 1588,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x068C",
+   "offset": 1676,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x06C0",
+   "offset": 1728,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x06F4",
+   "offset": 1780,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0718",
+   "offset": 1816,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0770",
+   "offset": 1904,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x07A4",
+   "offset": 1956,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x07FC",
+   "offset": 2044,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0830",
+   "offset": 2096,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0888",
+   "offset": 2184,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x08E0",
+   "offset": 2272,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0914",
+   "offset": 2324,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x096C",
+   "offset": 2412,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x09A0",
+   "offset": 2464,
+   "size": 100
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0A04",
+   "offset": 2564,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0A38",
+   "offset": 2616,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0A70",
+   "offset": 2672,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0AC8",
+   "offset": 2760,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0AFC",
+   "offset": 2812,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0B34",
+   "offset": 2868,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0B58",
+   "offset": 2904,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0BB0",
+   "offset": 2992,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0BE4",
+   "offset": 3044,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0C3C",
+   "offset": 3132,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0C70",
+   "offset": 3184,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0CC8",
+   "offset": 3272,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0D20",
+   "offset": 3360,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0D50",
+   "offset": 3408,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0DA8",
+   "offset": 3496,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0DE0",
+   "offset": 3552,
+   "size": 100
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0E44",
+   "offset": 3652,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0E78",
+   "offset": 3704,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0EA8",
+   "offset": 3752,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0F00",
+   "offset": 3840,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0F34",
+   "offset": 3892,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0F6C",
+   "offset": 3948,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0F90",
+   "offset": 3984,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x0FE8",
+   "offset": 4072,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x101C",
+   "offset": 4124,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1074",
+   "offset": 4212,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x10A8",
+   "offset": 4264,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1100",
+   "offset": 4352,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1158",
+   "offset": 4440,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x118C",
+   "offset": 4492,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x11E4",
+   "offset": 4580,
+   "size": 44
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1210",
+   "offset": 4624,
+   "size": 100
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1274",
+   "offset": 4724,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x12A8",
+   "offset": 4776,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x12E0",
+   "offset": 4832,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1338",
+   "offset": 4920,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x136C",
+   "offset": 4972,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x13A4",
+   "offset": 5028,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x13C8",
+   "offset": 5064,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1420",
+   "offset": 5152,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1454",
+   "offset": 5204,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x14AC",
+   "offset": 5292,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x14E0",
+   "offset": 5344,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1538",
+   "offset": 5432,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1590",
+   "offset": 5520,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x15C4",
+   "offset": 5572,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x161C",
+   "offset": 5660,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1650",
+   "offset": 5712,
+   "size": 100
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x16B4",
+   "offset": 5812,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x16EC",
+   "offset": 5868,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x171C",
+   "offset": 5916,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1774",
+   "offset": 6004,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x17A8",
+   "offset": 6056,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x17E0",
+   "offset": 6112,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1804",
+   "offset": 6148,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x185C",
+   "offset": 6236,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1890",
+   "offset": 6288,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x18E8",
+   "offset": 6376,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x191C",
+   "offset": 6428,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1974",
+   "offset": 6516,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x19CC",
+   "offset": 6604,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1A00",
+   "offset": 6656,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1A58",
+   "offset": 6744,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1A90",
+   "offset": 6800,
+   "size": 100
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1AF4",
+   "offset": 6900,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1B34",
+   "offset": 6964,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1B6C",
+   "offset": 7020,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1BC4",
+   "offset": 7108,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1BF8",
+   "offset": 7160,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1C30",
+   "offset": 7216,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1C54",
+   "offset": 7252,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1CAC",
+   "offset": 7340,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1CE0",
+   "offset": 7392,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1D38",
+   "offset": 7480,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1D6C",
+   "offset": 7532,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1DC4",
+   "offset": 7620,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1E1C",
+   "offset": 7708,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1E50",
+   "offset": 7760,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1EA8",
+   "offset": 7848,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1EE0",
+   "offset": 7904,
+   "size": 100
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1F44",
+   "offset": 8004,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1F74",
+   "offset": 8052,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1F9C",
+   "offset": 8092,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x1FF4",
+   "offset": 8180,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x2028",
+   "offset": 8232,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x2060",
+   "offset": 8288,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x2084",
+   "offset": 8324,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x20DC",
+   "offset": 8412,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x2110",
+   "offset": 8464,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x2168",
+   "offset": 8552,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x219C",
+   "offset": 8604,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x21F4",
+   "offset": 8692,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x224C",
+   "offset": 8780,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x2280",
+   "offset": 8832,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x22D8",
+   "offset": 8920,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x2310",
+   "offset": 8976,
+   "size": 100
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x2374",
+   "offset": 9076,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x23A8",
+   "offset": 9128,
+   "size": 44
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x23D4",
+   "offset": 9172,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x242C",
+   "offset": 9260,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x2460",
+   "offset": 9312,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x2498",
+   "offset": 9368,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x24BC",
+   "offset": 9404,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x2514",
+   "offset": 9492,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x2548",
+   "offset": 9544,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x25A0",
+   "offset": 9632,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x25D4",
+   "offset": 9684,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x262C",
+   "offset": 9772,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x2684",
+   "offset": 9860,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x26D0",
+   "offset": 9936,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusShieldPose_blob_0x2728",
+   "offset": 10024,
+   "size": 56
+  }
+ ],
+ "symbol": "SamusShieldPose",
+ "vanilla_data_size": 10080
+}

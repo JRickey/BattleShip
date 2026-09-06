@@ -25,8 +25,15 @@
 
 #include "resource/ResourceType.h"
 #include "resource/RelocFileFactory.h"
+#include "resource/SyntheticReloc.h"
 #include <ship/resource/factory/BlobFactory.h>
 #include <ship/resource/ResourceType.h>
+#include <fast/resource/ResourceType.h>
+#include <fast/resource/factory/DisplayListFactory.h>
+#include <fast/resource/factory/LightFactory.h>
+#include <fast/resource/factory/MatrixFactory.h>
+#include <fast/resource/factory/TextureFactory.h>
+#include <fast/resource/factory/VertexFactory.h>
 
 #include "app_paths.h"
 #include "bridge/audio_bridge.h"
@@ -475,6 +482,7 @@ void MountModsDir() {
 		}
 	}
 
+	bool mounted_new = false;
 	auto try_mount = [&](const fs::path& p) {
 		const std::string path = p.generic_string();
 		if (existing.contains(path)) {
@@ -483,6 +491,7 @@ void MountModsDir() {
 		if (am->AddArchive(path)) {
 			port_log("SSB64: mounted mod archive -> %s\n", path.c_str());
 			existing.insert(path);
+			mounted_new = true;
 		} else {
 			port_log("SSB64: failed to mount mod archive -> %s\n", path.c_str());
 		}
@@ -512,6 +521,20 @@ void MountModsDir() {
 		}
 	};
 	walk(modsDir);
+
+	/* A newly mounted archive can override paths whose resources are
+	 * already cached — the VFS override binds at AddArchive time, but the
+	 * ResourceManager cache and the deblob synthesis cache (I8,
+	 * docs/deblob.md) would keep serving the old content until the next
+	 * process start. Drop both; resources reload on demand and deblobbed
+	 * bundles re-synthesize with the override on the next scene load.
+	 * At boot this runs before anything is cached, so it is free. */
+	if (mounted_new) {
+		if (auto rm = sContext ? sContext->GetResourceManager() : nullptr) {
+			rm->UnloadResources("*");
+		}
+		portSyntheticRelocEvictAll();
+	}
 }
 
 /* Unmount mod archives whose on-disk source no longer exists. MountModsDir
@@ -1088,6 +1111,42 @@ static int PortInitImpl(int argc, char* argv[]) {
 		0
 	);
 
+	/* Fast3D typed-asset factories for deblobbed reloc slices
+	 * (docs/deblob.md): the synthesis engine loads these resource types
+	 * and re-serializes them into the bundle's big-endian image. */
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryBinaryDisplayListV0>(),
+		RESOURCE_FORMAT_BINARY, "DisplayList",
+		static_cast<uint32_t>(Fast::ResourceType::DisplayList), 0);
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryXMLDisplayListV0>(),
+		RESOURCE_FORMAT_XML, "DisplayList",
+		static_cast<uint32_t>(Fast::ResourceType::DisplayList), 0);
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryBinaryLightV0>(),
+		RESOURCE_FORMAT_BINARY, "Light",
+		static_cast<uint32_t>(Fast::ResourceType::Light), 0);
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryBinaryMatrixV0>(),
+		RESOURCE_FORMAT_BINARY, "Matrix",
+		static_cast<uint32_t>(Fast::ResourceType::Matrix), 0);
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryBinaryTextureV0>(),
+		RESOURCE_FORMAT_BINARY, "Texture",
+		static_cast<uint32_t>(Fast::ResourceType::Texture), 0);
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryBinaryTextureV1>(),
+		RESOURCE_FORMAT_BINARY, "Texture",
+		static_cast<uint32_t>(Fast::ResourceType::Texture), 1);
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryBinaryVertexV0>(),
+		RESOURCE_FORMAT_BINARY, "Vertex",
+		static_cast<uint32_t>(Fast::ResourceType::Vertex), 0);
+	loader->RegisterResourceFactory(
+		std::make_shared<Fast::ResourceFactoryXMLVertexV0>(),
+		RESOURCE_FORMAT_XML, "Vertex",
+		static_cast<uint32_t>(Fast::ResourceType::Vertex), 0);
+
 	port_log("SSB64: Resource factories registered\n");
 
 #ifndef DISABLE_SCRIPTING
@@ -1335,6 +1394,20 @@ int main(int argc, char* argv[]) {
 	// this point, so the JNI roundtrip succeeds.
 	(void)SDL_getenv("__ssb64_jni_warmup__");
 #endif
+
+	/* Deblob validation harness (docs/deblob.md, the synth_verify gate):
+	 * SSB64_SYNTH_SELFTEST=1 builds every spec'd bundle through the real
+	 * archive + factories + synthesis path and exits pass/fail before the
+	 * game boots. Each build enforces I5 (relocated-view CRC) and I7/I9
+	 * internally; results land in debug_traces/synth_verify_results.json.
+	 * ROM-independent: the spec CRCs are the ROM-anchored ground truth. */
+	if (const char *selftest = std::getenv("SSB64_SYNTH_SELFTEST");
+	    selftest && selftest[0] == '1') {
+		extern int portSyntheticRelocSelfTest();
+		int failures = portSyntheticRelocSelfTest();
+		PortShutdown();
+		_exit(failures == 0 ? 0 : 1);
+	}
 
 	// Wrap post-init (game boot + main loop + shutdown) in a top-level
 	// catch so uncaught C++ exceptions get logged as ssb64.log entries

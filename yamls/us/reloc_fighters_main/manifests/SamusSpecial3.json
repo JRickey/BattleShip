@@ -1,0 +1,103 @@
+{
+ "category": "fighters_main",
+ "content_hash": "a6408a30d0c9882846f8ae51c38551c9d5073547",
+ "extern_file_ids": [],
+ "extern_slots": [],
+ "file_id": 321,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 5,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 132,
+   "slot_slice": 5,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 172,
+   "slot_slice": 5,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  }
+ ],
+ "parent_path": "reloc_fighters_main/SamusSpecial3",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 65535,
+ "reloc_intern_offset": 177,
+ "relocated_view_crc32": 233854980,
+ "reports": {
+  "demotions": [
+   {
+    "fmt": null,
+    "height": null,
+    "load_siz": 2,
+    "offset": 48,
+    "reason": "ambiguous-texture",
+    "siz": null,
+    "size": 512,
+    "texels": 256,
+    "width": null
+   }
+  ],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 218,
+    "target": 624
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "pad",
+   "name": "dSamusSpecial3_pad_0x0000",
+   "offset": 0,
+   "size": 8
+  },
+  {
+   "colors": 16,
+   "kind": "lut",
+   "name": "dSamusSpecial3_Lut_0x0008",
+   "offset": 8,
+   "size": 32
+  },
+  {
+   "kind": "pad",
+   "name": "dSamusSpecial3_pad_0x0028",
+   "offset": 40,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dSamusSpecial3_blob_0x0030",
+   "offset": 48,
+   "size": 512
+  },
+  {
+   "count": 4,
+   "kind": "vtx",
+   "name": "dSamusSpecial3_Vtx_0x0230",
+   "offset": 560,
+   "size": 64
+  },
+  {
+   "count": 28,
+   "kind": "gfx",
+   "name": "dSamusSpecial3_Gfx_0x0270",
+   "offset": 624,
+   "size": 224
+  }
+ ],
+ "symbol": "SamusSpecial3",
+ "vanilla_data_size": 848
+}

@@ -111,7 +111,7 @@ cp "$TORCH_BIN"  "$APPDIR/usr/bin/torch"
 cp "$F3D_O2R"    "$APPDIR/usr/share/$APP_NAME/f3d.o2r"
 cp "$ROOT/gamecontrollerdb.txt" "$APPDIR/usr/share/$APP_NAME/gamecontrollerdb.txt"
 cp "$ROOT/config.yml" "$APPDIR/usr/share/$APP_NAME/config.yml"
-cp "$ROOT/yamls/$VER/"*.yml "$APPDIR/usr/share/$APP_NAME/yamls/$VER/"
+cp -R "$ROOT/yamls/$VER/." "$APPDIR/usr/share/$APP_NAME/yamls/$VER/"
 
 # Bundle the ESC menu fonts. Menu.cpp::FindMenuAssetPath walks up from
 # RealAppBundlePath() (= /proc/self/exe parent = AppDir/usr/bin inside
