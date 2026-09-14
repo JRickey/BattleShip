@@ -13,6 +13,31 @@
   - `& 'C:\Program Files\CMake\bin\cmake.exe' --build .\build\x64 --target ExtractAssetHeaders`
 - The executable target is `ssb64`, but the produced binary is `BattleShip`.
 
+### Editing Torch and asset recipes
+
+Use the normal `ssb64` build after editing Torch, libultraship, or an asset
+recipe. Desktop builds now invoke Torch's own incremental dependency check
+each time; existing source edits and newly added Torch source files are
+picked up without deleting its build directory. libultraship already builds
+in the main dependency graph; new files must be added to its source lists.
+
+Tracked `yamls/<version>/` files are authoring inputs. Ordinary builds do
+not regenerate or write them. CMake copies the selected region's recipes
+and `config.yml` into `<build>/asset-recipes/`, and extraction reads that
+copy. Updated recipes and the current Torch executable are staged beside
+the game on every build, including builds that do not relink the game.
+Deleted/renamed recipes are removed from the staged copies.
+
+The extraction fingerprint includes the contents and names of Torch's
+source files and the recipes, including uncommitted changes. Editing either
+re-extracts the archive automatically and refreshes its `.recipe` sidecar.
+An unchanged build preserves the archive, generated tables, and executable.
+
+Regeneration remains available explicitly: `RegenerateRelocYamls` regenerates
+the configured region; `DeblobRegen` regenerates both regions from their
+baseroms. These commands intentionally update tracked generated assets.
+See [the build dependency investigation](bugs/asset_build_dependencies_2026-09-14.md).
+
 ### ROM version (US / JP)
 
 `-DSSB64_VERSION=us` (default) or `-DSSB64_VERSION=jp` selects the ROM

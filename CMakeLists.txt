@@ -222,9 +222,27 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Android")
 else()
     # Desktop: build Torch as a host executable via ExternalProject so it
     # can run at our build time to extract ROM assets.
+    set(SSB64_TORCH_BUILD_DIR ${CMAKE_BINARY_DIR}/TorchExternal/src/TorchExternal-build)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        set(TORCH_SIDECAR_NAME torch.exe)
+        if(CMAKE_CONFIGURATION_TYPES)
+            set(TORCH_EXECUTABLE ${SSB64_TORCH_BUILD_DIR}/$<CONFIG>/torch.exe)
+        else()
+            set(TORCH_EXECUTABLE ${SSB64_TORCH_BUILD_DIR}/torch.exe)
+        endif()
+    else()
+        set(TORCH_SIDECAR_NAME torch)
+        set(TORCH_EXECUTABLE ${SSB64_TORCH_BUILD_DIR}/torch)
+    endif()
     ExternalProject_Add(TorchExternal
         PREFIX TorchExternal
         SOURCE_DIR ${CMAKE_SOURCE_DIR}/torch
+        BINARY_DIR ${SSB64_TORCH_BUILD_DIR}
+        # Run the nested dependency check every time. Its own build system
+        # recompiles only changed files; a completed ExternalProject stamp
+        # must not hide subsequent edits to this local submodule.
+        BUILD_ALWAYS TRUE
+        BUILD_BYPRODUCTS ${TORCH_EXECUTABLE}
         CMAKE_ARGS
             -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/torch-install
             -DUSE_STANDALONE=ON
@@ -238,37 +256,7 @@ else()
             -DBUILD_NAUDIO=ON
             -DBUILD_SSB64=ON
     )
-
-    ExternalProject_Get_Property(TorchExternal install_dir)
-    if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        # Torch is built via ExternalProject_Add and inherits the parent generator.
-        # Multi-config generators (Visual Studio) place the binary under <CONFIG>/;
-        # single-config generators (Ninja, NMake) drop it directly in the build dir.
-        if(CMAKE_CONFIGURATION_TYPES)
-            set(TORCH_EXECUTABLE ${install_dir}/src/TorchExternal-build/$<CONFIG>/torch.exe)
-        else()
-            set(TORCH_EXECUTABLE ${install_dir}/src/TorchExternal-build/torch.exe)
-        endif()
-        set(TORCH_SIDECAR_NAME torch.exe)
-    else()
-        set(TORCH_EXECUTABLE ${install_dir}/src/TorchExternal-build/torch)
-        set(TORCH_SIDECAR_NAME torch)
-    endif()
 endif()
-
-# Reloc YAML category files (same category set for every version; the
-# per-version ROM offsets differ inside them). yamls/${SSB64_VERSION}/ is
-# produced by tools/generate_yamls.py --version ${SSB64_VERSION}.
-set(SSB64_RELOC_YAML_CATEGORIES
-    animations bonus effects extern_data fighters_common fighters_main
-    interface items menus misc_named movies scene stages submotions
-    transitions
-)
-set(SSB64_RELOC_YAML_FILES "")
-foreach(_cat ${SSB64_RELOC_YAML_CATEGORIES})
-    list(APPEND SSB64_RELOC_YAML_FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/yamls/${SSB64_VERSION}/reloc_${_cat}.yml)
-endforeach()
 
 set(SSB64_CREDITS_GENERATED_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/decomp/src/credits/staff.credits.encoded
@@ -282,7 +270,9 @@ set(SSB64_CREDITS_GENERATED_FILES
 )
 
 add_custom_target(RegenerateRelocYamls
-    BYPRODUCTS ${SSB64_RELOC_YAML_FILES}
+    # These are tracked authoring inputs. Declaring them as BYPRODUCTS
+    # pulls this always-run target into ordinary extraction builds, and
+    # even lets Ninja clean delete them. Regeneration is opt-in only.
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_yamls.py --version ${SSB64_VERSION}
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_fighter_slices.py --version ${SSB64_VERSION}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -616,33 +606,49 @@ else()
 endif()
 message(STATUS "SSB64 app identity: ${SSB64_APP_NAME}")
 
-# Asset-recipe fingerprint: identifies the extraction pipeline (torch +
+# Asset-recipe fingerprint: identifies the extraction pipeline (Torch source +
 # config.yml + recipe yamls) that a BattleShip.o2r was produced by. The
 # port stamps it into a "<o2r>.recipe" sidecar after extraction and
 # re-extracts automatically when a binary update changes the recipe —
 # stale archives from older builds caused reloc-token storms and menu
 # crashes (issues #217/#221) until users manually re-extracted.
-execute_process(
-    COMMAND git -C ${CMAKE_CURRENT_SOURCE_DIR}/torch rev-parse HEAD
-    OUTPUT_VARIABLE SSB64_TORCH_SHA
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_QUIET)
-if(NOT SSB64_TORCH_SHA)
-    set(SSB64_TORCH_SHA "unknown-torch")
-endif()
-file(SHA1 ${CMAKE_CURRENT_SOURCE_DIR}/config.yml SSB64_RECIPE_CONFIG_SHA1)
-set(SSB64_RECIPE_CONCAT "${SSB64_TORCH_SHA}:${SSB64_RECIPE_CONFIG_SHA1}")
+file(GLOB_RECURSE SSB64_TORCH_RECIPE_INPUTS CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/torch/src/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/torch/src/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/torch/src/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/torch/src/*.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/torch/lib/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/torch/lib/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/torch/lib/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/torch/lib/*.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/torch/cmake/*.cmake)
+list(APPEND SSB64_TORCH_RECIPE_INPUTS ${CMAKE_CURRENT_SOURCE_DIR}/torch/CMakeLists.txt)
 # GLOB_RECURSE: the deblob child yamls live in per-category subdirectories
 # (yamls/<v>/reloc_fighters_main/*.yml, docs/deblob.md) and must invalidate
 # the recipe hash — a stale archive missing slices would fail synthesis.
-file(GLOB_RECURSE SSB64_RECIPE_YAMLS ${CMAKE_CURRENT_SOURCE_DIR}/yamls/${SSB64_VERSION}/*.yml)
-list(SORT SSB64_RECIPE_YAMLS)
-foreach(_recipe_yaml ${SSB64_RECIPE_YAMLS})
-    file(SHA1 ${_recipe_yaml} _recipe_yaml_sha1)
-    string(APPEND SSB64_RECIPE_CONCAT ":${_recipe_yaml_sha1}")
+file(GLOB_RECURSE SSB64_RECIPE_YAMLS CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/yamls/${SSB64_VERSION}/*.yml
+    ${CMAKE_CURRENT_SOURCE_DIR}/yamls/${SSB64_VERSION}/*.yaml)
+set(SSB64_RECIPE_INPUTS ${SSB64_TORCH_RECIPE_INPUTS} ${SSB64_RECIPE_YAMLS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/config.yml)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${SSB64_RECIPE_INPUTS})
+list(SORT SSB64_RECIPE_INPUTS)
+set(SSB64_RECIPE_CONCAT "")
+foreach(_recipe_input IN LISTS SSB64_RECIPE_INPUTS)
+    file(SHA1 ${_recipe_input} _recipe_input_sha1)
+    file(RELATIVE_PATH _recipe_path ${CMAKE_CURRENT_SOURCE_DIR} ${_recipe_input})
+    string(APPEND SSB64_RECIPE_CONCAT "${_recipe_path}:${_recipe_input_sha1}\n")
 endforeach()
 string(SHA1 SSB64_ASSET_RECIPE_HASH "${SSB64_RECIPE_CONCAT}")
 message(STATUS "SSB64 asset recipe hash: ${SSB64_ASSET_RECIPE_HASH}")
+# Track uncommitted extractor edits too, and compile the hash only into its
+# consumer: changing a recipe must not rebuild every game translation unit.
+set_property(SOURCE port/first_run.cpp APPEND PROPERTY COMPILE_DEFINITIONS
+    SSB64_ASSET_RECIPE_HASH=\"${SSB64_ASSET_RECIPE_HASH}\")
+set(SSB64_RECIPE_DIR ${CMAKE_BINARY_DIR}/asset-recipes)
+include(cmake/StageAssetRecipes.cmake)
+ssb64_stage_asset_recipes("${CMAKE_CURRENT_SOURCE_DIR}" "${SSB64_RECIPE_DIR}" "${SSB64_VERSION}")
+file(GENERATE OUTPUT ${SSB64_RECIPE_DIR}/recipe.sha1 CONTENT "${SSB64_ASSET_RECIPE_HASH}\n")
 
 # Shared compile definitions used by both the decomp object library and the
 # main executable.
@@ -683,9 +689,6 @@ set(SSB64_COMPILE_DEFS
 
     # Updater
     BATTLESHIP_CURRENT_VERSION=\"${BATTLESHIP_VERSION}\"
-
-    # Asset-recipe fingerprint (see the computation above SSB64_COMPILE_DEFS)
-    SSB64_ASSET_RECIPE_HASH=\"${SSB64_ASSET_RECIPE_HASH}\"
 )
 
 if(SSB64_STAGE_CYCLE_DEMO)
@@ -1106,15 +1109,6 @@ if (NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${CMAKE_SOURCE_DIR}/assets/custom/fonts/Inconsolata-Regular.ttf
             $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets/custom/fonts/Inconsolata-Regular.ttf
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${CMAKE_SOURCE_DIR}/config.yml
-            $<TARGET_FILE_DIR:${PROJECT_NAME}>/config.yml
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_SOURCE_DIR}/yamls/${SSB64_VERSION}
-            $<TARGET_FILE_DIR:${PROJECT_NAME}>/yamls/${SSB64_VERSION}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${TORCH_EXECUTABLE}
-            $<TARGET_FILE_DIR:${PROJECT_NAME}>/${TORCH_SIDECAR_NAME}
         # CSS stage asset PNGs (final_destination_background.png, etc.) are
         # copied in a separate POST_BUILD step added by the DeriveStageAssets
         # block further below, after SSB64_BASEROM is resolved.
@@ -1294,14 +1288,18 @@ set(SSB64_O2R     ${SSB64_O2R_DIR}/BattleShip.o2r)
 if(EXISTS "${SSB64_BASEROM}")
     add_custom_command(
         OUTPUT ${SSB64_O2R}
+        BYPRODUCTS ${SSB64_O2R}.recipe
         # SSB64_RECIPE_YAMLS + config.yml: editing any extraction recipe
         # (child slice maps included) re-extracts — previously a yaml edit
         # silently left a stale archive.
-        DEPENDS TorchExternal PrepareBuildInputs GenerateF3DO2R ${SSB64_BASEROM}
-                ${SSB64_RECIPE_YAMLS} ${CMAKE_SOURCE_DIR}/config.yml
+        DEPENDS TorchExternal ${TORCH_EXECUTABLE} ${SSB64_BASEROM}
+                ${SSB64_RECIPE_INPUTS} ${SSB64_RECIPE_DIR}/recipe.sha1
         COMMAND ${CMAKE_COMMAND} -E make_directory ${SSB64_O2R_DIR}
-        COMMAND ${TORCH_EXECUTABLE} o2r ${SSB64_BASEROM} -s ${CMAKE_SOURCE_DIR} -d ${SSB64_O2R_DIR}
+        COMMAND ${TORCH_EXECUTABLE} o2r ${SSB64_BASEROM} -s ${SSB64_RECIPE_DIR} -d ${SSB64_O2R_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${SSB64_RECIPE_DIR}/recipe.sha1 ${SSB64_O2R}.recipe
         COMMENT "Extracting ${SSB64_VERSION} assets from ${SSB64_BASEROM} -> ${SSB64_O2R}"
+        VERBATIM
     )
     add_custom_target(ExtractAssets DEPENDS ${SSB64_O2R})
     # Deblob validation gate (docs/deblob.md): builds every deblobbed
@@ -1323,20 +1321,7 @@ if(EXISTS "${SSB64_BASEROM}")
     # inputs (torch / build inputs / baserom) change; cached otherwise.
     # The release pipeline ships no baserom and hits the else() branch,
     # so packaged builds are unaffected (runtime first-run extracts).
-    #
-    # Staging the o2r into $<TARGET_FILE_DIR:ssb64> is done as a POST_BUILD
-    # step on ssb64 rather than inside the ExtractAssets custom_command —
-    # referencing $<TARGET_FILE_DIR:ssb64> inside the command would create
-    # a back-edge from ExtractAssets to ssb64 (CMake genex creates target
-    # deps), and combined with `add_dependencies(ssb64 ExtractAssets)`
-    # below produces a strongly-connected-component error at generate time.
     add_dependencies(${PROJECT_NAME} ExtractAssets)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${SSB64_O2R}
-            $<TARGET_FILE_DIR:${PROJECT_NAME}>/BattleShip.o2r
-        COMMENT "Staging BattleShip.o2r next to ssb64 binary"
-    )
 else()
     add_custom_target(ExtractAssets
         COMMAND ${CMAKE_COMMAND} -E echo
@@ -1346,6 +1331,31 @@ else()
     )
     message(STATUS "BattleShip.o2r: baserom absent — ExtractAssets stub installed")
 endif()
+
+# Staging must run even when only Torch/assets changed and ssb64 did not
+# relink. TARGET_FILE_DIR creates no dependency under CMP0112 (NEW since
+# our minimum CMake version), so this prerequisite has no back-edge.
+add_custom_target(StageRuntimeAssets
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${SSB64_RECIPE_DIR}
+        -DDESTINATION_DIR=$<TARGET_FILE_DIR:${PROJECT_NAME}>
+        -DVERSION=${SSB64_VERSION}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/StageAssetRecipes.cmake
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${TORCH_EXECUTABLE} $<TARGET_FILE_DIR:${PROJECT_NAME}>/${TORCH_SIDECAR_NAME}
+    DEPENDS TorchExternal
+    COMMENT "Staging extraction recipes and Torch next to the game"
+    VERBATIM)
+if(EXISTS "${SSB64_BASEROM}")
+    add_dependencies(StageRuntimeAssets ExtractAssets)
+    add_custom_command(TARGET StageRuntimeAssets POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${SSB64_O2R} $<TARGET_FILE_DIR:${PROJECT_NAME}>/${SSB64_APP_NAME}.o2r
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${SSB64_O2R}.recipe $<TARGET_FILE_DIR:${PROJECT_NAME}>/${SSB64_APP_NAME}.o2r.recipe
+        VERBATIM)
+endif()
+add_dependencies(${PROJECT_NAME} StageRuntimeAssets)
 
 add_custom_target(GenerateBattleShipO2R
     DEPENDS ExtractAssets
