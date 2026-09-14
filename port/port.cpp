@@ -1008,10 +1008,12 @@ static int PortInitImpl(int argc, char* argv[]) {
 
 		const std::string ssb64o2r = PortLocateFile(SSB64_O2R_NAME);
 		port_log("SSB64: adding game archive -> %s\n", ssb64o2r.c_str());
-		if (!am->AddArchive(ssb64o2r)) {
+		auto baseArchive = am->AddArchive(ssb64o2r);
+		if (!baseArchive) {
 			port_log("SSB64: AddArchive failed for %s\n", ssb64o2r.c_str());
 			return 1;
 		}
+		portSyntheticRelocSetBaseArchive(baseArchive);
 		port_log("SSB64: game archive registered\n");
 	}
 

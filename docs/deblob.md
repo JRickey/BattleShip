@@ -146,17 +146,28 @@ runtime, spec-schema, or CMake edits.
 1. `unzip -l BattleShip.o2r | grep <Symbol>/` lists the slices; the
    manifest (`yamls/us/reloc_fighters_main/manifests/<Symbol>.json`)
    describes each one (kind, vanilla offset/size, what references it).
-2. Author a replacement resource in the same OTR format (a DL slice is a
-   torch-exported binary DisplayList, a texture is raw N64 texels behind
-   a Texture header, etc.) — sizes may differ from vanilla; the port
-   re-layouts the bundle and remaps every reference.
+2. Author a replacement typed resource. DisplayList and Vertex accept both
+   Torch binary and Fast64 XML. Named DL, vertex and texture references may
+   point to new files included in the same mod: the loader packs their
+   transitive dependencies into the bundle. Sizes may grow, shrink or stay
+   unchanged. A replacement display list supplies its own pointer locations.
 3. Zip it at the identical path into a `.o2r`, drop it in `mods/`.
    Last-mounted archive wins; a mods-menu rescan applies it without a
    restart (next scene load).
-4. Constraints: references landing mid-slice are only valid for
-   prefix-preserving edits (the loader warns); a malformed slice fails
+4. Constraints: original references landing mid-slice still require
+   prefix-preserving edits (the loader warns); newly exported DL references
+   use the replacement's own offsets. Export named references instead of
+   copying unresolved vanilla relocation-chain descriptors. A malformed slice fails
    the whole bundle loudly rather than rendering garbage. Replaced
    textures re-key for hires packs by design (their rgba8Crc changes).
+
+Run `python debug_tools/test_deblob_mods.py --build build-rel-clang --output build-rel-clang/deblob-check`
+in a graphical session to test the real archive and factory path. The output
+directory must be new; executables, mods, settings and diagnostic files are
+isolated there. The test requires a local US archive and never downloads or
+publishes extracted assets. See
+[the replacement-loader investigation](bugs/deblob_replacement_loader_2026-09-14.md)
+for coverage and remaining authoring work.
 
 ## Classification (generator)
 

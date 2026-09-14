@@ -11,6 +11,11 @@
 #include <memory>
 
 class RelocFile;
+namespace Ship { class Archive; }
+
+// Register the extracted base archive before mounting overrides. Size alone
+// cannot distinguish vanilla assets from same-size binary or XML mods.
+void portSyntheticRelocSetBaseArchive(std::shared_ptr<Ship::Archive> archive);
 
 // Cached build (I8: size queries and loads must observe one identical
 // bundle). Returns nullptr when file_id has no spec or a slice failed —

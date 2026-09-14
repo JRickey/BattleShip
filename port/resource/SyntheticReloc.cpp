@@ -23,6 +23,9 @@
 #include "../bridge/ssb64_reloc_rebuild.h"
 
 #include <cstring>
+#include <algorithm>
+#include <deque>
+#include <functional>
 #include <mutex>
 #include <unordered_map>
 #include <vector>
@@ -31,6 +34,7 @@
 
 #include <ship/Context.h>
 #include <ship/resource/ResourceManager.h>
+#include <ship/resource/archive/ArchiveManager.h>
 #include <ship/resource/type/Blob.h>
 #include <ship/utils/StrHash64.h>
 #include <fast/resource/type/DisplayList.h>
@@ -88,6 +92,7 @@ struct SynthDlPatch
 	int32_t target_slice;  // slice index, or kPatchLiteral
 	uint32_t addend;       // byte offset added to the target slice's layout offset
 	bool seg0e;            // reconstruct with the 0x0E segment prefix
+	uint32_t read_size = 1; // full referenced range, not just its first byte
 };
 
 struct SynthDl
@@ -160,16 +165,16 @@ static void portPushLiteralRef(const SSB64SyntheticRelocSpec &spec, SynthDl &out
 
 static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
                                  const SSB64SyntheticRelocSpec &spec,
-                                 const std::unordered_map<uint64_t, uint32_t> &hashToSlice,
+                                 const std::function<bool(uint64_t, int32_t &)> &resolveReference,
                                  const char *slice_path, uint32_t vanilla_size,
+                                 bool vanilla,
                                  SynthDl &out)
 {
 	out.words.reserve(dl.Instructions.size() * 2);
 	bool skipArtificialBranchEnd = false;
 
 	auto resolveHash = [&](const Gfx &hashCmd, int32_t &slice_out) -> bool {
-		auto it = hashToSlice.find(portReadHash64(hashCmd));
-		if (it == hashToSlice.end())
+		if (!resolveReference(portReadHash64(hashCmd), slice_out))
 		{
 			// I7: resolution must be total — an unresolved non-injected
 			// hash is a fatal load error, never a silent passthrough.
@@ -178,7 +183,6 @@ static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
 			              portReadHash64(hashCmd), slice_path);
 			return false;
 		}
-		slice_out = (int32_t)it->second;
 		return true;
 	};
 
@@ -189,6 +193,51 @@ static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
 		const uint32_t w1 = static_cast<uint32_t>(cmd.words.w1);
 		const uint8_t opcode = static_cast<uint8_t>(w0 >> 24);
 
+		// Fast64 XML uses LUS-owned path strings, unlike Torch's binary
+		// hash pairs. Never truncate a host string pointer into the N64 image.
+		if (opcode == 0x24 || opcode == 0x25 || opcode == 0x27)
+		{
+			const char *path = reinterpret_cast<const char *>(cmd.words.w1);
+			if (std::find(dl.Strings.begin(), dl.Strings.end(), path) == dl.Strings.end())
+			{
+				spdlog::error("[deblob] invalid filepath command in '{}'", slice_path);
+				return false;
+			}
+			int32_t target;
+			if (!resolveReference(CRC64(path), target))
+			{
+				spdlog::error("[deblob] missing or unsupported asset '{}' referenced by '{}'", path, slice_path);
+				return false;
+			}
+			uint32_t addend = 0, width = 1;
+			if (opcode == 0x24)
+			{
+				if (++i >= dl.Instructions.size()) return false;
+				const auto &args = dl.Instructions[i];
+				const uint32_t count = static_cast<uint32_t>(args.words.w0);
+				const uint32_t index = static_cast<uint32_t>(args.words.w1) >> 16;
+				if (count == 0 || count > 32 || index > 32 - count) return false;
+				addend = (static_cast<uint32_t>(args.words.w1) & 0xFFFF) * sizeof(Vtx);
+				width = count * sizeof(Vtx);
+				out.words.push_back(0x01000000u | (count << 12) | ((index + count) << 1));
+			}
+			else
+			{
+				out.words.push_back(((opcode == 0x25 ? 0xFDu : 0xDEu) << 24) | (w0 & 0x00FFFFFFu));
+			}
+			out.patches.push_back({(uint32_t)out.words.size(), target, addend, false, width});
+			out.words.push_back(0);
+			continue;
+		}
+		if (opcode == 0x26) // XML Triangle1 uses LUS's wide-index encoding
+		{
+			const uint32_t a = w0 & 0xFFFFFF, b = w1 >> 16, c = w1 & 0xFFFF;
+			if (a >= 32 || b >= 32 || c >= 32) return false;
+			out.words.push_back(0x05000000u | (a << 17) | (b << 9) | (c << 1));
+			out.words.push_back(0);
+			continue;
+		}
+
 		if (skipArtificialBranchEnd && opcode == 0xDF)
 		{
 			skipArtificialBranchEnd = false;
@@ -198,6 +247,7 @@ static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
 
 		if (opcode == kOTRGMarker)
 		{
+			if (i + 1 >= dl.Instructions.size()) return false;
 			i++;
 			continue;
 		}
@@ -214,15 +264,21 @@ static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
 			}
 			const auto &hashCmd = dl.Instructions[++i];
 			const uint32_t nvtx = (w0 >> 12) & 0xFF;
-			const uint32_t didx = ((w0 >> 1) & 0x7F) - nvtx;
-			out.words.push_back((0x01u << 24) | (nvtx << 12) | ((didx + nvtx) << 1));
+			const uint32_t end = (w0 >> 1) & 0x7F;
+			if (nvtx == 0 || nvtx > 32 || end < nvtx || end > 32 || w1 % sizeof(Vtx) != 0)
+			{
+				spdlog::error("[deblob] invalid vertex count, buffer index or alignment in '{}'", slice_path);
+				return false;
+			}
+			out.words.push_back((0x01u << 24) | (nvtx << 12) | (end << 1));
 			int32_t slice;
 			if (!resolveHash(hashCmd, slice))
 			{
 				return false;
 			}
 			// w1 carries the byte delta within the vertex slice
-			out.patches.push_back({(uint32_t)out.words.size(), slice, w1, false});
+			out.patches.push_back({(uint32_t)out.words.size(), slice, w1, false,
+			                       nvtx * static_cast<uint32_t>(sizeof(Vtx))});
 			out.words.push_back(0);
 			continue;
 		}
@@ -246,8 +302,19 @@ static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
 			// top byte). Cover both shapes.
 			const bool duplicated =
 				(pairCmd.words.w0 == cmd.words.w0 && pairCmd.words.w1 == cmd.words.w1);
-			if (duplicated || portIsLiteralPair(pairCmd, real_opcode))
+			int32_t resolved_slice;
+			const bool named_reference = resolveReference(portReadHash64(pairCmd), resolved_slice);
+			if (!named_reference && (duplicated || portIsLiteralPair(pairCmd, real_opcode)))
 			{
+				// Unresolved binary descriptors belong to the original linked
+				// relocation chain. Their slot/target cannot be inferred after
+				// replacing the command stream; export named references instead.
+				const uint32_t literal = duplicated ? w1 : static_cast<uint32_t>(pairCmd.words.w1);
+				if (!vanilla && ((literal >> 24) == 0 || (literal >> 24) > 15))
+				{
+					spdlog::error("[deblob] unresolved vanilla relocation descriptor in override '{}'; export a named asset reference", slice_path);
+					return false;
+				}
 				if (opcode == kOTRGMoveMemHash)
 				{
 					// The OTR MOVEMEM rewrite destroys the original
@@ -278,11 +345,13 @@ static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
 			}
 			else
 			{
-				int32_t slice;
-				if (!resolveHash(pairCmd, slice))
+				if (!named_reference)
 				{
+					spdlog::error("[deblob] I7 violated: unresolved reference hash 0x{:016X} in '{}'",
+					              portReadHash64(pairCmd), slice_path);
 					return false;
 				}
+				const int32_t slice = resolved_slice;
 				if (opcode == kOTRGDlHash)
 				{
 					const uint32_t branch = (w0 >> 16) & 0xFF;
@@ -310,6 +379,13 @@ static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
 			continue;
 		}
 
+		if (!vanilla && ((opcode >= 0x20 && opcode <= 0x45) ||
+		    ((opcode == 0x01 || opcode == 0xDA || opcode == 0xDC || opcode == 0xDE || opcode == 0xFD) &&
+		     ((w1 >> 24) == 0 || (w1 >> 24) > 15))))
+		{
+			spdlog::error("[deblob] unsupported or unresolved pointer command 0x{:02X} in override '{}'", opcode, slice_path);
+			return false;
+		}
 		out.words.push_back(w0);
 		out.words.push_back(w1);
 	}
@@ -317,12 +393,19 @@ static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
 	// Torch appends a G_ENDDL terminator to count-delimited joint DLs so
 	// LUS's factory can read them; drop it when the reconstruction lands
 	// exactly one command past the vanilla slice (byte-exact fast path).
-	if (out.words.size() >= 2 &&
+	if (vanilla && out.words.size() >= 2 &&
 	    out.words.size() * sizeof(uint32_t) == (size_t)vanilla_size + 8 &&
 	    out.words[out.words.size() - 2] == 0xDF000000u &&
 	    out.words.back() == 0)
 	{
 		out.words.resize(out.words.size() - 2);
+	}
+	if (!vanilla && (out.words.size() < 2 ||
+	    (out.words[out.words.size() - 2] != 0xDF000000u &&
+	     out.words[out.words.size() - 2] != 0xDE010000u)))
+	{
+		spdlog::error("[deblob] replacement DL '{}' must end with EndDisplayList or JumpToDisplayList", slice_path);
+		return false;
 	}
 
 	return true;
@@ -337,6 +420,7 @@ struct SynthCacheEntry
 	std::shared_ptr<RelocFile> reloc;
 	std::vector<uint32_t> layout_offsets;   // per-slice layout offsets
 	std::vector<uint32_t> intern_pairs;     // flat (slot,target) pairs, layout coords
+	std::vector<uint32_t> actual_sizes;
 };
 
 // Intentionally leaked: the cache holds Ship::IResource shared_ptrs, and
@@ -345,6 +429,14 @@ struct SynthCacheEntry
 // the context. Process exit reclaims the memory.
 static auto &sSynthCache = *new std::unordered_map<uint32_t, SynthCacheEntry>();
 static std::mutex sSynthCacheMutex;
+static std::weak_ptr<Ship::Archive> sBaseArchive;
+
+void portSyntheticRelocSetBaseArchive(std::shared_ptr<Ship::Archive> archive)
+{
+	std::lock_guard<std::mutex> lock(sSynthCacheMutex);
+	sBaseArchive = archive;
+	sSynthCache.clear();
+}
 
 void portSyntheticRelocEvictAll()
 {
@@ -434,8 +526,16 @@ static void portDumpSynthInspect(const SSB64SyntheticRelocSpec &spec,
 			first = false;
 		}
 	}
-	fprintf(f, "\n ],\n \"intern_slot_count\": %u,\n \"extern_slot_count\": %u\n}\n",
-	        spec.intern_slot_count, spec.extern_slot_count);
+	fprintf(f, "\n ],\n \"intern_slots\": [");
+	first = true;
+	for (const auto &slot : entry.reloc->ExplicitInternSlots)
+	{
+		fprintf(f, "%s{\"slot\": %u, \"target\": %u}", first ? "" : ",",
+		        slot.SlotByteOff, slot.TargetByteOff);
+		first = false;
+	}
+	fprintf(f, "],\n \"intern_slot_count\": %zu,\n \"extern_slot_count\": %zu\n}\n",
+	        entry.reloc->ExplicitInternSlots.size(), entry.reloc->ExplicitExternSlots.size());
 	fclose(f);
 	spdlog::info("[deblob] wrote synthesis inspect JSON to {}", path);
 }
@@ -472,38 +572,48 @@ static void portDumpSynthBytesIfRequested(const SSB64SyntheticRelocSpec &spec, c
 // exists (fighter dep graphs are acyclic: Main -> Model -> extern banks).
 static thread_local std::vector<uint32_t> sSynthBuildStack;
 
-static uint32_t portRemapDepWordOffset(uint16_t dep_file_id, uint32_t dep_word_off)
+static bool portRemapDepWordOffset(uint16_t dep_file_id, uint32_t dep_word_off, uint32_t &remapped)
 {
+	remapped = dep_word_off;
 	const auto *depSpec = portGetSyntheticRelocSpec(dep_file_id);
 	if (depSpec == nullptr)
 	{
-		return dep_word_off;
+		return true;
 	}
 	for (uint32_t in_progress : sSynthBuildStack)
 	{
 		if (in_progress == dep_file_id)
 		{
-			return dep_word_off; // cycle guard: keep vanilla coords
+			spdlog::error("[deblob] cyclic bundle dependency at file_id {}", dep_file_id);
+			return false;
 		}
 	}
 	if (!portBuildSyntheticRelocResource(dep_file_id))
 	{
-		return dep_word_off; // dep fell back to archived parent (vanilla)
+		spdlog::error("[deblob] dependency file_id {} failed synthesis", dep_file_id);
+		return false;
 	}
 	std::lock_guard<std::mutex> lock(sSynthCacheMutex);
 	auto it = sSynthCache.find(dep_file_id);
 	if (it == sSynthCache.end())
 	{
-		return dep_word_off;
+		return false;
 	}
 	const uint32_t vanilla_byte = dep_word_off * 4;
 	int32_t slice = portFindVanillaSlice(*depSpec, vanilla_byte);
 	if (slice == kPatchLiteral)
 	{
-		return dep_word_off;
+		spdlog::error("[deblob] dependency reference has no slice in file_id {}", dep_file_id);
+		return false;
 	}
 	const uint32_t delta = vanilla_byte - depSpec->slices[slice].vanilla_offset;
-	return (it->second.layout_offsets[slice] + delta) / 4;
+	if (delta >= it->second.actual_sizes[slice])
+	{
+		spdlog::error("[deblob] dependency reference +0x{:X} exceeds replacement '{}'", delta, depSpec->slices[slice].path);
+		return false;
+	}
+	remapped = (it->second.layout_offsets[slice] + delta) / 4;
+	return true;
 }
 
 std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
@@ -513,7 +623,12 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	{
 		return nullptr;
 	}
-	const auto &spec = *specPtr;
+	// Extend the original slices with the transitive closure of new mod
+	// assets. These have no vanilla address and are packed after the base.
+	auto spec = *specPtr;
+	std::vector<SSB64SyntheticSlice> slices(spec.slices, spec.slices + spec.slice_count);
+	std::deque<std::string> extra_paths; // c_str pointers survive append
+	spec.slices = slices.data();
 
 	{
 		std::lock_guard<std::mutex> lock(sSynthCacheMutex);
@@ -531,6 +646,13 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 		return nullptr;
 	}
 	auto rm = ctx->GetResourceManager();
+	auto am = rm->GetArchiveManager();
+	auto baseArchive = sBaseArchive.lock();
+	if (!baseArchive)
+	{
+		spdlog::error("[deblob] base archive provenance was not registered");
+		return nullptr;
+	}
 
 	// Recursion guard for cross-file remaps (portRemapDepWordOffset may
 	// build a dependency bundle mid-build).
@@ -552,14 +674,51 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	std::vector<std::shared_ptr<Ship::IResource>> resources(spec.slice_count);
 	std::vector<uint32_t> actual_sizes(spec.slice_count, 0);
 	std::vector<SynthDl> dl_scratch(spec.slice_count);
+	std::vector<bool> overridden(spec.slice_count, false);
+	bool any_override = false;
+	auto resolveReference = [&](uint64_t hash, int32_t &target) -> bool {
+		const auto found = hashToSlice.find(hash);
+		if (found != hashToSlice.end())
+		{
+			target = static_cast<int32_t>(found->second);
+			return true;
+		}
+		const auto path = am->HashToString(hash);
+		if (!path || slices.size() >= specPtr->slice_count + 4096) return false;
+		std::shared_ptr<Ship::IResource> resource;
+		try { resource = rm->LoadResource(*path); }
+		catch (const std::exception &e)
+		{
+			spdlog::error("[deblob] new asset '{}' failed to parse: {}", *path, e.what());
+			return false;
+		}
+		SSB64SyntheticSliceKind kind;
+		if (std::dynamic_pointer_cast<Fast::DisplayList>(resource)) kind = SSB64SyntheticSliceKind::DisplayList;
+		else if (std::dynamic_pointer_cast<Fast::Vertex>(resource)) kind = SSB64SyntheticSliceKind::Vertex;
+		else if (std::dynamic_pointer_cast<Fast::Texture>(resource)) kind = SSB64SyntheticSliceKind::Texture;
+		else if (std::dynamic_pointer_cast<Ship::Blob>(resource)) kind = SSB64SyntheticSliceKind::Blob;
+		else return false;
+		target = static_cast<int32_t>(slices.size());
+		extra_paths.push_back(*path);
+		slices.push_back({extra_paths.back().c_str(), spec.vanilla_data_size, 0, kind});
+		spec.slices = slices.data();
+		spec.slice_count = static_cast<uint32_t>(slices.size());
+		hashToSlice.emplace(hash, target);
+		resources.push_back(resource);
+		actual_sizes.push_back(0);
+		dl_scratch.emplace_back();
+		overridden.push_back(true);
+		any_override = true;
+		return true;
+	};
 
 	for (uint32_t i = 0; i < spec.slice_count; i++)
 	{
-		const auto &slice = spec.slices[i];
-		std::shared_ptr<Ship::IResource> resource;
+		const auto slice = spec.slices[i];
+		std::shared_ptr<Ship::IResource> resource = resources[i];
 		try
 		{
-			resource = rm->LoadResource(slice.path);
+			if (!resource) resource = rm->LoadResource(slice.path);
 		}
 		catch (const std::exception &e)
 		{
@@ -578,6 +737,14 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 			return nullptr;
 		}
 		resources[i] = resource;
+		// Pinned LUS does not populate ResourceInitData::Parent. Resolve the
+		// actual factory path (including alt/ and .meta redirects) in the VFS.
+		const auto init = resource->GetInitData();
+		const std::string resource_path = init ? init->Path : slice.path;
+		const auto meta_archive = am->GetArchiveFromFile(std::string(slice.path) + ".meta");
+		overridden[i] = i >= specPtr->slice_count || am->GetArchiveFromFile(resource_path) != baseArchive ||
+		                (meta_archive && meta_archive != baseArchive);
+		any_override = any_override || overridden[i];
 
 		switch (slice.kind)
 		{
@@ -628,15 +795,26 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 				spdlog::error("[deblob] slice '{}' is not a DisplayList", slice.path);
 				return nullptr;
 			}
-			if (!portUnOtrDisplayList(*dl, spec, hashToSlice, slice.path,
-			                          slice.vanilla_size, dl_scratch[i]))
+			SynthDl scratch;
+			if (!portUnOtrDisplayList(*dl, spec, resolveReference, slice.path,
+			                          slice.vanilla_size, !overridden[i], scratch))
 			{
 				return nullptr;
 			}
+			dl_scratch[i] = std::move(scratch);
 			actual_sizes[i] = (uint32_t)(dl_scratch[i].words.size() * sizeof(uint32_t));
 			break;
 		}
 		}
+	}
+	// Bound the packed image before offset arithmetic or allocation. The
+	// original game uses 24-bit segmented addresses for file-local data.
+	uint64_t total_size = spec.vanilla_data_size;
+	for (uint32_t size : actual_sizes) total_size += static_cast<uint64_t>(size) + 16;
+	if (total_size > 0x01000000)
+	{
+		spdlog::error("[deblob] bundle '{}' exceeds the 24-bit address space", spec.parent_path);
+		return nullptr;
 	}
 
 	// --- layout ---
@@ -649,6 +827,7 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	// gate (I6) can compare against the fast path.
 	SynthCacheEntry entry;
 	entry.layout_offsets.resize(spec.slice_count);
+	entry.actual_sizes = actual_sizes;
 	bool relayout = false;
 	uint32_t cursor = 0;
 	for (uint32_t i = 0; i < spec.slice_count; i++)
@@ -680,10 +859,10 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	// lands at delta > 0 inside a slice is only meaningful when the
 	// replacement preserved that prefix — allow with a warning while the
 	// delta still fits, fail loudly when it does not.
-	auto check_delta = [&](uint32_t slice_idx, uint32_t delta, const char *what) -> bool {
-		if (delta == 0 || delta < actual_sizes[slice_idx])
+	auto check_delta = [&](uint32_t slice_idx, uint32_t delta, const char *what, uint32_t width = 1) -> bool {
+		if (delta < actual_sizes[slice_idx] && width <= actual_sizes[slice_idx] - delta)
 		{
-			if (relayout && delta != 0 &&
+			if (relayout && delta != 0 && spec.slices[slice_idx].vanilla_size != 0 &&
 			    actual_sizes[slice_idx] != spec.slices[slice_idx].vanilla_size)
 			{
 				spdlog::warn("[deblob] {} at +0x{:X} into resized slice '{}' — "
@@ -753,7 +932,18 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 			// the seg-0x0E prefix restored for literal segment refs
 			for (const auto &p : scratch.patches)
 			{
-				if (!check_delta((uint32_t)p.target_slice, p.addend, "DL reference"))
+				const uint8_t opcode = scratch.words[p.word_index - 1] >> 24;
+				const auto kind = spec.slices[p.target_slice].kind;
+				if (overridden[i] &&
+				    ((opcode == 0x01 && kind != SSB64SyntheticSliceKind::Vertex) ||
+				     (opcode == 0xDE && kind != SSB64SyntheticSliceKind::DisplayList) ||
+				     (opcode == 0xFD && kind != SSB64SyntheticSliceKind::Texture && kind != SSB64SyntheticSliceKind::Blob)))
+				{
+					spdlog::error("[deblob] wrong resource type for command 0x{:02X} in '{}'", opcode, slice.path);
+					return nullptr;
+				}
+				if (!check_delta((uint32_t)p.target_slice, p.addend, "DL reference",
+				                 opcode == 0xDE ? 8 : p.read_size))
 				{
 					return nullptr;
 				}
@@ -772,13 +962,43 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 		}
 		}
 	}
+	// A named DL can reference another new DL. Reject cycles before those
+	// references become an endless renderer call/branch chain.
+	std::vector<uint8_t> visiting(spec.slice_count, 0);
+	std::function<bool(uint32_t)> visit = [&](uint32_t i) {
+		if (visiting[i] == 1) return false;
+		if (visiting[i] == 2) return true;
+		visiting[i] = 1;
+		for (const auto &p : dl_scratch[i].patches)
+		{
+			if (!p.seg0e && dl_scratch[i].words[p.word_index - 1] >> 24 == 0xDE &&
+			    !visit(static_cast<uint32_t>(p.target_slice))) return false;
+		}
+		visiting[i] = 2;
+		return true;
+	};
+	if (any_override)
+	{
+		for (uint32_t i = 0; i < spec.slice_count; i++)
+		{
+			if (!visit(i))
+			{
+				spdlog::error("[deblob] cyclic display-list references in '{}'", spec.parent_path);
+				return nullptr;
+			}
+		}
+	}
 
 	// explicit slot lists in layout coordinates
 	relocFile->ExplicitInternSlots.reserve(spec.intern_slot_count);
 	for (uint32_t i = 0; i < spec.intern_slot_count; i++)
 	{
 		const auto &s = spec.intern_slots[i];
-		if (!check_delta(s.slot_slice, s.slot_offset_in_slice, "intern slot position") ||
+		// A replacement DL owns its command stream. Vanilla slot positions
+		// describe the old program and must never be applied to the new one.
+		if (overridden[s.slot_slice] &&
+		    spec.slices[s.slot_slice].kind == SSB64SyntheticSliceKind::DisplayList) continue;
+		if (!check_delta(s.slot_slice, s.slot_offset_in_slice, "intern slot position", 4) ||
 		    !check_delta(s.target_slice, s.target_offset_in_slice, "intern slot target"))
 		{
 			return nullptr;
@@ -790,12 +1010,28 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 		entry.intern_pairs.push_back(slot.SlotByteOff);
 		entry.intern_pairs.push_back(slot.TargetByteOff);
 	}
+	for (uint32_t i = 0; i < spec.slice_count; i++)
+	{
+		if (!overridden[i]) continue;
+		for (const auto &p : dl_scratch[i].patches)
+		{
+			if (p.seg0e) continue; // segmented references are resolved by the renderer
+			RelocExplicitInternSlot slot{
+				entry.layout_offsets[i] + p.word_index * 4,
+				entry.layout_offsets[p.target_slice] + p.addend};
+			relocFile->ExplicitInternSlots.push_back(slot);
+			entry.intern_pairs.push_back(slot.SlotByteOff);
+			entry.intern_pairs.push_back(slot.TargetByteOff);
+		}
+	}
 	relocFile->ExplicitExternSlots.reserve(spec.extern_slot_count);
 	relocFile->ExternFileIds.reserve(spec.extern_slot_count);
 	for (uint32_t i = 0; i < spec.extern_slot_count; i++)
 	{
 		const auto &s = spec.extern_slots[i];
-		if (!check_delta(s.slot_slice, s.slot_offset_in_slice, "extern slot position"))
+		if (overridden[s.slot_slice] &&
+		    spec.slices[s.slot_slice].kind == SSB64SyntheticSliceKind::DisplayList) continue;
+		if (!check_delta(s.slot_slice, s.slot_offset_in_slice, "extern slot position", 4))
 		{
 			return nullptr;
 		}
@@ -805,25 +1041,22 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 		// Cross-file fidelity: a dependency that is itself a relayouted
 		// deblobbed bundle moved its contents — remap the vanilla word
 		// offset through the dep's layout. Identity for unmodded deps.
-		slot.DepWordOff = portRemapDepWordOffset(s.dep_file_id, s.dep_word_offset);
+		if (!portRemapDepWordOffset(s.dep_file_id, s.dep_word_offset, slot.DepWordOff)) return nullptr;
 		relocFile->ExplicitExternSlots.push_back(slot);
 		// chain order == extern id order: lbRelocGetExternBytesNum walks
 		// this list to predict dependency allocation sizes
 		relocFile->ExternFileIds.push_back(s.dep_file_id);
 	}
 
-	// I5 vanilla gate (debug-grade here; synth_verify is the full gate):
-	// the fast-path output must equal the relocated view the generator
-	// hashed at extraction time.
+	// I5 applies to resources from the extracted archive. An override can
+	// legitimately change content while preserving every size and offset.
 	entry.reloc = relocFile;
 	portDumpSynthInspect(spec, entry, actual_sizes, dl_scratch);
 	portDumpSynthBytesIfRequested(spec, *relocFile);
 
-	if (!relayout)
+	if (!any_override)
 	{
-		// I5 vanilla gate — only meaningful when no slice was replaced
-		// with a different size (a relayouted bundle is validated by the
-		// structural checks above instead).
+		// Overridden bundles are validated structurally above.
 		uint32_t crc = portCrc32(relocFile->Data.data(), relocFile->Data.size());
 		if (crc != spec.relocated_view_crc32)
 		{
@@ -843,7 +1076,7 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 	}
 	spdlog::info("[deblob] synthesized '{}' from {} slices ({} bytes{})",
 	             spec.parent_path, spec.slice_count, data_size,
-	             relayout ? ", RELAYOUT" : ", crc ok");
+	             any_override ? ", override" : ", crc ok");
 	return relocFile;
 }
 
