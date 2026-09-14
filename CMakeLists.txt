@@ -893,6 +893,12 @@ endif()
 # Executable target — port C++ code + decomp object library
 ################################################################################
 
+# Target-file component dependencies are determined by the policy captured
+# when the target is created. Set it here as well as via the top-level
+# minimum: dependency/toolchain configuration can leave a legacy policy scope.
+# Otherwise StageRuntimeAssets -> TARGET_FILE_DIR(ssb64) cycles on Windows.
+cmake_policy(SET CMP0112 NEW)
+
 if (CMAKE_SYSTEM_NAME STREQUAL "Android")
     # SDLActivity (Java) loads a shared library and calls SDL_main from it
     # via dlsym. Output name `main` matches SDL2's default `libmain.so`

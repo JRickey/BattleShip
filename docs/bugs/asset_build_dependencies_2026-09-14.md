@@ -58,3 +58,10 @@ zero failed.
 
 Windows/macOS compilation and a JP runtime boot require their respective
 platform/region validation; Linux success alone does not establish those.
+
+The first Windows CI update exposed a dependency cycle between the game
+and runtime staging. CMP0112 is recorded when the executable target is
+created; explicitly set it to NEW at that point so toolchain/dependency
+policy scopes cannot reintroduce the old target-directory dependency.
+A minimal fixture reproduced the cycle with OLD and configured with NEW.
+The corresponding macOS build passed; the Windows correction awaits CI.
