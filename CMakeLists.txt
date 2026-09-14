@@ -893,12 +893,6 @@ endif()
 # Executable target — port C++ code + decomp object library
 ################################################################################
 
-# Target-file component dependencies are determined by the policy captured
-# when the target is created. Set it here as well as via the top-level
-# minimum: dependency/toolchain configuration can leave a legacy policy scope.
-# Otherwise StageRuntimeAssets -> TARGET_FILE_DIR(ssb64) cycles on Windows.
-cmake_policy(SET CMP0112 NEW)
-
 if (CMAKE_SYSTEM_NAME STREQUAL "Android")
     # SDLActivity (Java) loads a shared library and calls SDL_main from it
     # via dlsym. Output name `main` matches SDL2's default `libmain.so`
@@ -923,6 +917,39 @@ else()
     # (US) or `BattleShip-JP` (JP), so the two are distinct applications.
     set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "${SSB64_APP_NAME}")
 endif()
+
+# Share the runtime destination with the staging prerequisite. Referencing
+# TARGET_FILE_DIR here creates a back-edge with Visual Studio even under
+# CMP0112 NEW. Explicit paths keep both generators' dependency graphs acyclic.
+# Preserve the normal <build>/<config> multi-config output layout and any
+# output-directory overrides supplied by the caller.
+set(SSB64_RUNTIME_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+if(CMAKE_SYSTEM_NAME STREQUAL "Android")
+    set(_ssb64_output_property LIBRARY_OUTPUT_DIRECTORY)
+else()
+    set(_ssb64_output_property RUNTIME_OUTPUT_DIRECTORY)
+endif()
+get_property(_ssb64_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+get_target_property(_ssb64_output_dir ${PROJECT_NAME} ${_ssb64_output_property})
+if(_ssb64_output_dir)
+    set(SSB64_RUNTIME_DIR "${_ssb64_output_dir}")
+endif()
+if(_ssb64_multi_config)
+    if(NOT SSB64_RUNTIME_DIR MATCHES "\\$<")
+        string(APPEND SSB64_RUNTIME_DIR "/$<CONFIG>")
+    endif()
+    foreach(_ssb64_config IN LISTS CMAKE_CONFIGURATION_TYPES)
+        string(TOUPPER "${_ssb64_config}" _ssb64_config_upper)
+        get_target_property(_ssb64_config_dir ${PROJECT_NAME}
+            ${_ssb64_output_property}_${_ssb64_config_upper})
+        if(_ssb64_config_dir)
+            set(SSB64_RUNTIME_DIR
+                "$<IF:$<CONFIG:${_ssb64_config}>,${_ssb64_config_dir},${SSB64_RUNTIME_DIR}>")
+        endif()
+    endforeach()
+endif()
+# Normalize relative user overrides the same way as the target properties.
+set(SSB64_RUNTIME_DIR "$<PATH:ABSOLUTE_PATH,${SSB64_RUNTIME_DIR},${CMAKE_CURRENT_BINARY_DIR}>")
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set_target_properties(ssb64_game PROPERTIES
@@ -1339,16 +1366,16 @@ else()
 endif()
 
 # Staging must run even when only Torch/assets changed and ssb64 did not
-# relink. TARGET_FILE_DIR creates no dependency under CMP0112 (NEW since
-# our minimum CMake version), so this prerequisite has no back-edge.
+# relink. Use the shared explicit runtime directory, without a reference
+# back to the target that depends on this staging step.
 add_custom_target(StageRuntimeAssets
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${SSB64_RECIPE_DIR}
-        -DDESTINATION_DIR=$<TARGET_FILE_DIR:${PROJECT_NAME}>
+        -DDESTINATION_DIR=${SSB64_RUNTIME_DIR}
         -DVERSION=${SSB64_VERSION}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/StageAssetRecipes.cmake
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${TORCH_EXECUTABLE} $<TARGET_FILE_DIR:${PROJECT_NAME}>/${TORCH_SIDECAR_NAME}
+        ${TORCH_EXECUTABLE} ${SSB64_RUNTIME_DIR}/${TORCH_SIDECAR_NAME}
     DEPENDS TorchExternal
     COMMENT "Staging extraction recipes and Torch next to the game"
     VERBATIM)
@@ -1356,9 +1383,9 @@ if(EXISTS "${SSB64_BASEROM}")
     add_dependencies(StageRuntimeAssets ExtractAssets)
     add_custom_command(TARGET StageRuntimeAssets POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${SSB64_O2R} $<TARGET_FILE_DIR:${PROJECT_NAME}>/${SSB64_APP_NAME}.o2r
+            ${SSB64_O2R} ${SSB64_RUNTIME_DIR}/${SSB64_APP_NAME}.o2r
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${SSB64_O2R}.recipe $<TARGET_FILE_DIR:${PROJECT_NAME}>/${SSB64_APP_NAME}.o2r.recipe
+            ${SSB64_O2R}.recipe ${SSB64_RUNTIME_DIR}/${SSB64_APP_NAME}.o2r.recipe
         VERBATIM)
 endif()
 add_dependencies(${PROJECT_NAME} StageRuntimeAssets)

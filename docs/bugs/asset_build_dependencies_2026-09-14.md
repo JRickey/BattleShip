@@ -56,12 +56,16 @@ unchanged timestamps, stale recipe removal, and US/JP directory isolation.
 The rebuilt archive passed the vanilla synthesis gate: 106 bundles passed,
 zero failed.
 
-Windows/macOS compilation and a JP runtime boot require their respective
-platform/region validation; Linux success alone does not establish those.
+Linux and macOS PR builds passed. Windows CI exposed a dependency cycle
+between the game and its runtime-staging prerequisite. Explicitly setting
+CMP0112 to NEW did not eliminate the Visual Studio cycle. Staging now uses
+an independently resolved runtime directory instead of referencing
+`TARGET_FILE_DIR` on the target that depends on it. This preserves default
+single/multi-configuration layouts and caller-supplied output directories.
 
-The first Windows CI update exposed a dependency cycle between the game
-and runtime staging. CMP0112 is recorded when the executable target is
-created; explicitly set it to NEW at that point so toolchain/dependency
-policy scopes cannot reintroduce the old target-directory dependency.
-A minimal fixture reproduced the cycle with OLD and configured with NEW.
-The corresponding macOS build passed; the Windows correction awaits CI.
+Six fixtures configured and built successfully using Ninja and Ninja
+Multi-Config: default layouts, a custom directory containing spaces,
+per-configuration overrides, and generator-expression overrides. Each
+checked that staging landed in the actual executable directory. The real
+Linux build passed again. Updated Windows CI is still required before merge.
+A JP runtime boot also remains separate from these platform build checks.
