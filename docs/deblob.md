@@ -156,8 +156,9 @@ runtime, spec-schema, or CMake edits.
    restart (next scene load).
 4. Constraints: original references landing mid-slice still require
    prefix-preserving edits (the loader warns); newly exported DL references
-   use the replacement's own offsets. Export named references instead of
-   copying unresolved vanilla relocation-chain descriptors. A malformed slice fails
+   use the replacement's own offsets. Prefer named references. Unchanged
+   external-chain descriptors from the same original display list can move;
+   unknown raw pointers are rejected. A malformed slice fails
    the whole bundle loudly rather than rendering garbage. Replaced
    textures re-key for hires packs by design (their rgba8Crc changes).
 

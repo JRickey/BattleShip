@@ -29,8 +29,30 @@ checks the actual relocation slot positions, not just the process exit.
 
 Initial Linux boot checks completed 110 frames of Link's opening scene
 with the original model, the shorter replacement and the new XML mesh.
-Frame-capture requests were logged but produced no PNGs in that run;
-these boot checks do not establish visual correctness.
+The opening scene waits until global tick 1695 before drawing. Longer
+1820-frame runs produced all three requested screenshots for each case.
+Inspection confirmed intact vanilla geometry and the expected missing
+waist geometry in the deliberately reduced replacement. No crashes occurred.
+
+## Contributor PR review
+
+[PR #271](https://github.com/JRickey/BattleShip/pull/271), by Jameriquiah,
+targets `deblob-asset-extraction`, not the Torch repository. Its core
+replacement-slot, XML-path, dependency-append and CRC fixes overlap the
+reviewed implementation here. The merge retains its useful recovery of
+unchanged external-chain descriptors after command movement, while retaining
+the stronger range/type/cycle/termination checks and archive-object identity.
+Descriptor matches are checked before treating a word as a segmented pointer;
+the high byte of a chain-next field can also look like a segment number.
+The added regression moves two external texture references by one command
+and checks both new slot locations and their original dependency identities.
+
+Jameriquiah's Torch `asset-extraction` commit `f174e66` has the identical
+stable patch ID (`6a7515a8995f2878765412d7c5985d00d32d1f1e`) as our
+already-integrated `ab9c70a`. Our subsequent changes restore JP layouts,
+preserve companion files for `archive: false`, keep unresolved references
+byte-exact, report archive-write failures and fix incremental source discovery.
+There is no additional Torch patch to reapply from that branch.
 
 This work does not yet establish a complete custom-character workflow.
 Fast64's SSB64JointTree needs a game-specific adapter; arbitrary rigs must

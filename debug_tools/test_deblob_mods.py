@@ -60,6 +60,14 @@ def make_cases(archive):
         cases["wrong-reference-type"] = ({**xml, mesh: xml_vertices}, False, None)
         cases["cyclic-dl"] = ({DL_PATH: call, mesh: call}, False, None)
         cases["missing-asset"] = ({DL_PATH: call}, False, None)
+        manifest = json.loads((Path(__file__).resolve().parents[1] /
+                               "yamls/us/reloc_fighters_main/manifests/LinkModel.json").read_text())
+        ext = manifest["extern_slots"][0]
+        ext_path = PARENT + "/" + manifest["slices"][ext["slot_slice"]]["name"]
+        ext_dl = z.read(ext_path)
+        # Move both inherited external references without changing their
+        # identity. PR #271 recovers their descriptors at the new locations.
+        cases["moved-external-descriptors"] = ({ext_path: ext_dl[:72] + bytes(8) + ext_dl[72:]}, True, None)
         return cases
 
 
@@ -124,6 +132,13 @@ def main():
                 ok = ok and len(slots) == 1 and slots[0]["slot"] == s["layout_offset"] + size - 12
             else:
                 ok = False
+        if name == "moved-external-descriptors" and expected:
+            inspect = json.loads((traces / "synth_inspect_324.json").read_text())
+            replaced_path = next(iter(replacements))
+            s = next(s for s in inspect["slices"] if s["path"] == replaced_path)
+            slots = [x for x in inspect["extern_slots"]
+                     if s["layout_offset"] <= x["slot"] < s["layout_offset"] + s["actual_size"]]
+            ok = ok and [(x["slot"] - s["layout_offset"], x["file"], x["word"]) for x in slots] == [(76, 299, 2), (124, 299, 6)]
         results[name] = {"ok": bool(ok), "exit": proc.returncode, "expected": expected,
                          "synthesis": verdict}
         print(f"{name}: {'PASS' if ok else 'FAIL'} (exit {proc.returncode})", flush=True)

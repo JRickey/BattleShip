@@ -117,6 +117,32 @@ static bool portIsLiteralPair(const Gfx &pair, uint8_t real_opcode)
 	return static_cast<uint8_t>(static_cast<uint32_t>(pair.words.w0) >> 24) == real_opcode;
 }
 
+// PR #271: a binary mod may move a command while retaining its exact
+// external-chain descriptor. Recover its identity, never its old slot.
+// Match before interpreting segment prefixes: a chain-next word can start
+// with 0x0E too. Ambiguous descriptors are rejected.
+static const SSB64RelocExternSlot *portFindExternalDescriptor(
+    const SSB64SyntheticRelocSpec &spec, const char *path, uint32_t value)
+{
+	const SSB64RelocExternSlot *match = nullptr;
+	for (uint32_t e = 0; e < spec.extern_slot_count; e++)
+	{
+		const auto &slot = spec.extern_slots[e];
+		if (std::strcmp(spec.slices[slot.slot_slice].path, path) != 0) continue;
+		uint32_t next = 0xFFFF;
+		if (e + 1 < spec.extern_slot_count)
+		{
+			const auto &n = spec.extern_slots[e + 1];
+			next = (spec.slices[n.slot_slice].vanilla_offset + n.slot_offset_in_slice) / 4;
+		}
+		if (value != ((next << 16) | slot.dep_word_offset)) continue;
+		if (match && (match->dep_file_id != slot.dep_file_id || match->dep_word_offset != slot.dep_word_offset))
+			return nullptr;
+		match = &slot;
+	}
+	return match;
+}
+
 // Map a vanilla byte offset to its containing slice (binary search over the
 // spec's sorted vanilla layout). Used to make literal seg-0x0E references
 // relayout-safe: they become slice+delta patches instead of raw offsets.
@@ -306,11 +332,9 @@ static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
 			const bool named_reference = resolveReference(portReadHash64(pairCmd), resolved_slice);
 			if (!named_reference && (duplicated || portIsLiteralPair(pairCmd, real_opcode)))
 			{
-				// Unresolved binary descriptors belong to the original linked
-				// relocation chain. Their slot/target cannot be inferred after
-				// replacing the command stream; export named references instead.
 				const uint32_t literal = duplicated ? w1 : static_cast<uint32_t>(pairCmd.words.w1);
-				if (!vanilla && ((literal >> 24) == 0 || (literal >> 24) > 15))
+				const bool external = !vanilla && portFindExternalDescriptor(spec, slice_path, literal);
+				if (!vanilla && !external && ((literal >> 24) == 0 || (literal >> 24) > 15))
 				{
 					spdlog::error("[deblob] unresolved vanilla relocation descriptor in override '{}'; export a named asset reference", slice_path);
 					return false;
@@ -334,13 +358,15 @@ static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
 					// gate catches any vanilla DL that actually used them)
 					out.words.push_back(((uint32_t)real_opcode << 24) |
 					                    (opcode == kOTRGSetTImgHash ? (w0 & 0x00FFFFFFu) : 0u));
-					portPushLiteralRef(spec, out, w1);
+					if (external) out.words.push_back(w1);
+					else portPushLiteralRef(spec, out, w1);
 				}
 				else
 				{
 					// pair IS the original command — emit verbatim
 					out.words.push_back(static_cast<uint32_t>(pairCmd.words.w0));
-					portPushLiteralRef(spec, out, static_cast<uint32_t>(pairCmd.words.w1));
+					if (external) out.words.push_back(literal);
+					else portPushLiteralRef(spec, out, literal);
 				}
 			}
 			else
@@ -381,7 +407,8 @@ static bool portUnOtrDisplayList(const Fast::DisplayList &dl,
 
 		if (!vanilla && ((opcode >= 0x20 && opcode <= 0x45) ||
 		    ((opcode == 0x01 || opcode == 0xDA || opcode == 0xDC || opcode == 0xDE || opcode == 0xFD) &&
-		     ((w1 >> 24) == 0 || (w1 >> 24) > 15))))
+		     ((w1 >> 24) == 0 || (w1 >> 24) > 15) &&
+		     !portFindExternalDescriptor(spec, slice_path, w1))))
 		{
 			spdlog::error("[deblob] unsupported or unresolved pointer command 0x{:02X} in override '{}'", opcode, slice_path);
 			return false;
@@ -532,6 +559,14 @@ static void portDumpSynthInspect(const SSB64SyntheticRelocSpec &spec,
 	{
 		fprintf(f, "%s{\"slot\": %u, \"target\": %u}", first ? "" : ",",
 		        slot.SlotByteOff, slot.TargetByteOff);
+		first = false;
+	}
+	fprintf(f, "],\n \"extern_slots\": [");
+	first = true;
+	for (const auto &slot : entry.reloc->ExplicitExternSlots)
+	{
+		fprintf(f, "%s{\"slot\": %u, \"file\": %u, \"word\": %u}", first ? "" : ",",
+		        slot.SlotByteOff, slot.DepFileId, slot.DepWordOff);
 		first = false;
 	}
 	fprintf(f, "],\n \"intern_slot_count\": %zu,\n \"extern_slot_count\": %zu\n}\n",
@@ -1046,6 +1081,27 @@ std::shared_ptr<RelocFile> portBuildSyntheticRelocResource(uint32_t file_id)
 		// chain order == extern id order: lbRelocGetExternBytesNum walks
 		// this list to predict dependency allocation sizes
 		relocFile->ExternFileIds.push_back(s.dep_file_id);
+	}
+
+	for (uint32_t i = 0; i < spec.slice_count; i++)
+	{
+		if (!overridden[i] || spec.slices[i].kind != SSB64SyntheticSliceKind::DisplayList) continue;
+		const auto &scratch = dl_scratch[i];
+		for (uint32_t w = 1; w < scratch.words.size(); w += 2)
+		{
+			const uint32_t op = scratch.words[w - 1] >> 24;
+			if (op != 0x01 && op != 0xDE && op != 0xFD && op != 0xDC) continue;
+			if (std::any_of(scratch.patches.begin(), scratch.patches.end(),
+			                [w](const auto &p) { return p.word_index == w; })) continue;
+			const auto *external = portFindExternalDescriptor(spec, spec.slices[i].path, scratch.words[w]);
+			if (!external) continue; // validated segmented references need no relocation
+			RelocExplicitExternSlot slot;
+			slot.SlotByteOff = entry.layout_offsets[i] + w * 4;
+			slot.DepFileId = external->dep_file_id;
+			if (!portRemapDepWordOffset(slot.DepFileId, external->dep_word_offset, slot.DepWordOff)) return nullptr;
+			relocFile->ExplicitExternSlots.push_back(slot);
+			relocFile->ExternFileIds.push_back(slot.DepFileId);
+		}
 	}
 
 	// I5 applies to resources from the extracted archive. An override can

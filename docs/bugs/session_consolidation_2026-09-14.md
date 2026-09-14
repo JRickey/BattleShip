@@ -21,3 +21,7 @@ fixes when reviewed. No replies have been posted by this review.
 Avoid presenting outstanding on-device or real-pack checks as completed.
 The contributor's display-list and build reports are tracked separately in
 the asset-build and replacement-loader investigation notes.
+
+PR #271 also needs a maintainer response explaining the integration and
+requesting a retest of the contributor's actual model. It targets the deblob
+branch and complements PR #270; it is not a separate Torch PR.
