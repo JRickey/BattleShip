@@ -1,0 +1,543 @@
+{
+ "category": "fighters_main",
+ "content_hash": "c19d0d9b60448e041c743ce59acace52385d86d2",
+ "extern_file_ids": [
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176,
+  176
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 470,
+   "slot_offset_in_slice": 36,
+   "slot_slice": 3
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 0,
+   "slot_offset_in_slice": 64,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 25,
+   "slot_offset_in_slice": 108,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 50,
+   "slot_offset_in_slice": 160,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 75,
+   "slot_offset_in_slice": 220,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 104,
+   "slot_offset_in_slice": 264,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 125,
+   "slot_offset_in_slice": 292,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 146,
+   "slot_offset_in_slice": 336,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 172,
+   "slot_offset_in_slice": 380,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 201,
+   "slot_offset_in_slice": 416,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 222,
+   "slot_offset_in_slice": 444,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 243,
+   "slot_offset_in_slice": 484,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 268,
+   "slot_offset_in_slice": 516,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 293,
+   "slot_offset_in_slice": 556,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 318,
+   "slot_offset_in_slice": 588,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 343,
+   "slot_offset_in_slice": 636,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 368,
+   "slot_offset_in_slice": 692,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 397,
+   "slot_offset_in_slice": 20,
+   "slot_slice": 15
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 427,
+   "slot_offset_in_slice": 236,
+   "slot_slice": 21
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 433,
+   "slot_offset_in_slice": 248,
+   "slot_slice": 21
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 435,
+   "slot_offset_in_slice": 260,
+   "slot_slice": 21
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 444,
+   "slot_offset_in_slice": 280,
+   "slot_slice": 21
+  },
+  {
+   "dep_file_id": 176,
+   "dep_word_offset": 451,
+   "slot_offset_in_slice": 300,
+   "slot_slice": 21
+  }
+ ],
+ "file_id": 199,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 0
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 0
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 0
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 2,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 3,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 3,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 4,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 6,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 9,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 10,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 11,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 12
+  },
+  {
+   "slot_offset_in_slice": 40,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 13
+  },
+  {
+   "slot_offset_in_slice": 40,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 14
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 15
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 16
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 16
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 16
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 17,
+   "target_offset_in_slice": 0,
+   "target_slice": 17
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 18
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 19,
+   "target_offset_in_slice": 0,
+   "target_slice": 19
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 20,
+   "target_offset_in_slice": 0,
+   "target_slice": 20
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 21,
+   "target_offset_in_slice": 0,
+   "target_slice": 21
+  },
+  {
+   "slot_offset_in_slice": 272,
+   "slot_slice": 21,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 292,
+   "slot_slice": 21,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 392,
+   "slot_slice": 22,
+   "target_offset_in_slice": 0,
+   "target_slice": 22
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 23
+  }
+ ],
+ "parent_path": "reloc_fighters_main/LinkMainMotion",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version jp",
+  "rom_sha1": "4b71f0e01878696733eefa9c80d11c147ecb4984",
+  "version": "jp"
+ },
+ "reloc_extern_offset": 124,
+ "reloc_intern_offset": 7,
+ "relocated_view_crc32": 743648719,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 200,
+    "target": 20
+   },
+   {
+    "from_file_id": 202,
+    "target": 20
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x0000",
+   "offset": 0,
+   "size": 20
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x0014",
+   "offset": 20,
+   "size": 104
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x007C",
+   "offset": 124,
+   "size": 336
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x01CC",
+   "offset": 460,
+   "size": 120
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x0244",
+   "offset": 580,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x0290",
+   "offset": 656,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x02B0",
+   "offset": 688,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x02D0",
+   "offset": 720,
+   "size": 520
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x04D8",
+   "offset": 1240,
+   "size": 768
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x07D8",
+   "offset": 2008,
+   "size": 148
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x086C",
+   "offset": 2156,
+   "size": 160
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x090C",
+   "offset": 2316,
+   "size": 132
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x0990",
+   "offset": 2448,
+   "size": 144
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x0A20",
+   "offset": 2592,
+   "size": 44
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x0A4C",
+   "offset": 2636,
+   "size": 748
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x0D38",
+   "offset": 3384,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x0D60",
+   "offset": 3424,
+   "size": 152
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x0DF8",
+   "offset": 3576,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x0E2C",
+   "offset": 3628,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x0E54",
+   "offset": 3668,
+   "size": 216
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x0F2C",
+   "offset": 3884,
+   "size": 212
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x1000",
+   "offset": 4096,
+   "size": 680
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x12A8",
+   "offset": 4776,
+   "size": 2576
+  },
+  {
+   "kind": "blob",
+   "name": "dLinkMainMotion_blob_0x1CB8",
+   "offset": 7352,
+   "size": 568
+  }
+ ],
+ "symbol": "LinkMainMotion",
+ "vanilla_data_size": 7920
+}

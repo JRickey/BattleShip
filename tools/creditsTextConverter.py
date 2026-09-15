@@ -1,5 +1,13 @@
 import sys
 import os
+from pathlib import Path
+
+
+def write_if_changed(path, text):
+	data = text.encode('utf-8')
+	output = Path(path)
+	if not output.exists() or output.read_bytes() != data:
+		output.write_bytes(data)
 
 DECODE_PRINT_MARGIN = 35
 
@@ -225,14 +233,11 @@ if __name__ == "__main__":
 	else:
 		startCountPairs = getDelimiterData(creditsText)
 
-	with open(outMetadataPath, 'w') as metadataFile:
-		for pair in startCountPairs:
-			metadataFile.write(f"{pair[0]},{pair[1]},\n")
+	write_if_changed(outMetadataPath, ''.join(f"{pair[0]},{pair[1]},\n" for pair in startCountPairs))
 
 	if isMultiline:
 		encodedText = encodeMultiline(creditsText, encodeMapTitleFont if isTitleFont else encodeMapParagraphFont)
 	else:
 		encodedText = encode(creditsText, encodeMapTitleFont if isTitleFont else encodeMapParagraphFont)
 
-	with open(outEncodedPath, 'w') as encodedFile:
-		encodedFile.write(encodedText)
+	write_if_changed(outEncodedPath, encodedText)

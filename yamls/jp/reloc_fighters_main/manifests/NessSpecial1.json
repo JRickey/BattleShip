@@ -1,0 +1,80 @@
+{
+ "category": "fighters_main",
+ "content_hash": "3215eac70dbe789ab384be0e496e5e3b7e8e7ed2",
+ "extern_file_ids": [
+  311,
+  311,
+  311,
+  311,
+  311
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 311,
+   "dep_word_offset": 90,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 311,
+   "dep_word_offset": 0,
+   "slot_offset_in_slice": 4,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 311,
+   "dep_word_offset": 120,
+   "slot_offset_in_slice": 12,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 311,
+   "dep_word_offset": 642,
+   "slot_offset_in_slice": 52,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 311,
+   "dep_word_offset": 700,
+   "slot_offset_in_slice": 60,
+   "slot_slice": 0
+  }
+ ],
+ "file_id": 215,
+ "intern_slots": [],
+ "parent_path": "reloc_fighters_main/NessSpecial1",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version jp",
+  "rom_sha1": "4b71f0e01878696733eefa9c80d11c147ecb4984",
+  "version": "jp"
+ },
+ "reloc_extern_offset": 0,
+ "reloc_intern_offset": 65535,
+ "relocated_view_crc32": 1754750182,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 205,
+    "target": 0
+   },
+   {
+    "from_file_id": 214,
+    "target": 0
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "blob",
+   "name": "dNessSpecial1_blob_0x0000",
+   "offset": 0,
+   "size": 128
+  }
+ ],
+ "symbol": "NessSpecial1",
+ "vanilla_data_size": 128
+}

@@ -12,6 +12,7 @@ FoxSpecial3:
   size: 0x185A
   symbol: FoxSpecial3
   file_id: 161
+  archive: false
   # compressed: True
   # decompressed_size: 0x2F80
 
@@ -21,6 +22,7 @@ MarioMainMotion:
   size: 0x866
   symbol: MarioMainMotion
   file_id: 202
+  archive: false
   # compressed: True
   # decompressed_size: 0x19A0
 
@@ -30,6 +32,7 @@ MarioMain:
   size: 0x318
   symbol: MarioMain
   file_id: 203
+  archive: false
   # compressed: True
   # decompressed_size: 0x770
 
@@ -39,6 +42,7 @@ MarioSpecial1:
   size: 0x34
   symbol: MarioSpecial1
   file_id: 204
+  archive: false
   # compressed: True
   # decompressed_size: 0x40
 
@@ -48,6 +52,7 @@ MMarioMainMotion:
   size: 0x74
   symbol: MMarioMainMotion
   file_id: 205
+  archive: false
   # compressed: True
   # decompressed_size: 0x140
 
@@ -57,6 +62,7 @@ MMarioMain:
   size: 0x218
   symbol: MMarioMain
   file_id: 206
+  archive: false
   # compressed: True
   # decompressed_size: 0x5F0
 
@@ -66,6 +72,7 @@ NMarioMain:
   size: 0x1FA
   symbol: NMarioMain
   file_id: 207
+  archive: false
   # compressed: True
   # decompressed_size: 0x5E0
 
@@ -75,6 +82,7 @@ FoxMainMotion:
   size: 0x86A
   symbol: FoxMainMotion
   file_id: 208
+  archive: false
   # compressed: True
   # decompressed_size: 0x1AA0
 
@@ -84,6 +92,7 @@ FoxMain:
   size: 0x32E
   symbol: FoxMain
   file_id: 209
+  archive: false
   # compressed: True
   # decompressed_size: 0x7C0
 
@@ -93,6 +102,7 @@ FoxSpecial1:
   size: 0x2E
   symbol: FoxSpecial1
   file_id: 210
+  archive: false
   # compressed: True
   # decompressed_size: 0x40
 
@@ -102,6 +112,7 @@ NFoxMain:
   size: 0x206
   symbol: NFoxMain
   file_id: 211
+  archive: false
   # compressed: True
   # decompressed_size: 0x5F0
 
@@ -111,6 +122,7 @@ DonkeyMainMotion:
   size: 0x8D6
   symbol: DonkeyMainMotion
   file_id: 212
+  archive: false
   # compressed: True
   # decompressed_size: 0x1CD0
 
@@ -120,6 +132,7 @@ DonkeyMain:
   size: 0x3F6
   symbol: DonkeyMain
   file_id: 213
+  archive: false
   # compressed: True
   # decompressed_size: 0x7F0
 
@@ -129,6 +142,7 @@ NDonkeyMain:
   size: 0x206
   symbol: NDonkeyMain
   file_id: 214
+  archive: false
   # compressed: True
   # decompressed_size: 0x5E0
 
@@ -138,6 +152,7 @@ GDonkeyMain:
   size: 0x374
   symbol: GDonkeyMain
   file_id: 215
+  archive: false
   # compressed: True
   # decompressed_size: 0x710
 
@@ -147,6 +162,7 @@ SamusMainMotion:
   size: 0x992
   symbol: SamusMainMotion
   file_id: 216
+  archive: false
   # compressed: True
   # decompressed_size: 0x1EC0
 
@@ -156,6 +172,7 @@ SamusMain:
   size: 0x46E
   symbol: SamusMain
   file_id: 217
+  archive: false
   # compressed: True
   # decompressed_size: 0x960
 
@@ -165,6 +182,7 @@ SamusSpecial1:
   size: 0x26
   symbol: SamusSpecial1
   file_id: 218
+  archive: false
   # compressed: True
   # decompressed_size: 0x40
 
@@ -174,6 +192,7 @@ NSamusMain:
   size: 0x25A
   symbol: NSamusMain
   file_id: 219
+  archive: false
   # compressed: True
   # decompressed_size: 0x710
 
@@ -183,6 +202,7 @@ LuigiMainMotion:
   size: 0x886
   symbol: LuigiMainMotion
   file_id: 220
+  archive: false
   # compressed: True
   # decompressed_size: 0x1A30
 
@@ -192,6 +212,7 @@ LuigiMain:
   size: 0x394
   symbol: LuigiMain
   file_id: 221
+  archive: false
   # compressed: True
   # decompressed_size: 0x8D0
 
@@ -201,6 +222,7 @@ LuigiSpecial1:
   size: 0x34
   symbol: LuigiSpecial1
   file_id: 222
+  archive: false
   # compressed: True
   # decompressed_size: 0x40
 
@@ -210,6 +232,7 @@ NLuigiMain:
   size: 0x1FE
   symbol: NLuigiMain
   file_id: 223
+  archive: false
   # compressed: True
   # decompressed_size: 0x5E0
 
@@ -219,6 +242,7 @@ LinkMainMotion:
   size: 0x952
   symbol: LinkMainMotion
   file_id: 224
+  archive: false
   # compressed: True
   # decompressed_size: 0x1EF0
 
@@ -228,6 +252,7 @@ LinkMain:
   size: 0x4CA
   symbol: LinkMain
   file_id: 225
+  archive: false
   # compressed: True
   # decompressed_size: 0xA50
 
@@ -237,6 +262,7 @@ LinkSpecial1:
   size: 0x38
   symbol: LinkSpecial1
   file_id: 226
+  archive: false
   # compressed: True
   # decompressed_size: 0x40
 
@@ -246,6 +272,7 @@ NLinkMain:
   size: 0x20E
   symbol: NLinkMain
   file_id: 227
+  archive: false
   # compressed: True
   # decompressed_size: 0x620
 
@@ -255,6 +282,7 @@ KirbyMainMotion:
   size: 0xD1E
   symbol: KirbyMainMotion
   file_id: 228
+  archive: false
   # compressed: True
   # decompressed_size: 0x25B0
 
@@ -264,6 +292,7 @@ KirbyMain:
   size: 0x5B8
   symbol: KirbyMain
   file_id: 229
+  archive: false
   # compressed: True
   # decompressed_size: 0xB50
 
@@ -273,6 +302,7 @@ NKirbyMain:
   size: 0x1DE
   symbol: NKirbyMain
   file_id: 231
+  archive: false
   # compressed: True
   # decompressed_size: 0x610
 
@@ -282,6 +312,7 @@ PurinMainMotion:
   size: 0x846
   symbol: PurinMainMotion
   file_id: 232
+  archive: false
   # compressed: True
   # decompressed_size: 0x1780
 
@@ -291,6 +322,7 @@ PurinMain:
   size: 0x2BA
   symbol: PurinMain
   file_id: 233
+  archive: false
   # compressed: True
   # decompressed_size: 0x7C0
 
@@ -300,6 +332,7 @@ NPurinMain:
   size: 0x1D2
   symbol: NPurinMain
   file_id: 234
+  archive: false
   # compressed: True
   # decompressed_size: 0x5F0
 
@@ -309,6 +342,7 @@ CaptainMainMotion:
   size: 0x9CE
   symbol: CaptainMainMotion
   file_id: 235
+  archive: false
   # compressed: True
   # decompressed_size: 0x1DB0
 
@@ -318,6 +352,7 @@ CaptainMain:
   size: 0x3DA
   symbol: CaptainMain
   file_id: 236
+  archive: false
   # compressed: True
   # decompressed_size: 0x7D0
 
@@ -327,6 +362,7 @@ NCaptainMain:
   size: 0x206
   symbol: NCaptainMain
   file_id: 237
+  archive: false
   # compressed: True
   # decompressed_size: 0x5F0
 
@@ -336,6 +372,7 @@ NessMainMotion:
   size: 0x836
   symbol: NessMainMotion
   file_id: 238
+  archive: false
   # compressed: True
   # decompressed_size: 0x17B0
 
@@ -345,6 +382,7 @@ NessMain:
   size: 0x3F6
   symbol: NessMain
   file_id: 239
+  archive: false
   # compressed: True
   # decompressed_size: 0x910
 
@@ -354,6 +392,7 @@ NessSpecial1:
   size: 0x6E
   symbol: NessSpecial1
   file_id: 240
+  archive: false
   # compressed: True
   # decompressed_size: 0x80
 
@@ -363,6 +402,7 @@ NNessMain:
   size: 0x22E
   symbol: NNessMain
   file_id: 241
+  archive: false
   # compressed: True
   # decompressed_size: 0x640
 
@@ -372,6 +412,7 @@ PikachuMainMotion:
   size: 0x866
   symbol: PikachuMainMotion
   file_id: 242
+  archive: false
   # compressed: True
   # decompressed_size: 0x1760
 
@@ -381,6 +422,7 @@ PikachuMain:
   size: 0x322
   symbol: PikachuMain
   file_id: 243
+  archive: false
   # compressed: True
   # decompressed_size: 0x770
 
@@ -390,6 +432,7 @@ PikachuSpecial1:
   size: 0x64
   symbol: PikachuSpecial1
   file_id: 244
+  archive: false
   # compressed: True
   # decompressed_size: 0x70
 
@@ -399,6 +442,7 @@ NPikachuMain:
   size: 0x200
   symbol: NPikachuMain
   file_id: 245
+  archive: false
   # compressed: True
   # decompressed_size: 0x5F0
 
@@ -408,6 +452,7 @@ YoshiMainMotion:
   size: 0x81E
   symbol: YoshiMainMotion
   file_id: 246
+  archive: false
   # compressed: True
   # decompressed_size: 0x17C0
 
@@ -417,6 +462,7 @@ YoshiMain:
   size: 0x376
   symbol: YoshiMain
   file_id: 247
+  archive: false
   # compressed: True
   # decompressed_size: 0x7D0
 
@@ -426,6 +472,7 @@ NYoshiMain:
   size: 0x1FA
   symbol: NYoshiMain
   file_id: 248
+  archive: false
   # compressed: True
   # decompressed_size: 0x600
 
@@ -435,6 +482,7 @@ BossMainMotion:
   size: 0x3D8
   symbol: BossMainMotion
   file_id: 249
+  archive: false
   # compressed: True
   # decompressed_size: 0x9B0
 
@@ -444,6 +492,7 @@ BossMain:
   size: 0x1F8
   symbol: BossMain
   file_id: 250
+  archive: false
   # compressed: True
   # decompressed_size: 0x430
 
@@ -453,6 +502,7 @@ MarioModel:
   size: 0x2E7C
   symbol: MarioModel
   file_id: 296
+  archive: false
   # compressed: True
   # decompressed_size: 0x7510
 
@@ -462,6 +512,7 @@ MarioSpecial3:
   size: 0x178
   symbol: MarioSpecial3
   file_id: 297
+  archive: false
   # compressed: True
   # decompressed_size: 0x290
 
@@ -471,6 +522,7 @@ MarioShieldPose:
   size: 0x198C
   symbol: MarioShieldPose
   file_id: 298
+  archive: false
   # compressed: True
   # decompressed_size: 0x2A00
 
@@ -480,6 +532,7 @@ MMarioModel:
   size: 0x1860
   symbol: MMarioModel
   file_id: 300
+  archive: false
   # compressed: True
   # decompressed_size: 0x2F40
 
@@ -489,6 +542,7 @@ NMarioModel:
   size: 0xD90
   symbol: NMarioModel
   file_id: 301
+  archive: false
   # compressed: True
   # decompressed_size: 0x2EB0
 
@@ -498,6 +552,7 @@ NFoxModel:
   size: 0xD94
   symbol: NFoxModel
   file_id: 303
+  archive: false
   # compressed: True
   # decompressed_size: 0x32D0
 
@@ -507,6 +562,7 @@ NYoshiModel:
   size: 0xD60
   symbol: NYoshiModel
   file_id: 304
+  archive: false
   # compressed: True
   # decompressed_size: 0x3400
 
@@ -516,6 +572,7 @@ NKirbyModel:
   size: 0xAC8
   symbol: NKirbyModel
   file_id: 305
+  archive: false
   # compressed: True
   # decompressed_size: 0x2730
 
@@ -525,6 +582,7 @@ NPurinModel:
   size: 0xB64
   symbol: NPurinModel
   file_id: 306
+  archive: false
   # compressed: True
   # decompressed_size: 0x2860
 
@@ -534,6 +592,7 @@ NPikachuModel:
   size: 0xCBC
   symbol: NPikachuModel
   file_id: 307
+  archive: false
   # compressed: True
   # decompressed_size: 0x2C50
 
@@ -543,6 +602,7 @@ NDonkeyModel:
   size: 0xE88
   symbol: NDonkeyModel
   file_id: 308
+  archive: false
   # compressed: True
   # decompressed_size: 0x31D0
 
@@ -552,6 +612,7 @@ NSamusModel:
   size: 0x157C
   symbol: NSamusModel
   file_id: 309
+  archive: false
   # compressed: True
   # decompressed_size: 0x4BD0
 
@@ -561,6 +622,7 @@ NLinkModel:
   size: 0xFF8
   symbol: NLinkModel
   file_id: 310
+  archive: false
   # compressed: True
   # decompressed_size: 0x3630
 
@@ -570,6 +632,7 @@ NCaptainModel:
   size: 0xE48
   symbol: NCaptainModel
   file_id: 311
+  archive: false
   # compressed: True
   # decompressed_size: 0x3220
 
@@ -579,6 +642,7 @@ NNessModel:
   size: 0xED0
   symbol: NNessModel
   file_id: 312
+  archive: false
   # compressed: True
   # decompressed_size: 0x35E0
 
@@ -588,6 +652,7 @@ FoxModel:
   size: 0x2EB8
   symbol: FoxModel
   file_id: 313
+  archive: false
   # compressed: True
   # decompressed_size: 0x7E50
 
@@ -597,6 +662,7 @@ FoxShieldPose:
   size: 0x189C
   symbol: FoxShieldPose
   file_id: 314
+  archive: false
   # compressed: True
   # decompressed_size: 0x2BB0
 
@@ -606,6 +672,7 @@ FoxSpecial4:
   size: 0x54
   symbol: FoxSpecial4
   file_id: 316
+  archive: false
   # compressed: True
   # decompressed_size: 0x90
 
@@ -615,6 +682,7 @@ DonkeyModel:
   size: 0x4E30
   symbol: DonkeyModel
   file_id: 317
+  archive: false
   # compressed: True
   # decompressed_size: 0xD600
 
@@ -624,6 +692,7 @@ DonkeyShieldPose:
   size: 0x1808
   symbol: DonkeyShieldPose
   file_id: 318
+  archive: false
   # compressed: True
   # decompressed_size: 0x2700
 
@@ -633,6 +702,7 @@ DkIcon:
   size: 0x1F8
   symbol: DkIcon
   file_id: 319
+  archive: false
   # compressed: True
   # decompressed_size: 0x340
 
@@ -642,6 +712,7 @@ SamusModel:
   size: 0x5948
   symbol: SamusModel
   file_id: 320
+  archive: false
   # compressed: True
   # decompressed_size: 0xE550
 
@@ -651,6 +722,7 @@ SamusSpecial3:
   size: 0x204
   symbol: SamusSpecial3
   file_id: 321
+  archive: false
   # compressed: True
   # decompressed_size: 0x350
 
@@ -660,6 +732,7 @@ SamusShieldPose:
   size: 0x1858
   symbol: SamusShieldPose
   file_id: 322
+  archive: false
   # compressed: True
   # decompressed_size: 0x2760
 
@@ -669,6 +742,7 @@ LuigiModel:
   size: 0x2E20
   symbol: LuigiModel
   file_id: 323
+  archive: false
   # compressed: True
   # decompressed_size: 0x7F10
 
@@ -678,6 +752,7 @@ LinkModel:
   size: 0x7678
   symbol: LinkModel
   file_id: 324
+  archive: false
   # compressed: True
   # decompressed_size: 0x11F70
 
@@ -687,6 +762,7 @@ LinkSpecial3:
   size: 0x2A0
   symbol: LinkSpecial3
   file_id: 325
+  archive: false
   # compressed: True
   # decompressed_size: 0x6F0
 
@@ -696,6 +772,7 @@ LinkShieldPose:
   size: 0x1888
   symbol: LinkShieldPose
   file_id: 327
+  archive: false
   # compressed: True
   # decompressed_size: 0x2E40
 
@@ -705,6 +782,7 @@ KirbyModel:
   size: 0xB164
   symbol: KirbyModel
   file_id: 328
+  archive: false
   # compressed: True
   # decompressed_size: 0x1D820
 
@@ -714,6 +792,7 @@ KirbyShieldPose:
   size: 0x1854
   symbol: KirbyShieldPose
   file_id: 329
+  archive: false
   # compressed: True
   # decompressed_size: 0x2EC0
 
@@ -723,6 +802,7 @@ PurinModel:
   size: 0x31A4
   symbol: PurinModel
   file_id: 330
+  archive: false
   # compressed: True
   # decompressed_size: 0x7DE0
 
@@ -732,6 +812,7 @@ PurinShieldPose:
   size: 0x2740
   symbol: PurinShieldPose
   file_id: 331
+  archive: false
   # compressed: True
   # decompressed_size: 0x4610
 
@@ -741,6 +822,7 @@ CaptainModel:
   size: 0x4440
   symbol: CaptainModel
   file_id: 332
+  archive: false
   # compressed: True
   # decompressed_size: 0xC890
 
@@ -750,6 +832,7 @@ CaptainSpecial3:
   size: 0x4B0
   symbol: CaptainSpecial3
   file_id: 333
+  archive: false
   # compressed: True
   # decompressed_size: 0x870
 
@@ -759,6 +842,7 @@ CaptainShieldPose:
   size: 0x1AE4
   symbol: CaptainShieldPose
   file_id: 334
+  archive: false
   # compressed: True
   # decompressed_size: 0x2AE0
 
@@ -768,6 +852,7 @@ NessModel:
   size: 0x4770
   symbol: NessModel
   file_id: 335
+  archive: false
   # compressed: True
   # decompressed_size: 0xC3C0
 
@@ -777,6 +862,7 @@ NessSpecial3:
   size: 0x4AC
   symbol: NessSpecial3
   file_id: 336
+  archive: false
   # compressed: True
   # decompressed_size: 0xBA0
 
@@ -786,6 +872,7 @@ NessShieldPose:
   size: 0x1ED4
   symbol: NessShieldPose
   file_id: 337
+  archive: false
   # compressed: True
   # decompressed_size: 0x30D0
 
@@ -795,6 +882,7 @@ YoshiModel:
   size: 0x384C
   symbol: YoshiModel
   file_id: 338
+  archive: false
   # compressed: True
   # decompressed_size: 0xACE0
 
@@ -804,6 +892,7 @@ YoshiSpecial3:
   size: 0x654
   symbol: YoshiSpecial3
   file_id: 339
+  archive: false
   # compressed: True
   # decompressed_size: 0xE70
 
@@ -813,6 +902,7 @@ YoshiShieldPose:
   size: 0x544
   symbol: YoshiShieldPose
   file_id: 340
+  archive: false
   # compressed: True
   # decompressed_size: 0x1B80
 
@@ -822,6 +912,7 @@ PikachuModel:
   size: 0x3644
   symbol: PikachuModel
   file_id: 341
+  archive: false
   # compressed: True
   # decompressed_size: 0x9C30
 
@@ -831,6 +922,7 @@ PikachuSpecial3:
   size: 0xE20
   symbol: PikachuSpecial3
   file_id: 342
+  archive: false
   # compressed: True
   # decompressed_size: 0x2390
 
@@ -840,6 +932,7 @@ PikachuShieldPose:
   size: 0x1FE8
   symbol: PikachuShieldPose
   file_id: 343
+  archive: false
   # compressed: True
   # decompressed_size: 0x3740
 
@@ -849,6 +942,7 @@ BossModel:
   size: 0x1858
   symbol: BossModel
   file_id: 344
+  archive: false
   # compressed: True
   # decompressed_size: 0x2D40
 
@@ -858,6 +952,7 @@ MasterHandIcon:
   size: 0x184
   symbol: MasterHandIcon
   file_id: 345
+  archive: false
   # compressed: True
   # decompressed_size: 0x300
 
@@ -867,6 +962,7 @@ FoxSpecial2:
   size: 0x3E0
   symbol: FoxSpecial2
   file_id: 346
+  archive: false
   # compressed: True
   # decompressed_size: 0xE30
 
@@ -876,6 +972,7 @@ PikachuSpecial2:
   size: 0x8A4
   symbol: PikachuSpecial2
   file_id: 347
+  archive: false
   # compressed: True
   # decompressed_size: 0x1B60
 
@@ -885,6 +982,7 @@ KirbySpecial2:
   size: 0xEE0
   symbol: KirbySpecial2
   file_id: 348
+  archive: false
   # compressed: True
   # decompressed_size: 0x2910
 
@@ -894,6 +992,7 @@ SamusSpecial2:
   size: 0x644
   symbol: SamusSpecial2
   file_id: 349
+  archive: false
   # compressed: True
   # decompressed_size: 0xCA0
 
@@ -903,6 +1002,7 @@ CaptainSpecial2:
   size: 0x1A68
   symbol: CaptainSpecial2
   file_id: 350
+  archive: false
   # compressed: True
   # decompressed_size: 0x65E0
 
@@ -912,6 +1012,7 @@ PurinSpecial2:
   size: 0xDA0
   symbol: PurinSpecial2
   file_id: 351
+  archive: false
   # compressed: True
   # decompressed_size: 0x2F50
 
@@ -921,6 +1022,7 @@ NessSpecial2:
   size: 0x5E4
   symbol: NessSpecial2
   file_id: 352
+  archive: false
   # compressed: True
   # decompressed_size: 0xB10
 
@@ -930,6 +1032,7 @@ LinkSpecial2:
   size: 0xB04
   symbol: LinkSpecial2
   file_id: 353
+  archive: false
   # compressed: True
   # decompressed_size: 0x1A10
 
@@ -939,6 +1042,7 @@ YoshiSpecial2:
   size: 0x380
   symbol: YoshiSpecial2
   file_id: 354
+  archive: false
   # compressed: True
   # decompressed_size: 0x7C0
 
@@ -948,6 +1052,7 @@ DonkeySpecial2:
   size: 0x57C
   symbol: DonkeySpecial2
   file_id: 355
+  archive: false
   # compressed: True
   # decompressed_size: 0x930
 
@@ -957,5 +1062,6 @@ MarioSpecial2:
   size: 0x390
   symbol: MarioSpecial2
   file_id: 356
+  archive: false
   # compressed: True
   # decompressed_size: 0x740

@@ -1,0 +1,562 @@
+{
+ "category": "fighters_main",
+ "content_hash": "54c3eecf334692329238c2bb7b3b43e8aca1eb7f",
+ "extern_file_ids": [
+  208,
+  346,
+  161,
+  210,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  315,
+  315,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  313,
+  314,
+  314,
+  314,
+  314,
+  314,
+  314,
+  314,
+  314,
+  314
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 208,
+   "dep_word_offset": 0,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 346,
+   "dep_word_offset": 172,
+   "slot_offset_in_slice": 4,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 161,
+   "dep_word_offset": 2828,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 210,
+   "dep_word_offset": 0,
+   "slot_offset_in_slice": 12,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 1918,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 4
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 4808,
+   "slot_offset_in_slice": 20,
+   "slot_slice": 4
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 6156,
+   "slot_offset_in_slice": 40,
+   "slot_slice": 4
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 6224,
+   "slot_offset_in_slice": 60,
+   "slot_slice": 4
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 2246,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 5
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 5104,
+   "slot_offset_in_slice": 20,
+   "slot_slice": 5
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 6004,
+   "slot_offset_in_slice": 40,
+   "slot_slice": 5
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 6072,
+   "slot_offset_in_slice": 60,
+   "slot_slice": 5
+  },
+  {
+   "dep_file_id": 315,
+   "dep_word_offset": 252,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 6
+  },
+  {
+   "dep_file_id": 315,
+   "dep_word_offset": 252,
+   "slot_offset_in_slice": 20,
+   "slot_slice": 6
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 2638,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 0,
+   "slot_offset_in_slice": 4,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 2948,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 5444,
+   "slot_offset_in_slice": 16,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 3148,
+   "slot_offset_in_slice": 20,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 5752,
+   "slot_offset_in_slice": 24,
+   "slot_slice": 9
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 7904,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 7914,
+   "slot_offset_in_slice": 4,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 7924,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 7934,
+   "slot_offset_in_slice": 12,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 7946,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 8066,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 6288,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 6344,
+   "slot_offset_in_slice": 16,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 6792,
+   "slot_offset_in_slice": 32,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 6724,
+   "slot_offset_in_slice": 40,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 6852,
+   "slot_offset_in_slice": 48,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 6572,
+   "slot_offset_in_slice": 64,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 6792,
+   "slot_offset_in_slice": 80,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 6724,
+   "slot_offset_in_slice": 88,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 6916,
+   "slot_offset_in_slice": 96,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 6988,
+   "slot_offset_in_slice": 120,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 7032,
+   "slot_offset_in_slice": 128,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 7076,
+   "slot_offset_in_slice": 144,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 6988,
+   "slot_offset_in_slice": 160,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 7032,
+   "slot_offset_in_slice": 168,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 7076,
+   "slot_offset_in_slice": 184,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 313,
+   "dep_word_offset": 7176,
+   "slot_offset_in_slice": 192,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 72,
+   "slot_offset_in_slice": 740,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 392,
+   "slot_offset_in_slice": 744,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 692,
+   "slot_offset_in_slice": 748,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 996,
+   "slot_offset_in_slice": 752,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 1296,
+   "slot_offset_in_slice": 756,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 1600,
+   "slot_offset_in_slice": 760,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 1900,
+   "slot_offset_in_slice": 764,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 2204,
+   "slot_offset_in_slice": 768,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 314,
+   "dep_word_offset": 2500,
+   "slot_offset_in_slice": 772,
+   "slot_slice": 14
+  }
+ ],
+ "file_id": 209,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 13
+  },
+  {
+   "slot_offset_in_slice": 680,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 684,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 732,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 736,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 820,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 828,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 836,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 844,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 12
+  },
+  {
+   "slot_offset_in_slice": 848,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 14
+  }
+ ],
+ "parent_path": "reloc_fighters_main/FoxMain",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 0,
+ "reloc_intern_offset": 80,
+ "relocated_view_crc32": 2280184584,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "gap",
+   "name": "dFoxMain_gap_0x0000",
+   "offset": 0,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dFoxMain_blob_0x0010",
+   "offset": 16,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dFoxMain_blob_0x0018",
+   "offset": 24,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dFoxMain_blob_0x0020",
+   "offset": 32,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dFoxMain_blob_0x0060",
+   "offset": 96,
+   "size": 80
+  },
+  {
+   "kind": "blob",
+   "name": "dFoxMain_blob_0x00B0",
+   "offset": 176,
+   "size": 80
+  },
+  {
+   "kind": "blob",
+   "name": "dFoxMain_blob_0x0100",
+   "offset": 256,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dFoxMain_blob_0x0128",
+   "offset": 296,
+   "size": 108
+  },
+  {
+   "kind": "blob",
+   "name": "dFoxMain_blob_0x0194",
+   "offset": 404,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dFoxMain_blob_0x019C",
+   "offset": 412,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dFoxMain_blob_0x01BC",
+   "offset": 444,
+   "size": 432
+  },
+  {
+   "kind": "blob",
+   "name": "dFoxMain_blob_0x036C",
+   "offset": 876,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dFoxMain_blob_0x037C",
+   "offset": 892,
+   "size": 12
+  },
+  {
+   "kind": "blob",
+   "name": "dFoxMain_blob_0x0388",
+   "offset": 904,
+   "size": 216
+  },
+  {
+   "kind": "blob",
+   "name": "dFoxMain_blob_0x0460",
+   "offset": 1120,
+   "size": 864
+  }
+ ],
+ "symbol": "FoxMain",
+ "vanilla_data_size": 1984
+}

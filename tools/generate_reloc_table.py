@@ -37,6 +37,13 @@ OUTPUT_H   = Path(f"port/resource/{VERSIONS['us']['stem']}.h")
 FILE_COUNT = VERSIONS["us"]["file_count"]
 
 
+def write_if_changed(path: Path, text: str) -> None:
+    """Avoid recompiling the game when the generated table is unchanged."""
+    data = text.encode("utf-8")
+    if not path.exists() or path.read_bytes() != data:
+        path.write_bytes(data)
+
+
 def select_version(version):
     """Repoint the input/output/count globals at the chosen version."""
     global YAML_DIR, OUTPUT, OUTPUT_H, FILE_COUNT
@@ -112,7 +119,7 @@ def generate(entries: dict[int, str], output: Path) -> None:
     lines.append("};")
     lines.append("")
 
-    output.write_text("\n".join(lines), encoding="utf-8")
+    write_if_changed(output, "\n".join(lines))
     print(f"Generated {output} ({len(entries)} entries)")
 
 
@@ -142,7 +149,7 @@ def generate_header(output_h: Path) -> None:
         "#endif",
         "",
     ]
-    output_h.write_text("\n".join(lines), encoding="utf-8")
+    write_if_changed(output_h, "\n".join(lines))
     print(f"Generated {output_h} (RELOC_FILE_COUNT={FILE_COUNT})")
 
 

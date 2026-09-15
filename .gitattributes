@@ -6,8 +6,14 @@
 yamls/**/*.yml text eol=lf
 
 # Same logic for the other gitignored-but-actually-tracked codegen output.
-include/reloc_data.h text eol=lf
-port/resource/RelocFileTable.cpp text eol=lf
+# Wildcarded across the region split (reloc_data.us.h / .jp.h etc.) — the
+# old exact names predate it and matched nothing, which let a contributor
+# branch CRLF-convert RelocFileTable.us.cpp wholesale.
+include/reloc_data*.h text eol=lf
+port/resource/RelocFileTable*.cpp text eol=lf
+port/resource/RelocFileTable*.h text eol=lf
+port/bridge/ssb64_reloc_rebuild*.cpp text eol=lf
+yamls/**/manifests/*.json text eol=lf
 
 # Python tooling: keep LF on all platforms so committed sources don't drift.
 *.py text eol=lf

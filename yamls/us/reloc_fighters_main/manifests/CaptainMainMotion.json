@@ -1,0 +1,591 @@
+{
+ "category": "fighters_main",
+ "content_hash": "658baafabc8aa8ce4aae66a1570f6ac7af64cc15",
+ "extern_file_ids": [
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 470,
+   "slot_offset_in_slice": 32,
+   "slot_slice": 3
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 0,
+   "slot_offset_in_slice": 52,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 25,
+   "slot_offset_in_slice": 104,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 50,
+   "slot_offset_in_slice": 168,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 75,
+   "slot_offset_in_slice": 216,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 104,
+   "slot_offset_in_slice": 260,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 125,
+   "slot_offset_in_slice": 296,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 146,
+   "slot_offset_in_slice": 352,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 172,
+   "slot_offset_in_slice": 388,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 201,
+   "slot_offset_in_slice": 424,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 222,
+   "slot_offset_in_slice": 460,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 243,
+   "slot_offset_in_slice": 504,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 268,
+   "slot_offset_in_slice": 540,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 293,
+   "slot_offset_in_slice": 580,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 318,
+   "slot_offset_in_slice": 620,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 343,
+   "slot_offset_in_slice": 684,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 368,
+   "slot_offset_in_slice": 724,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 397,
+   "slot_offset_in_slice": 12,
+   "slot_slice": 15
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 427,
+   "slot_offset_in_slice": 204,
+   "slot_slice": 21
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 433,
+   "slot_offset_in_slice": 216,
+   "slot_slice": 21
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 435,
+   "slot_offset_in_slice": 228,
+   "slot_slice": 21
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 444,
+   "slot_offset_in_slice": 248,
+   "slot_slice": 21
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 451,
+   "slot_offset_in_slice": 268,
+   "slot_slice": 21
+  }
+ ],
+ "file_id": 235,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 2,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 3,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 3,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 4,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 6,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 9,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 10,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 11,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 40,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 12
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 13
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 14
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 15
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 16
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 16
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 16
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 17,
+   "target_offset_in_slice": 0,
+   "target_slice": 17
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 18
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 19,
+   "target_offset_in_slice": 0,
+   "target_slice": 19
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 20,
+   "target_offset_in_slice": 0,
+   "target_slice": 20
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 21,
+   "target_offset_in_slice": 0,
+   "target_slice": 21
+  },
+  {
+   "slot_offset_in_slice": 240,
+   "slot_slice": 21,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 260,
+   "slot_slice": 21,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 22
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 22
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 22
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 22
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 22
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 23
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 24
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 25,
+   "target_offset_in_slice": 0,
+   "target_slice": 25
+  },
+  {
+   "slot_offset_in_slice": 352,
+   "slot_slice": 26,
+   "target_offset_in_slice": 0,
+   "target_slice": 26
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 27,
+   "target_offset_in_slice": 0,
+   "target_slice": 27
+  }
+ ],
+ "parent_path": "reloc_fighters_main/CaptainMainMotion",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 157,
+ "reloc_intern_offset": 56,
+ "relocated_view_crc32": 3112208478,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 236,
+    "target": 108
+   },
+   {
+    "from_file_id": 237,
+    "target": 108
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "gap",
+   "name": "dCaptainMainMotion_gap_0x0000",
+   "offset": 0,
+   "size": 108
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x006C",
+   "offset": 108,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x00A4",
+   "offset": 164,
+   "size": 432
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x0254",
+   "offset": 596,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x02AC",
+   "offset": 684,
+   "size": 68
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x02F0",
+   "offset": 752,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x0310",
+   "offset": 784,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x0330",
+   "offset": 816,
+   "size": 352
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x0490",
+   "offset": 1168,
+   "size": 688
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x0740",
+   "offset": 1856,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x07B0",
+   "offset": 1968,
+   "size": 124
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x082C",
+   "offset": 2092,
+   "size": 96
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x088C",
+   "offset": 2188,
+   "size": 108
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x08F8",
+   "offset": 2296,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x0918",
+   "offset": 2328,
+   "size": 780
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x0C24",
+   "offset": 3108,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x0C44",
+   "offset": 3140,
+   "size": 140
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x0CD0",
+   "offset": 3280,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x0D00",
+   "offset": 3328,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x0D28",
+   "offset": 3368,
+   "size": 124
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x0DA4",
+   "offset": 3492,
+   "size": 172
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x0E50",
+   "offset": 3664,
+   "size": 536
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x1068",
+   "offset": 4200,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x10A4",
+   "offset": 4260,
+   "size": 2096
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x18D4",
+   "offset": 6356,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x18F4",
+   "offset": 6388,
+   "size": 448
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x1AB4",
+   "offset": 6836,
+   "size": 416
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainMainMotion_blob_0x1C54",
+   "offset": 7252,
+   "size": 348
+  }
+ ],
+ "symbol": "CaptainMainMotion",
+ "vanilla_data_size": 7600
+}

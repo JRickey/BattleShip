@@ -1,0 +1,59 @@
+{
+ "category": "fighters_main",
+ "content_hash": "ef853db0fc3d2364d6d611d56dfed6583c32a581",
+ "extern_file_ids": [
+  272,
+  272
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 272,
+   "dep_word_offset": 106,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 272,
+   "dep_word_offset": 54,
+   "slot_offset_in_slice": 4,
+   "slot_slice": 0
+  }
+ ],
+ "file_id": 197,
+ "intern_slots": [],
+ "parent_path": "reloc_fighters_main/LuigiSpecial1",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version jp",
+  "rom_sha1": "4b71f0e01878696733eefa9c80d11c147ecb4984",
+  "version": "jp"
+ },
+ "reloc_extern_offset": 0,
+ "reloc_intern_offset": 65535,
+ "relocated_view_crc32": 821228297,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 196,
+    "target": 0
+   },
+   {
+    "from_file_id": 205,
+    "target": 0
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "blob",
+   "name": "dLuigiSpecial1_blob_0x0000",
+   "offset": 0,
+   "size": 64
+  }
+ ],
+ "symbol": "LuigiSpecial1",
+ "vanilla_data_size": 64
+}

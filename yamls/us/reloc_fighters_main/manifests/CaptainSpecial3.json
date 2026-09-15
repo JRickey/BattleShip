@@ -1,0 +1,191 @@
+{
+ "category": "fighters_main",
+ "content_hash": "826d499efc2a2e1b7ae872185e09b38d855874b2",
+ "extern_file_ids": [],
+ "extern_slots": [],
+ "file_id": 333,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 512,
+   "slot_slice": 5,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 6,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 6,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 6,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 10,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 156,
+   "slot_slice": 10,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 11,
+   "target_offset_in_slice": 0,
+   "target_slice": 13
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 12
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 12
+  }
+ ],
+ "parent_path": "reloc_fighters_main/CaptainSpecial3",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 65535,
+ "reloc_intern_offset": 420,
+ "relocated_view_crc32": 1609123041,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 230,
+    "target": 1888
+   },
+   {
+    "from_file_id": 236,
+    "target": 1888
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "gap",
+   "name": "dCaptainSpecial3_gap_0x0000",
+   "offset": 0,
+   "size": 88
+  },
+  {
+   "colors": 16,
+   "kind": "lut",
+   "name": "dCaptainSpecial3_Lut_0x0058",
+   "offset": 88,
+   "size": 32
+  },
+  {
+   "kind": "pad",
+   "name": "dCaptainSpecial3_pad_0x0078",
+   "offset": 120,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainSpecial3_blob_0x0080",
+   "offset": 128,
+   "size": 520
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainSpecial3_blob_0x0288",
+   "offset": 648,
+   "size": 520
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainSpecial3_blob_0x0490",
+   "offset": 1168,
+   "size": 516
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainSpecial3_blob_0x0694",
+   "offset": 1684,
+   "size": 12
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainSpecial3_blob_0x06A0",
+   "offset": 1696,
+   "size": 120
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainSpecial3_blob_0x0718",
+   "offset": 1816,
+   "size": 8
+  },
+  {
+   "count": 4,
+   "kind": "vtx",
+   "name": "dCaptainSpecial3_Vtx_0x0720",
+   "offset": 1824,
+   "size": 64
+  },
+  {
+   "count": 26,
+   "kind": "gfx",
+   "name": "dCaptainSpecial3_Gfx_0x0760",
+   "offset": 1888,
+   "size": 208
+  },
+  {
+   "kind": "pad",
+   "name": "dCaptainSpecial3_pad_0x0830",
+   "offset": 2096,
+   "size": 4
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainSpecial3_blob_0x0834",
+   "offset": 2100,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainSpecial3_blob_0x086C",
+   "offset": 2156,
+   "size": 4
+  }
+ ],
+ "symbol": "CaptainSpecial3",
+ "vanilla_data_size": 2160
+}

@@ -1,0 +1,1225 @@
+{
+ "category": "fighters_main",
+ "content_hash": "83b12e11dd582292064182678b757450da728413",
+ "extern_file_ids": [],
+ "extern_slots": [],
+ "file_id": 342,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 5,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 140,
+   "slot_slice": 5,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 172,
+   "slot_slice": 5,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 140,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 25
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 26
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 27
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 28
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 29
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 30
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 17,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 17,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 17,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 19,
+   "target_offset_in_slice": 0,
+   "target_slice": 13
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 20,
+   "target_offset_in_slice": 0,
+   "target_slice": 14
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 21,
+   "target_offset_in_slice": 0,
+   "target_slice": 15
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 22,
+   "target_offset_in_slice": 0,
+   "target_slice": 16
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 17
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 18
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 25,
+   "target_offset_in_slice": 0,
+   "target_slice": 19
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 26,
+   "target_offset_in_slice": 0,
+   "target_slice": 20
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 27,
+   "target_offset_in_slice": 0,
+   "target_slice": 21
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 28,
+   "target_offset_in_slice": 0,
+   "target_slice": 22
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 29,
+   "target_offset_in_slice": 0,
+   "target_slice": 23
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 30,
+   "target_offset_in_slice": 0,
+   "target_slice": 24
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 37,
+   "target_offset_in_slice": 0,
+   "target_slice": 31
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 38,
+   "target_offset_in_slice": 0,
+   "target_slice": 32
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 39,
+   "target_offset_in_slice": 16,
+   "target_slice": 31
+  },
+  {
+   "slot_offset_in_slice": 116,
+   "slot_slice": 39,
+   "target_offset_in_slice": 0,
+   "target_slice": 33
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 40,
+   "target_offset_in_slice": 0,
+   "target_slice": 34
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 41,
+   "target_offset_in_slice": 0,
+   "target_slice": 35
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 42,
+   "target_offset_in_slice": 0,
+   "target_slice": 36
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 43,
+   "target_offset_in_slice": 0,
+   "target_slice": 37
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 44,
+   "target_offset_in_slice": 0,
+   "target_slice": 38
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 45,
+   "target_offset_in_slice": 0,
+   "target_slice": 39
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 46,
+   "target_offset_in_slice": 0,
+   "target_slice": 40
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 47,
+   "target_offset_in_slice": 0,
+   "target_slice": 41
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 48,
+   "target_offset_in_slice": 0,
+   "target_slice": 42
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 49,
+   "target_offset_in_slice": 0,
+   "target_slice": 43
+  },
+  {
+   "slot_offset_in_slice": 136,
+   "slot_slice": 49,
+   "target_offset_in_slice": 0,
+   "target_slice": 44
+  },
+  {
+   "slot_offset_in_slice": 180,
+   "slot_slice": 49,
+   "target_offset_in_slice": 0,
+   "target_slice": 45
+  },
+  {
+   "slot_offset_in_slice": 224,
+   "slot_slice": 49,
+   "target_offset_in_slice": 0,
+   "target_slice": 46
+  },
+  {
+   "slot_offset_in_slice": 268,
+   "slot_slice": 49,
+   "target_offset_in_slice": 0,
+   "target_slice": 47
+  },
+  {
+   "slot_offset_in_slice": 312,
+   "slot_slice": 49,
+   "target_offset_in_slice": 0,
+   "target_slice": 48
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 51
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 52
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 53
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 54
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 55
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 56
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 57
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 51,
+   "target_offset_in_slice": 0,
+   "target_slice": 51
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 52
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 53,
+   "target_offset_in_slice": 0,
+   "target_slice": 53
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 54,
+   "target_offset_in_slice": 0,
+   "target_slice": 54
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 55,
+   "target_offset_in_slice": 0,
+   "target_slice": 55
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 56,
+   "target_offset_in_slice": 0,
+   "target_slice": 56
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 57,
+   "target_offset_in_slice": 0,
+   "target_slice": 57
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 58,
+   "target_offset_in_slice": 0,
+   "target_slice": 65
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 58,
+   "target_offset_in_slice": 0,
+   "target_slice": 66
+  },
+  {
+   "slot_offset_in_slice": 16,
+   "slot_slice": 58,
+   "target_offset_in_slice": 0,
+   "target_slice": 67
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 58,
+   "target_offset_in_slice": 0,
+   "target_slice": 68
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 58,
+   "target_offset_in_slice": 0,
+   "target_slice": 69
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 58,
+   "target_offset_in_slice": 0,
+   "target_slice": 70
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 59,
+   "target_offset_in_slice": 0,
+   "target_slice": 59
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 60,
+   "target_offset_in_slice": 0,
+   "target_slice": 60
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 61,
+   "target_offset_in_slice": 0,
+   "target_slice": 61
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 62,
+   "target_offset_in_slice": 0,
+   "target_slice": 62
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 63,
+   "target_offset_in_slice": 0,
+   "target_slice": 63
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 64,
+   "target_offset_in_slice": 0,
+   "target_slice": 64
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 65,
+   "target_offset_in_slice": 0,
+   "target_slice": 59
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 66,
+   "target_offset_in_slice": 0,
+   "target_slice": 60
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 61
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 68,
+   "target_offset_in_slice": 0,
+   "target_slice": 62
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 63
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 70,
+   "target_offset_in_slice": 0,
+   "target_slice": 64
+  },
+  {
+   "slot_offset_in_slice": 516,
+   "slot_slice": 74,
+   "target_offset_in_slice": 0,
+   "target_slice": 77
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 75,
+   "target_offset_in_slice": 0,
+   "target_slice": 74
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 75,
+   "target_offset_in_slice": 0,
+   "target_slice": 73
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 76,
+   "target_offset_in_slice": 0,
+   "target_slice": 75
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 77,
+   "target_offset_in_slice": 0,
+   "target_slice": 76
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 79,
+   "target_offset_in_slice": 0,
+   "target_slice": 71
+  },
+  {
+   "slot_offset_in_slice": 172,
+   "slot_slice": 79,
+   "target_offset_in_slice": 0,
+   "target_slice": 78
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 79
+  },
+  {
+   "slot_offset_in_slice": 140,
+   "slot_slice": 80,
+   "target_offset_in_slice": 0,
+   "target_slice": 81
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 81,
+   "target_offset_in_slice": 0,
+   "target_slice": 81
+  },
+  {
+   "slot_offset_in_slice": 108,
+   "slot_slice": 81,
+   "target_offset_in_slice": 0,
+   "target_slice": 83
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 82,
+   "target_offset_in_slice": 0,
+   "target_slice": 82
+  },
+  {
+   "slot_offset_in_slice": 0,
+   "slot_slice": 83,
+   "target_offset_in_slice": 0,
+   "target_slice": 82
+  }
+ ],
+ "parent_path": "reloc_fighters_main/PikachuSpecial3",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 65535,
+ "reloc_intern_offset": 179,
+ "relocated_view_crc32": 1093379786,
+ "reports": {
+  "demotions": [
+   {
+    "fmt": null,
+    "height": null,
+    "load_siz": 2,
+    "offset": 48,
+    "reason": "ambiguous-texture",
+    "siz": null,
+    "size": 512,
+    "texels": 256,
+    "width": null
+   }
+  ],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 244,
+    "target": 624
+   },
+   {
+    "from_file_id": 244,
+    "target": 864
+   },
+   {
+    "from_file_id": 244,
+    "target": 4120
+   },
+   {
+    "from_file_id": 244,
+    "target": 6280
+   },
+   {
+    "from_file_id": 244,
+    "target": 6688
+   },
+   {
+    "from_file_id": 244,
+    "target": 6880
+   }
+  ],
+  "mid_slice_targets": [
+   {
+    "delta": 16,
+    "slice": "dPikachuSpecial3_Vtx_0x1380",
+    "target": 5008,
+    "via": "chain"
+   },
+   {
+    "delta": 16,
+    "slice": "dPikachuSpecial3_Vtx_0x1380",
+    "target": 5008,
+    "via": "dl@0x15C0+0x68"
+   }
+  ]
+ },
+ "slices": [
+  {
+   "kind": "pad",
+   "name": "dPikachuSpecial3_pad_0x0000",
+   "offset": 0,
+   "size": 8
+  },
+  {
+   "colors": 16,
+   "kind": "lut",
+   "name": "dPikachuSpecial3_Lut_0x0008",
+   "offset": 8,
+   "size": 32
+  },
+  {
+   "kind": "pad",
+   "name": "dPikachuSpecial3_pad_0x0028",
+   "offset": 40,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x0030",
+   "offset": 48,
+   "size": 512
+  },
+  {
+   "count": 4,
+   "kind": "vtx",
+   "name": "dPikachuSpecial3_Vtx_0x0230",
+   "offset": 560,
+   "size": 64
+  },
+  {
+   "count": 29,
+   "kind": "gfx",
+   "name": "dPikachuSpecial3_Gfx_0x0270",
+   "offset": 624,
+   "size": 232
+  },
+  {
+   "kind": "pad",
+   "name": "dPikachuSpecial3_pad_0x0358",
+   "offset": 856,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x0360",
+   "offset": 864,
+   "size": 4
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x0364",
+   "offset": 868,
+   "size": 164
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x0408",
+   "offset": 1032,
+   "size": 1032
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x0810",
+   "offset": 2064,
+   "size": 1032
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x0C18",
+   "offset": 3096,
+   "size": 1024
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1018",
+   "offset": 4120,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1038",
+   "offset": 4152,
+   "size": 12
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1044",
+   "offset": 4164,
+   "size": 12
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1050",
+   "offset": 4176,
+   "size": 12
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x105C",
+   "offset": 4188,
+   "size": 12
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1068",
+   "offset": 4200,
+   "size": 12
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1074",
+   "offset": 4212,
+   "size": 12
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1080",
+   "offset": 4224,
+   "size": 120
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x10F8",
+   "offset": 4344,
+   "size": 120
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1170",
+   "offset": 4464,
+   "size": 120
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x11E8",
+   "offset": 4584,
+   "size": 120
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1260",
+   "offset": 4704,
+   "size": 120
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x12D8",
+   "offset": 4824,
+   "size": 120
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1350",
+   "offset": 4944,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1358",
+   "offset": 4952,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1360",
+   "offset": 4960,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1368",
+   "offset": 4968,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1370",
+   "offset": 4976,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1378",
+   "offset": 4984,
+   "size": 8
+  },
+  {
+   "count": 3,
+   "kind": "vtx",
+   "name": "dPikachuSpecial3_Vtx_0x1380",
+   "offset": 4992,
+   "size": 48
+  },
+  {
+   "count": 3,
+   "kind": "vtx",
+   "name": "dPikachuSpecial3_Vtx_0x13B0",
+   "offset": 5040,
+   "size": 48
+  },
+  {
+   "count": 2,
+   "kind": "vtx",
+   "name": "dPikachuSpecial3_Vtx_0x13E0",
+   "offset": 5088,
+   "size": 32
+  },
+  {
+   "count": 3,
+   "kind": "vtx",
+   "name": "dPikachuSpecial3_Vtx_0x1400",
+   "offset": 5120,
+   "size": 48
+  },
+  {
+   "count": 3,
+   "kind": "vtx",
+   "name": "dPikachuSpecial3_Vtx_0x1430",
+   "offset": 5168,
+   "size": 48
+  },
+  {
+   "count": 3,
+   "kind": "vtx",
+   "name": "dPikachuSpecial3_Vtx_0x1460",
+   "offset": 5216,
+   "size": 48
+  },
+  {
+   "count": 19,
+   "kind": "gfx",
+   "name": "dPikachuSpecial3_Gfx_0x1490",
+   "offset": 5264,
+   "size": 152
+  },
+  {
+   "count": 19,
+   "kind": "gfx",
+   "name": "dPikachuSpecial3_Gfx_0x1528",
+   "offset": 5416,
+   "size": 152
+  },
+  {
+   "count": 20,
+   "kind": "gfx",
+   "name": "dPikachuSpecial3_Gfx_0x15C0",
+   "offset": 5568,
+   "size": 160
+  },
+  {
+   "count": 19,
+   "kind": "gfx",
+   "name": "dPikachuSpecial3_Gfx_0x1660",
+   "offset": 5728,
+   "size": 152
+  },
+  {
+   "count": 19,
+   "kind": "gfx",
+   "name": "dPikachuSpecial3_Gfx_0x16F8",
+   "offset": 5880,
+   "size": 152
+  },
+  {
+   "count": 19,
+   "kind": "gfx",
+   "name": "dPikachuSpecial3_Gfx_0x1790",
+   "offset": 6032,
+   "size": 152
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1828",
+   "offset": 6184,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1838",
+   "offset": 6200,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1848",
+   "offset": 6216,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1858",
+   "offset": 6232,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1868",
+   "offset": 6248,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1878",
+   "offset": 6264,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1888",
+   "offset": 6280,
+   "size": 408
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1A20",
+   "offset": 6688,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1A40",
+   "offset": 6720,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1A64",
+   "offset": 6756,
+   "size": 20
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1A78",
+   "offset": 6776,
+   "size": 20
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1A8C",
+   "offset": 6796,
+   "size": 20
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1AA0",
+   "offset": 6816,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1AB0",
+   "offset": 6832,
+   "size": 20
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1AC4",
+   "offset": 6852,
+   "size": 28
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1AE0",
+   "offset": 6880,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1B00",
+   "offset": 6912,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1B38",
+   "offset": 6968,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1B68",
+   "offset": 7016,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1B88",
+   "offset": 7048,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1BC0",
+   "offset": 7104,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1BF8",
+   "offset": 7160,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1C20",
+   "offset": 7200,
+   "size": 4
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1C24",
+   "offset": 7204,
+   "size": 4
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1C28",
+   "offset": 7208,
+   "size": 4
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1C2C",
+   "offset": 7212,
+   "size": 4
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1C30",
+   "offset": 7216,
+   "size": 4
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1C34",
+   "offset": 7220,
+   "size": 60
+  },
+  {
+   "colors": 16,
+   "kind": "lut",
+   "name": "dPikachuSpecial3_Lut_0x1C70",
+   "offset": 7280,
+   "size": 32
+  },
+  {
+   "kind": "pad",
+   "name": "dPikachuSpecial3_pad_0x1C90",
+   "offset": 7312,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1C98",
+   "offset": 7320,
+   "size": 520
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x1EA0",
+   "offset": 7840,
+   "size": 520
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x20A8",
+   "offset": 8360,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x20B0",
+   "offset": 8368,
+   "size": 120
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x2128",
+   "offset": 8488,
+   "size": 8
+  },
+  {
+   "count": 4,
+   "kind": "vtx",
+   "name": "dPikachuSpecial3_Vtx_0x2130",
+   "offset": 8496,
+   "size": 64
+  },
+  {
+   "count": 29,
+   "kind": "gfx",
+   "name": "dPikachuSpecial3_Gfx_0x2170",
+   "offset": 8560,
+   "size": 232
+  },
+  {
+   "kind": "gap",
+   "name": "dPikachuSpecial3_gap_0x2258",
+   "offset": 8792,
+   "size": 144
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x22E8",
+   "offset": 8936,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x2358",
+   "offset": 9048,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dPikachuSpecial3_blob_0x2388",
+   "offset": 9096,
+   "size": 8
+  }
+ ],
+ "symbol": "PikachuSpecial3",
+ "vanilla_data_size": 9104
+}
