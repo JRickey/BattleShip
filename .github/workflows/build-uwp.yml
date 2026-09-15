@@ -23,6 +23,10 @@ jobs:
         with:
           arch: x64
 
+      - name: Install asset-generation dependencies
+        shell: pwsh
+        run: python3 -m pip install --disable-pip-version-check Pillow
+
       - name: Restore native dependencies and objects
         id: native-cache
         uses: actions/cache/restore@v4
