@@ -45,3 +45,10 @@ a fractional subframe cadence to match the reported display refresh, capped at
 240 FPS. Rates such as 90, 120, 144, and 165 Hz therefore receive correctly
 paced and temporally positioned interpolation frames without changing game
 logic speed.
+
+## Reproducible Windows build environment
+
+GitHub Actions builds and signs the package on `windows-2022`. A matching
+Windows-container definition and one-command build script live in `ci/windows`.
+The image requires a Windows Server 2022 or compatible Windows 11 container
+host; it cannot run on a Linux Docker daemon.
