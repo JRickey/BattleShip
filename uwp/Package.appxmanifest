@@ -15,6 +15,13 @@
   </Properties>
   <Dependencies>
     <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+    <!-- BattleShip and the packaged SDL/UWP libraries use the app-container
+         MSVC runtime. Declaring the framework makes those DLLs part of the
+         package dependency graph on Xbox (shipping the dependency APPX next
+         to the bundle is not sufficient by itself). -->
+    <PackageDependency Name="Microsoft.VCLibs.140.00"
+                       MinVersion="14.0.33519.0"
+                       Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" />
   </Dependencies>
   <Resources><Resource Language="x-generate" /></Resources>
   <Applications>
