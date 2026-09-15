@@ -2,6 +2,18 @@ cmake_minimum_required(VERSION 3.24.0 FATAL_ERROR)
 
 project(ssb64 LANGUAGES C CXX)
 
+option(BATTLESHIP_UWP "Build the native DLL used by the Xbox/UWP wrapper" OFF)
+
+if(BATTLESHIP_UWP)
+    if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        message(FATAL_ERROR "BATTLESHIP_UWP requires a Windows x64 host build")
+    endif()
+    set(NON_PORTABLE ON CACHE BOOL "Store writable data in platform app storage" FORCE)
+    set(DISABLE_SCRIPTING ON CACHE BOOL "UWP cannot provide executable-memory scripting" FORCE)
+    set(LUS_ENABLE_POSTPROCESS_TRANSPILER OFF CACHE BOOL "UWP uses packaged shaders" FORCE)
+    add_compile_definitions(_UWP=1 BATTLESHIP_UWP=1)
+endif()
+
 # Android needs ASM for the aarch64 coroutine context-switch
 # (port/coroutine_aarch64.S). Enable it before any add_library/add_executable
 # call sees an .S source. ASM is preprocessed by clang on the way through.
@@ -110,6 +122,9 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Android" AND NOT SSB64_VERSION STREQUAL "us")
         "Android build is US-only (got SSB64_VERSION=${SSB64_VERSION}). "
         "Drop -DSSB64_VERSION=jp from the Gradle externalNativeBuild args.")
 endif()
+if (BATTLESHIP_UWP AND NOT SSB64_VERSION STREQUAL "us")
+    message(FATAL_ERROR "The UWP package supports the US ROM only")
+endif()
 string(TOUPPER "${SSB64_VERSION}" SSB64_VERSION_UC)
 message(STATUS "SSB64 ROM version: ${SSB64_VERSION}")
 
@@ -148,6 +163,14 @@ set(BUILD_FZERO OFF CACHE BOOL "" FORCE)
 set(BUILD_MARIO_ARTIST OFF CACHE BOOL "" FORCE)
 set(BUILD_NAUDIO ON CACHE BOOL "" FORCE)
 set(BUILD_SSB64 ON CACHE BOOL "" FORCE)
+
+if(BATTLESHIP_UWP)
+    FetchContent_Declare(UwpLibs
+        GIT_REPOSITORY https://github.com/worleydl/uwp-dep.git
+        GIT_TAG 0ec87d2406b47743772e2787654275a6f6c0e284
+    )
+    FetchContent_MakeAvailable(UwpLibs)
+endif()
 
 ################################################################################
 # Subdirectories: libultraship
@@ -529,9 +552,17 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Android")
         "port/enhancements/(Updater|DiscordRichPresence|ShaderDownloader)\\.cpp$")
     list(FILTER SSB64_SRC_PORT EXCLUDE REGEX "port/port_window_icon\\.cpp$")
 endif()
+if(BATTLESHIP_UWP)
+    # Xbox packages are updated as MSIX and cannot use these Win32
+    # shell-out/IPC integrations.
+    list(FILTER SSB64_SRC_PORT EXCLUDE REGEX
+        "port/enhancements/(Updater|DiscordRichPresence|ShaderDownloader)\\.cpp$")
+    list(FILTER SSB64_SRC_PORT EXCLUDE REGEX "port/port_window_icon\\.cpp$")
+    list(FILTER SSB64_SRC_PORT EXCLUDE REGEX "port/first_run\\.cpp$")
+endif()
 # Treat the generated icon header as a source so CMake schedules it ahead
 # of any port TU compilation (port_window_icon.cpp #includes it).
-if (NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
+if (NOT CMAKE_SYSTEM_NAME STREQUAL "Android" AND NOT BATTLESHIP_UWP)
     list(APPEND SSB64_SRC_PORT ${SSB64_ICON_GEN})
 endif()
 # Arrow + nameplate baked headers — added as sources so CMake schedules their
@@ -815,7 +846,7 @@ endif()
 # Fetch Discord RPC (desktop only — Android drops Discord Rich Presence
 # along with the rest of the network-dependent features).
 ################################################################################
-if (NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
+if (NOT CMAKE_SYSTEM_NAME STREQUAL "Android" AND NOT BATTLESHIP_UWP)
     # discord-rpc v3.4.0's CMakeLists declares cmake_minimum_required(VERSION 2.x),
     # which CMake 3.30+ refuses to honor. Force a baseline policy version for the
     # fetched subdir so the build still configures with current CMake.
@@ -867,6 +898,18 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Android")
         port/coroutine_armv7.S
     )
     set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "main")
+elseif(BATTLESHIP_UWP)
+    # The UWP CoreApplication executable is a tiny wrapper in uwp/. Keep the
+    # existing game entrypoint in a DLL and export SDL_main for that wrapper.
+    add_library(${PROJECT_NAME} SHARED
+        ${SSB64_SRC_PORT}
+        ${SSB64_DEBUG_TOOLS}
+        $<TARGET_OBJECTS:ssb64_game>
+    )
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        OUTPUT_NAME "BattleShip"
+        WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+    )
 else()
     add_executable(${PROJECT_NAME} ${SSB64_SRC_PORT} ${SSB64_DEBUG_TOOLS} $<TARGET_OBJECTS:ssb64_game>)
 
@@ -905,7 +948,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/debug_tools
     ${SSB64_CSS_GEN_DIR}                         # CSS icon baked headers (arrow_data.h)
 )
-if (NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
+if (NOT CMAKE_SYSTEM_NAME STREQUAL "Android" AND NOT BATTLESHIP_UWP)
     target_include_directories(${PROJECT_NAME} PRIVATE
         ${SSB64_ICON_GEN_DIR}                         # Generated icon header (port_icon_data.h)
         ${discord_rpc_SOURCE_DIR}/include             # Discord Rich Presence
@@ -925,6 +968,9 @@ endif()
 if (CMAKE_SYSTEM_NAME STREQUAL "Android")
     add_dependencies(${PROJECT_NAME} libultraship)
     target_link_libraries(${PROJECT_NAME} PRIVATE libultraship)
+elseif(BATTLESHIP_UWP)
+    add_dependencies(${PROJECT_NAME} libultraship TorchExternal)
+    target_link_libraries(${PROJECT_NAME} PRIVATE libultraship SDL2 LIBUWP GLFW3)
 else()
     add_dependencies(${PROJECT_NAME} libultraship TorchExternal discord-rpc)
     target_link_libraries(${PROJECT_NAME} PRIVATE libultraship discord-rpc)
@@ -982,7 +1028,7 @@ endif()
 # Platform-specific settings
 ################################################################################
 
-if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows" AND NOT BATTLESHIP_UWP)
     target_link_options(${PROJECT_NAME} PRIVATE /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup)
     target_link_libraries(${PROJECT_NAME} PRIVATE shell32)
     # DMA functions (osEPiStartDma, osPiStartDma) are provided by LUS.

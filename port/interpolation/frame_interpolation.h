@@ -1,11 +1,11 @@
 /**
  * frame_interpolation.h — Enhanced framerate mode (interpolated rendering).
  *
- * Renders k subframes per 60 Hz game tick (k = target fps / 60) with object
- * and camera matrices interpolated between the two most recent ticks. Game
- * logic cadence is untouched: PortPushFrame still runs exactly one tick, and
- * the tick's 16.67 ms wall duration is preserved because each of the k
- * subframe presents paces at 1/(60k) s via Fast3dWindow::SetTargetFps(60*k).
+ * Renders one or more subframes per 60 Hz game tick with object and camera
+ * matrices interpolated between the two most recent ticks. Integer multiples
+ * use a fixed count; display-match mode uses a fractional cadence so rates
+ * such as 90, 144, and 165 Hz receive the correct number and phase of frames.
+ * Game logic cadence remains 60 Hz.
  *
  * Recording side: decomp draw code (gcPrepDObjMatrix, camera preps) calls
  * portInterpRecordMtx() at each gSPMatrix emission with the Mtx pointer and a
@@ -31,6 +31,7 @@ extern "C" {
 
 /* CVar holding the target fps (0 = off, 120/180/240). Shared with PortMenu. */
 #define PORT_INTERP_CVAR_FPS "gEnhancedFps"
+#define PORT_INTERP_CVAR_MATCH_DISPLAY "gEnhancedFpsMatchDisplay"
 
 /**
  * Recording hook, called from decomp draw code (C) at gSPMatrix emission.
@@ -78,9 +79,10 @@ void portInterpApplyConfig(void);
 
 /**
  * Replacement map for subframe j of `total` (1-based). Returns a reference to
- * an internal map keyed by this tick's Mtx pointers with values lerped at
- * fraction j/total; the last subframe returns an empty map (render from game
- * memory, bit-exact). Valid until the next portInterpBeginDraw/EndDraw.
+ * an internal map keyed by this tick's Mtx pointers with values lerped at the
+ * cadence-derived display-time fraction. An exact tick endpoint returns an
+ * empty map (render from game memory, bit-exact). Valid until the next
+ * portInterpBeginDraw/EndDraw.
  */
 const std::unordered_map<Mtx *, MtxF> &portInterpGetReplacements(int subframe, int total);
 

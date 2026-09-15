@@ -357,7 +357,7 @@ void RenderPostProcessDiagnostics(WidgetInfo& /*widget*/) {
     }
 }
 
-#if !defined(__ANDROID__)
+#if !defined(__ANDROID__) && !defined(BATTLESHIP_UWP)
 // Shader-pack downloader UI is gated off on Android (the libretro
 // catalog fetch + ZIP-extract pipeline doesn't fit Play Store distro;
 // port/enhancements/ShaderDownloader.cpp is not compiled into libmain.so).
@@ -858,7 +858,7 @@ void PortMenu::AddMenuSettings() {
         .RaceDisable(false)
         .Options(CheckboxOptions().Tooltip("Gives the search input focus when it becomes visible."));
 
-#if !defined(__ANDROID__)
+#if !defined(__ANDROID__) && !defined(BATTLESHIP_UWP)
     // DRP — Android drops discord-rpc entirely (no curl + Play Store
     // distribution friction; the Discord SDK isn't built for mobile).
     AddWidget(path, "Enable Discord Rich Presence", WIDGET_CVAR_CHECKBOX)
@@ -937,7 +937,7 @@ void PortMenu::AddMenuSettings() {
                      .DefaultValue(1));
 #endif
 
-#if !defined(__ANDROID__)
+#if !defined(__ANDROID__) && !defined(BATTLESHIP_UWP)
     // Post-process / CRT shader stack — hidden on Android. The libretro
     // slang→SPIR-V→backend transpile path hasn't been validated against
     // GLES on mobile, and the libretro shader catalog download (curl +
@@ -967,6 +967,11 @@ void PortMenu::AddMenuSettings() {
         .CVar(PORT_INTERP_CVAR_FPS)
         .RaceDisable(false)
         .Callback([](WidgetInfo&) { portInterpApplyConfig(); })
+        .PreFunc([this](WidgetInfo& info) {
+            if (disabledMap.at(DISABLE_FOR_MATCH_REFRESH_RATE_ON).active) {
+                info.activeDisables.push_back(DISABLE_FOR_MATCH_REFRESH_RATE_ON);
+            }
+        })
         .Options(ComboboxOptions()
                      .Tooltip("Renders extra frames between 60 Hz game ticks by interpolating object "
                               "and camera motion. Game logic, physics, and input timing stay at exactly "
@@ -977,7 +982,17 @@ void PortMenu::AddMenuSettings() {
                      .ComboMap(kEnhancedFpsMap)
                      .DefaultIndex(0));
 
-#if !defined(__ANDROID__)
+    AddWidget(path, "Match Display Refresh Rate", WIDGET_CVAR_CHECKBOX)
+        .CVar(PORT_INTERP_CVAR_MATCH_DISPLAY)
+        .RaceDisable(false)
+        .Callback([](WidgetInfo&) { portInterpApplyConfig(); })
+        .Options(CheckboxOptions()
+                     .Tooltip("Locks interpolated rendering to the active display refresh rate, from 60 through "
+                              "240 Hz. Fractional frame cadence preserves the fixed 60 Hz game simulation on "
+                              "90/120/144/165 Hz phones, TVs, monitors, and Xbox display modes.")
+                     .DefaultValue(false));
+
+#if !defined(__ANDROID__) && !defined(BATTLESHIP_UWP)
     AddWidget(path, "Windowed Fullscreen", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_SDL_WINDOWED_FULLSCREEN)
         .RaceDisable(false)
@@ -1428,7 +1443,7 @@ void PortMenu::AddMenuAssets() {
     // Pack-authoring dump tooling is desktop-only — it writes hundreds of
     // files into <app>/ and is driven from a separate offline conversion
     // pipeline, neither of which makes sense on a touch device.
-#if !defined(__ANDROID__)
+#if !defined(__ANDROID__) && !defined(BATTLESHIP_UWP)
     AddWidget(path, "Pack Authoring", WIDGET_SEPARATOR_TEXT);
     AddWidget(path,
               "Dump Source Textures writes one .bin per unique texture into "
@@ -1693,7 +1708,7 @@ void PortMenu::AddMenuAbout() {
     AddWidget(path, "Zorkats: C Modding Documentation", WIDGET_TEXT);
 
 
-#if !defined(__ANDROID__)
+#if !defined(__ANDROID__) && !defined(BATTLESHIP_UWP)
     // BUILT-IN UPDATER — hidden on Android. App updates come through the
     // Play Store on mobile; a curl-driven GitHub-releases updater can't
     // replace a system-managed installation, and the curl shell-out
@@ -1817,8 +1832,8 @@ void PortMenu::InitElement() {
            },
             "Not available on DirectX" } },
         { DISABLE_FOR_MATCH_REFRESH_RATE_ON,
-          { [](disabledInfo&) -> bool { return CVarGetInteger(CVAR_SETTING("MatchRefreshRate"), 0); },
-            "Match Refresh Rate is enabled" } },
+          { [](disabledInfo&) -> bool { return CVarGetInteger(PORT_INTERP_CVAR_MATCH_DISPLAY, 0); },
+            "Match Display Refresh Rate is enabled" } },
         { DISABLE_FOR_ADVANCED_RESOLUTION_ON,
           { [](disabledInfo&) -> bool { return CVarGetInteger(CVAR_PREFIX_ADVANCED_RESOLUTION ".Enabled", 0); },
             "Advanced Resolution enabled" } },
@@ -1876,7 +1891,7 @@ void PortMenu::DrawElement() {
     }
 
     RenderPostProcessLowResWarnModal();
-#if !defined(__ANDROID__)
+#if !defined(__ANDROID__) && !defined(BATTLESHIP_UWP)
     RenderShaderPackModal();
 #endif
 }
