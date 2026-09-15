@@ -1256,6 +1256,7 @@ int main(int argc, char* argv[]) {
 		}
 		port_log_init(logPath.c_str());
 	}
+	port_log("SSB64: main entered\n");
 
 #ifdef __APPLE__
 	/* Disable the macOS press-and-hold accent/diacritic popup for this app.
@@ -1298,6 +1299,7 @@ int main(int argc, char* argv[]) {
 	// Initialize RenderDoc trigger BEFORE PortInit so the RenderDoc DLL
 	// can hook D3D11 before LUS creates the device.
 	portRenderDocInit();
+	port_log("SSB64: RenderDoc hook initialized\n");
 
 	if (PortInit(argc, argv) != 0) {
 		return 1;

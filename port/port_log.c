@@ -32,6 +32,12 @@ void port_log(const char *fmt, ...)
 	va_start(ap, fmt);
 	vfprintf(sLogFile, fmt, ap);
 	va_end(ap);
+	#if defined(BATTLESHIP_UWP)
+	/* Xbox Device Portal may terminate a failed UWP process before stdio's
+	 * normal-exit flush runs. Keep startup diagnostics durable so failures
+	 * can be diagnosed from LocalState without attaching a debugger. */
+	fflush(sLogFile);
+	#endif
 	/* fflush on every call costs seconds per frame on a slow drive when
 	 * figatree watchdogs fire 28x per frame during a stuck APPEAR. Rely on
 	 * stdio's buffer + OS-on-exit flush for normal logging; crash dumps
