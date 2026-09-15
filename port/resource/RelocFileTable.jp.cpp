@@ -7,6 +7,8 @@
 
 #include "RelocFileTable.h"
 
+#include <cstddef>
+
 const char* const gRelocFileTable[RELOC_FILE_COUNT] = {
 	"reloc_menus/MNCommon", /* 0 */
 	"reloc_menus/MNMain", /* 1 */
