@@ -71,7 +71,6 @@ endforeach()
 target_sources(${PROJECT_NAME} PRIVATE ${BIN_DEPS} ${PKG_ASSETS} ${FONT_FILES})
 target_include_directories(${PROJECT_NAME} PRIVATE "${UWP_DEPS}/include")
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    "${NATIVE_DIR}/BattleShip.lib"
     "${UWP_DEPS}/lib/libuwp.lib"
     "${UWP_DEPS}/lib/SDL2.lib"
     OneCore.lib
