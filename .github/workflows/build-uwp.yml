@@ -67,18 +67,31 @@ jobs:
         shell: pwsh
         run: |
           cmake -S uwp -B build-uwp -G "Visual Studio 17 2022" -A x64 `
-            -DBATTLESHIP_BUILD_DIR="${{ github.workspace }}/build-windows"
+            -DBATTLESHIP_BUILD_DIR="${{ github.workspace }}/build-windows" `
+            -DBATTLESHIP_PACKAGE_VERSION="1.0.${{ github.run_number }}.0"
 
       - name: Build and sign MSIX bundle
         shell: pwsh
+        env:
+          UWP_SIGNING_PFX_BASE64: ${{ secrets.UWP_SIGNING_PFX_BASE64 }}
+          UWP_SIGNING_PFX_PASSWORD: ${{ secrets.UWP_SIGNING_PFX_PASSWORD }}
         run: |
-          $cert = New-SelfSignedCertificate `
-            -Type Custom `
-            -Subject "CN=JRickey" `
-            -KeyUsage DigitalSignature `
-            -FriendlyName "BattleShip UWP CI" `
-            -CertStoreLocation "Cert:\CurrentUser\My" `
-            -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
+          if ($env:UWP_SIGNING_PFX_BASE64 -and $env:UWP_SIGNING_PFX_PASSWORD) {
+            $pfxPath = Join-Path $env:RUNNER_TEMP "BattleShip-UWP.pfx"
+            [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:UWP_SIGNING_PFX_BASE64))
+            $securePassword = ConvertTo-SecureString $env:UWP_SIGNING_PFX_PASSWORD -AsPlainText -Force
+            $cert = Import-PfxCertificate -FilePath $pfxPath `
+              -CertStoreLocation "Cert:\CurrentUser\My" -Password $securePassword
+          } else {
+            Write-Warning "Stable signing secrets are unavailable; generating a one-run development certificate."
+            $cert = New-SelfSignedCertificate `
+              -Type Custom `
+              -Subject "CN=JRickey" `
+              -KeyUsage DigitalSignature `
+              -FriendlyName "BattleShip UWP CI fallback" `
+              -CertStoreLocation "Cert:\CurrentUser\My" `
+              -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
+          }
           msbuild build-uwp/BattleShip-UWP.vcxproj `
             /p:Configuration=Release `
             /p:Platform=x64 `

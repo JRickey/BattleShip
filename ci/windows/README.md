@@ -14,7 +14,10 @@ docker run --rm -m 12GB `
 
 The source mount must already contain recursively initialized submodules. The
 image is intentionally a build environment, not a runtime image; its output is
-a signed sideload package under `dist`.
+a signed sideload package under `dist`. Pass `-PackageVersion`, `-SigningPfx`,
+and `-SigningPassword` to `build-uwp.ps1` when producing upgrade-compatible
+releases; without a PFX the script intentionally makes a disposable development
+certificate.
 
 Windows containers require a Windows container host and matching/compatible
 host and image versions. A Linux Docker daemon cannot execute this image. The

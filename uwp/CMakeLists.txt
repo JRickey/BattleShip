@@ -9,10 +9,17 @@ project(BattleShip-UWP LANGUAGES CXX)
 set_directory_properties(PROPERTIES VS_STARTUP_PROJECT ${PROJECT_NAME})
 
 set(BATTLESHIP_BUILD_DIR "" CACHE PATH "BattleShip native build directory")
+set(BATTLESHIP_PACKAGE_VERSION "1.0.0.0" CACHE STRING "Four-part MSIX package version")
 if(NOT BATTLESHIP_BUILD_DIR)
     message(FATAL_ERROR "BATTLESHIP_BUILD_DIR must point to the native BattleShip build")
 endif()
+if(NOT BATTLESHIP_PACKAGE_VERSION MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$")
+    message(FATAL_ERROR "BATTLESHIP_PACKAGE_VERSION must be a four-part MSIX version")
+endif()
 set(BATTLESHIP_NATIVE_CONFIG "Release" CACHE STRING "Native BattleShip configuration to package")
+
+set(BATTLESHIP_MANIFEST "${CMAKE_CURRENT_BINARY_DIR}/Package.appxmanifest")
+configure_file(Package.appxmanifest "${BATTLESHIP_MANIFEST}" @ONLY)
 
 add_executable(${PROJECT_NAME} WIN32 main.cpp)
 
@@ -30,7 +37,7 @@ set(BIN_DEPS
     "${UWP_DEPS}/bin/opengl32.dll"
     "${UWP_DEPS}/bin/SDL2.dll"
     "${UWP_DEPS}/bin/z-1.dll"
-    Package.appxmanifest
+    "${BATTLESHIP_MANIFEST}"
     INSTALL.txt
 )
 set_source_files_properties(${BIN_DEPS} PROPERTIES

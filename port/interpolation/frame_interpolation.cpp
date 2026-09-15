@@ -78,6 +78,8 @@ std::unordered_map<Mtx *, MtxF> sReplacements;
 const std::unordered_map<Mtx *, MtxF> sEmptyReplacements;
 
 bool sConfigInited = false;
+bool sEnvInited = false;
+int sEnvFps = -1;
 int sConfigK = 1;       /* k requested by CVar/env */
 int sThrottleCapK = 4;  /* upper bound imposed by the auto-throttle */
 int sAppliedK = 1;      /* last k applied via SetTargetFps */
@@ -177,6 +179,19 @@ Fast::Fast3dWindow *get_fast3d_window()
     return dynamic_cast<Fast::Fast3dWindow *>(context->GetWindow().get());
 }
 
+int clamp_display_fps(uint32_t refresh)
+{
+    int fps = static_cast<int>(refresh);
+    if (fps < 60) fps = 60;
+    if (fps > 60 * kMaxSubframes) fps = 60 * kMaxSubframes;
+    return fps;
+}
+
+bool display_match_enabled()
+{
+    return CVarGetInteger(PORT_INTERP_CVAR_MATCH_DISPLAY, 0) != 0;
+}
+
 void apply_effective_rate(int targetFps)
 {
     if (targetFps == sAppliedTargetFps) {
@@ -205,8 +220,6 @@ extern "C" void portInterpApplyConfig(void)
     sConfigInited = true;
 
     /* One-shot env reads. */
-    static bool sEnvInited = false;
-    static int sEnvFps = -1;
     if (!sEnvInited) {
         sEnvInited = true;
         const char *env = std::getenv("SSB64_INTERP_FPS");
@@ -222,19 +235,17 @@ extern "C" void portInterpApplyConfig(void)
     }
 
     int fps = (sEnvFps >= 0) ? sEnvFps : CVarGetInteger(PORT_INTERP_CVAR_FPS, 0);
-    if (sEnvFps < 0 && CVarGetInteger(PORT_INTERP_CVAR_MATCH_DISPLAY, 0)) {
+    if (sEnvFps < 0 && display_match_enabled()) {
         auto* window = get_fast3d_window();
         const uint32_t refresh = window != nullptr ? window->GetCurrentRefreshRate() : 60;
         // Keep the 60 Hz simulation fixed while matching arbitrary display
         // rates. A fractional cadence distributes ceil(fps / 60) subframes
         // across ticks and computes their true temporal phases, so 90, 144,
         // and 165 Hz panels are paced exactly instead of being rounded down.
-        fps = static_cast<int>(refresh);
-        if (fps < 60) fps = 60;
-        if (fps > 60 * kMaxSubframes) fps = 60 * kMaxSubframes;
+        fps = clamp_display_fps(refresh);
         port_log("SSB64: interp — display reports %u Hz; match mode selected %d fps\n", refresh, fps);
     }
-    const bool matchDisplay = sEnvFps < 0 && CVarGetInteger(PORT_INTERP_CVAR_MATCH_DISPLAY, 0);
+    const bool matchDisplay = sEnvFps < 0 && display_match_enabled();
     int k = (fps >= 60) ? (matchDisplay ? (fps + 59) / 60 : (fps + 30) / 60) : 1;
     if (k < 1) k = 1;
     if (k > kMaxSubframes) k = kMaxSubframes;
@@ -258,6 +269,29 @@ extern "C" int portInterpActiveSubframes(void)
 {
     if (!sConfigInited) {
         portInterpApplyConfig();
+    }
+
+    // Refresh can change without a settings callback: desktop windows can
+    // move between monitors and mobile displays can switch adaptive-refresh
+    // modes while the app is running. Re-sample it at the game-tick boundary
+    // and restart only the render cadence when the reported rate changes.
+    if (sEnvFps < 0 && display_match_enabled()) {
+        auto* window = get_fast3d_window();
+        if (window != nullptr) {
+            const uint32_t refresh = window->GetCurrentRefreshRate();
+            const int targetFps = clamp_display_fps(refresh);
+            if (targetFps != sConfigTargetFps) {
+                sConfigTargetFps = targetFps;
+                sConfigK = (targetFps + 59) / 60;
+                sThrottleCapK = kMaxSubframes;
+                sOverrunTics = 0;
+                sWarmupRemaining = kWarmupTics;
+                sCadenceAccumulator = 0;
+                sRecordArmed = sConfigK > 1;
+                port_log("SSB64: interp — display changed to %u Hz; match mode selected %d fps\n",
+                         refresh, targetFps);
+            }
+        }
     }
     if (sConfigK <= 1) {
         apply_effective_rate(60);

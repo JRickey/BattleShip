@@ -1,6 +1,9 @@
 param(
     [string]$Source = "C:\src",
-    [string]$Output = "C:\out"
+    [string]$Output = "C:\out",
+    [string]$PackageVersion = "1.0.0.0",
+    [string]$SigningPfx = "",
+    [string]$SigningPassword = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,16 +26,24 @@ if ($LASTEXITCODE -ne 0) { throw "Native build failed ($LASTEXITCODE)." }
 
 cmake -S (Join-Path $Source "uwp") -B $packageBuild -G "Visual Studio 17 2022" -A x64 `
     -DBATTLESHIP_BUILD_DIR=$nativeBuild `
-    -DBATTLESHIP_NATIVE_CONFIG=Release
+    -DBATTLESHIP_NATIVE_CONFIG=Release `
+    -DBATTLESHIP_PACKAGE_VERSION=$PackageVersion
 if ($LASTEXITCODE -ne 0) { throw "Package configure failed ($LASTEXITCODE)." }
 
-$cert = New-SelfSignedCertificate `
-    -Type Custom `
-    -Subject "CN=JRickey" `
-    -KeyUsage DigitalSignature `
-    -FriendlyName "BattleShip UWP container" `
-    -CertStoreLocation "Cert:\CurrentUser\My" `
-    -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
+if ($SigningPfx) {
+    if (-not $SigningPassword) { throw "SigningPassword is required when SigningPfx is set." }
+    $securePassword = ConvertTo-SecureString $SigningPassword -AsPlainText -Force
+    $cert = Import-PfxCertificate -FilePath $SigningPfx `
+        -CertStoreLocation "Cert:\CurrentUser\My" -Password $securePassword
+} else {
+    $cert = New-SelfSignedCertificate `
+        -Type Custom `
+        -Subject "CN=JRickey" `
+        -KeyUsage DigitalSignature `
+        -FriendlyName "BattleShip UWP container" `
+        -CertStoreLocation "Cert:\CurrentUser\My" `
+        -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
+}
 
 msbuild (Join-Path $packageBuild "BattleShip-UWP.vcxproj") `
     /p:Configuration=Release `

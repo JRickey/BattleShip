@@ -14,7 +14,8 @@ Extract the tool, then in PowerShell run:
 .\Prepare-BattleShip-US.ps1 "C:\path\to\Super Smash Bros. (USA).z64"
 ```
 
-Copy the generated `BattleShip` directory to the root of an Xbox-formatted
+Sign in to an Xbox profile before installing; Xbox UWP deployment requires an
+interactive user session. Copy the generated `BattleShip` directory to the root of an Xbox-formatted
 media USB drive. The game archive must resolve as
 `E:\BattleShip\BattleShip.o2r`. Install the MSIX bundle and certificate through
 Xbox Device Portal, choose **Game** for the app type, and launch it.
@@ -44,11 +45,16 @@ desktop, Android, and iOS. BattleShip keeps its fixed 60 Hz simulation and uses
 a fractional subframe cadence to match the reported display refresh, capped at
 240 FPS. Rates such as 90, 120, 144, and 165 Hz therefore receive correctly
 paced and temporally positioned interpolation frames without changing game
-logic speed.
+logic speed. Match mode re-samples the active display while running, so moving a
+desktop window between monitors or a phone changing adaptive-refresh modes does
+not leave it locked to the old rate.
 
 ## Reproducible Windows build environment
 
-GitHub Actions builds and signs the package on `windows-2022`. A matching
-Windows-container definition and one-command build script live in `ci/windows`.
+GitHub Actions gives each package a unique build version. When the repository
+defines `UWP_SIGNING_PFX_BASE64` and `UWP_SIGNING_PFX_PASSWORD`, builds use that
+stable development certificate; forks without those secrets receive a
+disposable self-signed certificate. A matching Windows-container definition
+and one-command build script live in `ci/windows`.
 The image requires a Windows Server 2022 or compatible Windows 11 container
 host; it cannot run on a Linux Docker daemon.
