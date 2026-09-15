@@ -1306,7 +1306,10 @@ add_custom_target(GenerateBattleShipO2R
 #
 # Desktop-only.  Android is a follow-up task (stage PNGs need to be packaged
 # into the APK assets/ and extracted to externalFilesDir on first launch).
-if(EXISTS "${SSB64_BASEROM}")
+# derive_stage_assets.py currently understands the US ROM layout only.
+# This affects three additional CSS stage images, not the main game assets.
+set(SSB64_CSS_ASSET_ROM "${CMAKE_CURRENT_SOURCE_DIR}/baserom.us.z64")
+if(EXISTS "${SSB64_CSS_ASSET_ROM}")
     add_custom_command(
         OUTPUT
             ${SSB64_CSS_FD_BG_PNG}
@@ -1321,12 +1324,12 @@ if(EXISTS "${SSB64_BASEROM}")
             ${SSB64_CSS_BF_NAME_PNG}
         COMMAND ${Python3_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/tools/derive_stage_assets.py
-                ${SSB64_BASEROM}
+                ${SSB64_CSS_ASSET_ROM}
                 ${SSB64_CSS_STAGE_ASSET_DIR}
         DEPENDS
-            ${SSB64_BASEROM}
+            ${SSB64_CSS_ASSET_ROM}
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/derive_stage_assets.py
-        COMMENT "Extracting CSS stage assets from ${SSB64_BASEROM}"
+        COMMENT "Extracting CSS stage assets from ${SSB64_CSS_ASSET_ROM}"
         VERBATIM
     )
     add_custom_target(DeriveStageAssets
