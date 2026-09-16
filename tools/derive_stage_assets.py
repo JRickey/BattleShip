@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-derive_stage_assets.py — Extract CSS stage assets from baserom.us.z64.
+derive_stage_assets.py — Extract CSS stage assets from a US or JP baserom.
 
 For each stage in the STAGES manifest this script:
-  1. Extracts the reloc file from baserom.us.z64 (using the VPK0/reloc logic
+  1. Extracts the reloc file from the supplied baserom (using the VPK0/reloc logic
      shared with debug_tools/reloc_extract/reloc_extract.py).
   2. Parses the Sprite struct at the specified byte offset (big-endian ROM layout).
   3. Resolves each Bitmap's texel-buffer pointer using the SSB64 RELOC linked-list
@@ -79,6 +79,7 @@ STAGES = [
         "name_text":  "FINAL DESTINATION",  # synthetic nameplate (no ROM sprite)
         "emblem_src": {
             "reloc_file": 345,              # llMasterHandIconFileID = 0x159
+            "reloc_file_jp": 320,           # JP llMasterHandIconFileID = 0x140
             "sprite_off": 0x2b8,            # llMasterHandIconFTEmblemSprite = 0x2b8
         },
     },
@@ -430,7 +431,13 @@ def extract_emblem(stage: dict, rom: bytes, output_dir: Path) -> None:
     """
     name = stage["name"]
     src  = stage["emblem_src"]
-    reloc_file = src["reloc_file"]
+    if len(rom) <= 0x3E:
+        raise ValueError("ROM is too small to contain an N64 country code")
+    reloc_file = (
+        src.get("reloc_file_jp", src["reloc_file"])
+        if rom[0x3E] == ord("J")
+        else src["reloc_file"]
+    )
     sprite_off = src["sprite_off"]
 
     print(

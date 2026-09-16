@@ -2,7 +2,7 @@
 """
 reloc_extract — Standalone SSB64:RELOC file extractor and verifier.
 
-Reads baserom.us.z64 directly using the same logic as Torch's RelocFactory,
+Reads a US or JP baserom directly using the same logic as Torch's RelocFactory,
 decompresses VPK0 if needed, and writes the raw decompressed bytes.
 
 Use cases:
@@ -22,11 +22,24 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # ROM layout constants — must match torch/src/factories/ssb64/RelocFactory.h
 # ---------------------------------------------------------------------------
-RELOC_TABLE_ROM_ADDR    = 0x001AC870
-RELOC_FILE_COUNT        = 2132
 RELOC_TABLE_ENTRY_SIZE  = 12
-RELOC_TABLE_SIZE        = (RELOC_FILE_COUNT + 1) * RELOC_TABLE_ENTRY_SIZE
-RELOC_DATA_START        = RELOC_TABLE_ROM_ADDR + RELOC_TABLE_SIZE
+ROM_COUNTRY_CODE_OFF    = 0x3E
+RELOC_LAYOUTS = {
+    ord("E"): (0x001AC870, 2132),  # NALE, US v1.0
+    ord("J"): (0x001ACAF0, 2107),  # NALJ, Japan
+}
+
+
+def get_reloc_layout(rom: bytes):
+    """Return (table address, file count, data start) for this ROM."""
+    if len(rom) <= ROM_COUNTRY_CODE_OFF:
+        raise ValueError("ROM is too small to contain an N64 country code")
+    country = rom[ROM_COUNTRY_CODE_OFF]
+    if country not in RELOC_LAYOUTS:
+        raise ValueError(f"unsupported ROM country code 0x{country:02X}")
+    table_addr, file_count = RELOC_LAYOUTS[country]
+    table_size = (file_count + 1) * RELOC_TABLE_ENTRY_SIZE
+    return table_addr, file_count, table_addr + table_size
 
 
 # ---------------------------------------------------------------------------
@@ -145,10 +158,11 @@ def vpk0_decode(src: bytes) -> bytes:
 # RELOC extractor
 # ---------------------------------------------------------------------------
 def read_table_entry(rom: bytes, file_id: int):
-    if file_id >= RELOC_FILE_COUNT:
-        raise ValueError(f"file_id {file_id} out of range (max {RELOC_FILE_COUNT - 1})")
+    table_addr, file_count, data_start = get_reloc_layout(rom)
+    if file_id < 0 or file_id >= file_count:
+        raise ValueError(f"file_id {file_id} out of range (max {file_count - 1})")
 
-    table_off = RELOC_TABLE_ROM_ADDR + file_id * RELOC_TABLE_ENTRY_SIZE
+    table_off = table_addr + file_id * RELOC_TABLE_ENTRY_SIZE
     if table_off + RELOC_TABLE_ENTRY_SIZE * 2 > len(rom):
         raise ValueError("ROM too small for table entry")
 
@@ -173,6 +187,7 @@ def read_table_entry(rom: bytes, file_id: int):
         "compressed_bytes": compressed_words * 4,
         "decompressed_bytes": decompressed_words * 4,
         "next_data_offset": next_data_offset,
+        "data_start": data_start,
     }
 
 
@@ -188,10 +203,10 @@ def extract_file(rom: bytes, file_id: int) -> bytes:
         file=sys.stderr,
     )
 
-    data_rom_addr = RELOC_DATA_START + info["data_offset"]
+    data_rom_addr = info["data_start"] + info["data_offset"]
     print(
         f"data_rom_addr=0x{data_rom_addr:X} "
-        f"(RELOC_DATA_START=0x{RELOC_DATA_START:X} + offset=0x{info['data_offset']:X})",
+        f"(RELOC_DATA_START=0x{info['data_start']:X} + offset=0x{info['data_offset']:X})",
         file=sys.stderr,
     )
 
