@@ -1,0 +1,128 @@
+{
+ "category": "fighters_main",
+ "content_hash": "4742c7ec58f5b54414e8f64cff88421f231426a8",
+ "extern_file_ids": [
+  344,
+  344
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 344,
+   "dep_word_offset": 2862,
+   "slot_offset_in_slice": 72,
+   "slot_slice": 4
+  },
+  {
+   "dep_file_id": 344,
+   "dep_word_offset": 2862,
+   "slot_offset_in_slice": 124,
+   "slot_slice": 4
+  }
+ ],
+ "file_id": 249,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 228,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 2,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 3,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 4,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 40,
+   "slot_slice": 5,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 6,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  }
+ ],
+ "parent_path": "reloc_fighters_main/BossMainMotion",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 477,
+ "reloc_intern_offset": 167,
+ "relocated_view_crc32": 2766676250,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 250,
+    "target": 0
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "blob",
+   "name": "dBossMainMotion_blob_0x0000",
+   "offset": 0,
+   "size": 440
+  },
+  {
+   "kind": "blob",
+   "name": "dBossMainMotion_blob_0x01B8",
+   "offset": 440,
+   "size": 448
+  },
+  {
+   "kind": "blob",
+   "name": "dBossMainMotion_blob_0x0378",
+   "offset": 888,
+   "size": 344
+  },
+  {
+   "kind": "blob",
+   "name": "dBossMainMotion_blob_0x04D0",
+   "offset": 1232,
+   "size": 604
+  },
+  {
+   "kind": "blob",
+   "name": "dBossMainMotion_blob_0x072C",
+   "offset": 1836,
+   "size": 504
+  },
+  {
+   "kind": "blob",
+   "name": "dBossMainMotion_blob_0x0924",
+   "offset": 2340,
+   "size": 44
+  },
+  {
+   "kind": "blob",
+   "name": "dBossMainMotion_blob_0x0950",
+   "offset": 2384,
+   "size": 96
+  }
+ ],
+ "symbol": "BossMainMotion",
+ "vanilla_data_size": 2480
+}

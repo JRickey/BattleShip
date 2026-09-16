@@ -1,0 +1,529 @@
+{
+ "category": "fighters_main",
+ "content_hash": "dfc137e3d38e34739d3eb1bf9ee52967d30ce76f",
+ "extern_file_ids": [
+  202,
+  356,
+  204,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  296,
+  298,
+  298,
+  298,
+  298,
+  298,
+  298,
+  298,
+  298,
+  298
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 202,
+   "dep_word_offset": 9,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 356,
+   "dep_word_offset": 386,
+   "slot_offset_in_slice": 4,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 204,
+   "dep_word_offset": 0,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 1590,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 4
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 3992,
+   "slot_offset_in_slice": 20,
+   "slot_slice": 4
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 5312,
+   "slot_offset_in_slice": 40,
+   "slot_slice": 4
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 5432,
+   "slot_offset_in_slice": 60,
+   "slot_slice": 4
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 1906,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 5
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 4254,
+   "slot_offset_in_slice": 20,
+   "slot_slice": 5
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 5060,
+   "slot_offset_in_slice": 40,
+   "slot_slice": 5
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 5180,
+   "slot_offset_in_slice": 60,
+   "slot_slice": 5
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 2176,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 0,
+   "slot_offset_in_slice": 4,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 2464,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 4452,
+   "slot_offset_in_slice": 16,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 2684,
+   "slot_offset_in_slice": 20,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 4740,
+   "slot_offset_in_slice": 24,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 7296,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 10
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 7306,
+   "slot_offset_in_slice": 4,
+   "slot_slice": 10
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 7316,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 10
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 7326,
+   "slot_offset_in_slice": 12,
+   "slot_slice": 10
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 7336,
+   "slot_offset_in_slice": 16,
+   "slot_slice": 10
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 7348,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 7474,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 11
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 5504,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 5560,
+   "slot_offset_in_slice": 16,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 6068,
+   "slot_offset_in_slice": 32,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 6000,
+   "slot_offset_in_slice": 40,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 6128,
+   "slot_offset_in_slice": 48,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 5824,
+   "slot_offset_in_slice": 64,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 6068,
+   "slot_offset_in_slice": 80,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 6000,
+   "slot_offset_in_slice": 88,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 6192,
+   "slot_offset_in_slice": 96,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 6264,
+   "slot_offset_in_slice": 120,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 6332,
+   "slot_offset_in_slice": 128,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 6388,
+   "slot_offset_in_slice": 144,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 6264,
+   "slot_offset_in_slice": 160,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 6332,
+   "slot_offset_in_slice": 168,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 296,
+   "dep_word_offset": 6388,
+   "slot_offset_in_slice": 184,
+   "slot_slice": 12
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 60,
+   "slot_offset_in_slice": 740,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 360,
+   "slot_offset_in_slice": 744,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 644,
+   "slot_offset_in_slice": 748,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 928,
+   "slot_offset_in_slice": 752,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 1212,
+   "slot_offset_in_slice": 756,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 1512,
+   "slot_offset_in_slice": 760,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 1816,
+   "slot_offset_in_slice": 764,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 2104,
+   "slot_offset_in_slice": 768,
+   "slot_slice": 13
+  },
+  {
+   "dep_file_id": 298,
+   "dep_word_offset": 2384,
+   "slot_offset_in_slice": 772,
+   "slot_slice": 13
+  }
+ ],
+ "file_id": 203,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 6,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 6,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 11,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 12
+  },
+  {
+   "slot_offset_in_slice": 680,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 684,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 732,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 736,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 820,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 828,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 836,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 844,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 848,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 13
+  }
+ ],
+ "parent_path": "reloc_fighters_main/MarioMain",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 0,
+ "reloc_intern_offset": 69,
+ "relocated_view_crc32": 1865104368,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "gap",
+   "name": "dMarioMain_gap_0x0000",
+   "offset": 0,
+   "size": 12
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMain_blob_0x000C",
+   "offset": 12,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMain_blob_0x0014",
+   "offset": 20,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMain_blob_0x001C",
+   "offset": 28,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMain_blob_0x005C",
+   "offset": 92,
+   "size": 80
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMain_blob_0x00AC",
+   "offset": 172,
+   "size": 80
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMain_blob_0x00FC",
+   "offset": 252,
+   "size": 100
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMain_blob_0x0160",
+   "offset": 352,
+   "size": 4
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMain_blob_0x0164",
+   "offset": 356,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMain_blob_0x0184",
+   "offset": 388,
+   "size": 432
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMain_blob_0x0334",
+   "offset": 820,
+   "size": 20
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMain_blob_0x0348",
+   "offset": 840,
+   "size": 12
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMain_blob_0x0354",
+   "offset": 852,
+   "size": 200
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMain_blob_0x041C",
+   "offset": 1052,
+   "size": 852
+  }
+ ],
+ "symbol": "MarioMain",
+ "vanilla_data_size": 1904
+}

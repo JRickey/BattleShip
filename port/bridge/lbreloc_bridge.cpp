@@ -28,6 +28,8 @@
 #include "resource/RelocFile.h"
 #include "resource/RelocFileTable.h"
 #include "resource/RelocPointerTable.h"
+#include "resource/SyntheticReloc.h"
+#include "ssb64_reloc_rebuild.h"
 #include "bridge/lbreloc_byteswap.h"
 
 extern "C" void port_aobj_register_halfswapped_range(void *base, unsigned long size);
@@ -326,6 +328,23 @@ static std::shared_ptr<RelocFile> portLoadRelocResource(u32 file_id)
 		return nullptr;
 	}
 
+	// Deblobbed bundles are synthesized from their typed o2r slices
+	// (docs/deblob.md). Parents ship with archive:false, so on synthesis
+	// failure the LoadResource below misses and the stale-archive handler
+	// prints its actionable delete-and-relaunch message — the synthesis
+	// error above it names the exact slice and invariant.
+	if (portGetSyntheticRelocSpec(file_id) != nullptr)
+	{
+		auto synthetic = portBuildSyntheticRelocResource(file_id);
+		if (synthetic)
+		{
+			return synthetic;
+		}
+		spdlog::error("[deblob] synthesis failed for file_id {} — no archived parent"
+		              " ships for deblobbed bundles; see the slice error above",
+		              file_id);
+	}
+
 	std::string path(gRelocFileTable[file_id]);
 	auto resource = ctx->GetResourceManager()->LoadResource(path);
 
@@ -514,7 +533,54 @@ void lbRelocAddForceStatusBufferFile(u32 id, void *addr)
  * pointer is registered in the token table and the 32-bit token is
  * written into the 4-byte slot.
  */
-extern "C" void portRelocLoadFileFromBytes(
+
+/* Explicit relocation input for synthesized (deblobbed) bundles: their
+ * chain descriptor words were replaced with real content at extraction, so
+ * the loader applies these flat, chain-ordered lists instead of walking
+ * the in-data chains (docs/deblob.md, RelocFile.h). */
+struct PortRelocExplicitRelocation
+{
+	const RelocExplicitInternSlot *intern_slots;
+	size_t intern_count;
+	const RelocExplicitExternSlot *extern_slots;
+	size_t extern_count;
+};
+
+/* One intern relocation slot, shared by the chain walk, the explicit flat
+ * loop, and the mod-private path so all three tokenize identically:
+ * optional SETTIMG/G_VTX texture fixup, target pointer -> token, optional
+ * figatree slot marking, token stamped into the slot, optional chain-slot
+ * note for the generational eviction bookkeeping. */
+static inline void portRelocApplyInternSlot(
+	void *ram_dst, size_t copySize,
+	uint32_t slot_byte_off, uint32_t target_byte_off,
+	bool texture_fixup, bool note_chain,
+	std::vector<uint8_t> *figatree_words)
+{
+	if (texture_fixup)
+	{
+		portRelocFixupTextureFromChain(ram_dst, copySize,
+		                               slot_byte_off, target_byte_off);
+	}
+
+	void *target = (void *)((uintptr_t)ram_dst + target_byte_off);
+	u32 token = portRelocRegisterPointer(target);
+
+	uint32_t slot_word = slot_byte_off / (uint32_t)sizeof(u32);
+	if (figatree_words != nullptr && slot_word < figatree_words->size())
+	{
+		(*figatree_words)[slot_word] = 1;
+	}
+
+	u32 *slot = (u32 *)((uintptr_t)ram_dst + slot_byte_off);
+	*slot = token;
+	if (note_chain)
+	{
+		portRelocNoteChainSlot(slot);
+	}
+}
+
+static void portRelocLoadFileFromBytesImpl(
 	unsigned int    file_id,
 	void           *ram_dst,
 	unsigned int    bytes_num,
@@ -525,7 +591,8 @@ extern "C" void portRelocLoadFileFromBytes(
 	unsigned short  reloc_extern_offset,
 	const unsigned short *extern_file_ids,
 	unsigned int    extern_count,
-	int             force_figatree_fixup)
+	int             force_figatree_fixup,
+	const PortRelocExplicitRelocation *explicit_reloc)
 {
 	/* portRelocIsFighterFigatreeFile looks up gRelocFileTable[file_id]
 	 * to match the "reloc_animations/" path prefix. Mod-registered file
@@ -675,6 +742,90 @@ extern "C" void portRelocLoadFileFromBytes(
 	// In the port, we compute the pointer, register it as a token, and
 	// write the 32-bit token into the 4-byte word.
 
+	if (explicit_reloc != nullptr)
+	{
+		// --- Explicit relocation (synthesized/deblobbed bundles) ---
+		//
+		// The chain descriptor words were replaced with real content at
+		// extraction, so the in-data chains are unwalkable; apply the
+		// spec's flat, chain-ordered slot lists instead (docs/deblob.md).
+		// Offsets arrive in the bundle's CURRENT layout, so this path is
+		// also what makes relayouted (resized-mod) bundles relocatable.
+		for (size_t i = 0; i < explicit_reloc->intern_count; i++)
+		{
+			const RelocExplicitInternSlot &s = explicit_reloc->intern_slots[i];
+			if ((size_t)s.SlotByteOff + sizeof(u32) > copySize ||
+			    (size_t)s.TargetByteOff >= copySize)
+			{
+				spdlog::error("[deblob] I9 violated: explicit intern slot {} OOB "
+				              "(file_id {}, slot=0x{:X} target=0x{:X} size=0x{:X})"
+				              " — diagnose: SSB64_SYNTH_INSPECT={}",
+				              i, file_id, s.SlotByteOff, s.TargetByteOff, copySize, file_id);
+				break;
+			}
+			portRelocApplyInternSlot(ram_dst, copySize,
+			                         s.SlotByteOff, s.TargetByteOff,
+			                         /* texture_fixup */ true, /* note_chain */ true,
+			                         is_fighter_figatree ? &figatree_reloc_words : nullptr);
+		}
+
+		for (size_t i = 0; i < explicit_reloc->extern_count; i++)
+		{
+			const RelocExplicitExternSlot &s = explicit_reloc->extern_slots[i];
+			if ((size_t)s.SlotByteOff + sizeof(u32) > copySize)
+			{
+				spdlog::error("[deblob] I9 violated: explicit extern slot {} OOB "
+				              "(file_id {}, slot=0x{:X} size=0x{:X})"
+				              " — diagnose: SSB64_SYNTH_INSPECT={}",
+				              i, file_id, s.SlotByteOff, copySize, file_id);
+				break;
+			}
+
+			// Same dependency resolution as the chain walk below, but the
+			// dep file id comes from the slot itself instead of the
+			// positional extern id list.
+			void *vaddr_extern;
+			if (loc == nLBFileLocationForce)
+			{
+				vaddr_extern = lbRelocFindForceStatusBufferFile(s.DepFileId);
+			}
+			else
+			{
+				vaddr_extern = lbRelocFindStatusBufferFile(s.DepFileId);
+			}
+			if (vaddr_extern == NULL)
+			{
+				switch (loc)
+				{
+				case nLBFileLocationExtern:
+					vaddr_extern = lbRelocGetExternBufferFile(s.DepFileId);
+					break;
+				case nLBFileLocationDefault:
+					vaddr_extern = lbRelocGetInternBufferFile(s.DepFileId);
+					break;
+				case nLBFileLocationForce:
+					vaddr_extern = lbRelocGetForceExternBufferFile(s.DepFileId);
+					break;
+				}
+			}
+
+			void *target = (void *)((uintptr_t)vaddr_extern +
+			                        ((size_t)s.DepWordOff * sizeof(u32)));
+			u32 token = portRelocRegisterPointer(target);
+
+			uint32_t slot_word = s.SlotByteOff / (uint32_t)sizeof(u32);
+			if (is_fighter_figatree && slot_word < figatree_reloc_words.size())
+			{
+				figatree_reloc_words[slot_word] = 1;
+			}
+			u32 *slot = (u32 *)((uintptr_t)ram_dst + s.SlotByteOff);
+			*slot = token;
+			portRelocNoteChainSlot(slot);
+		}
+	}
+	else
+	{
+
 	u16 reloc_intern = reloc_intern_offset;
 	u32 intern_steps = 0;
 
@@ -727,30 +878,16 @@ extern "C" void portRelocLoadFileFromBytes(
 		// chain — they exist as raw 0x0Exxxxxx values in the ROM data.
 		// These are intra-file sub-DL references resolved to absolute
 		// addresses by portNormalizeDisplayListPointer at widening time.
-		{
-			// Texture fixup: if this slot is the w1 of a G_SETTIMG cmd, the
-			// chain encoding gives us the in-file target offset (words_num*4)
-			// where the actual texture bytes live.  Pass2's seg==0x0E walk
-			// can't see these (the chain encoding has random high bytes), so
-			// we apply the texture-format BSWAP32 fixup here.  Idempotent.
-			uint32_t slot_byte_off = (uint32_t)(reloc_intern * sizeof(u32));
-			uint32_t target_byte_off = (uint32_t)(words_num * sizeof(u32));
-			portRelocFixupTextureFromChain(ram_dst, copySize,
-			                               slot_byte_off, target_byte_off);
-
-			// Compute the real target pointer (within this file's data)
-			void *target = (void *)((uintptr_t)ram_dst + (words_num * sizeof(u32)));
-
-			// Register in the token table and write the 32-bit token
-			u32 token = portRelocRegisterPointer(target);
-
-			if (is_fighter_figatree && (reloc_intern < figatree_reloc_words.size()))
-			{
-				figatree_reloc_words[reloc_intern] = 1;
-			}
-			*slot = token;
-			portRelocNoteChainSlot(slot);
-		}
+		//
+		// Texture fixup happens inside the helper: if this slot is the w1
+		// of a G_SETTIMG cmd, the chain encoding gives us the in-file
+		// target offset where the texture bytes live; pass2's seg==0x0E
+		// scan can't see these. Idempotent.
+		portRelocApplyInternSlot(ram_dst, copySize,
+		                         (uint32_t)(reloc_intern * sizeof(u32)),
+		                         (uint32_t)(words_num * sizeof(u32)),
+		                         /* texture_fixup */ true, /* note_chain */ true,
+		                         is_fighter_figatree ? &figatree_reloc_words : nullptr);
 
 		reloc_intern = next_reloc;
 	}
@@ -840,6 +977,8 @@ extern "C" void portRelocLoadFileFromBytes(
 		reloc_extern = next_reloc;
 	}
 
+	} // explicit_reloc == nullptr (chain walks)
+
 	if (is_fighter_figatree)
 	{
 		portRelocFixupFighterFigatree(ram_dst, copySize, figatree_reloc_words);
@@ -854,6 +993,28 @@ extern "C" void portRelocLoadFileFromBytes(
 		portStageAuditEmitLoadSummary(file_id, table_path, copySize);
 		portStageAuditEmitOpcodeCensus(file_id, table_path, ram_dst, copySize);
 	}
+}
+
+/* Stable C ABI (mod-facing, see doc above): chain-walk relocation only. */
+extern "C" void portRelocLoadFileFromBytes(
+	unsigned int    file_id,
+	void           *ram_dst,
+	unsigned int    bytes_num,
+	int             loc,
+	const void     *src_bytes,
+	unsigned int    src_size,
+	unsigned short  reloc_intern_offset,
+	unsigned short  reloc_extern_offset,
+	const unsigned short *extern_file_ids,
+	unsigned int    extern_count,
+	int             force_figatree_fixup)
+{
+	portRelocLoadFileFromBytesImpl(file_id, ram_dst, bytes_num, loc,
+	                               src_bytes, src_size,
+	                               reloc_intern_offset, reloc_extern_offset,
+	                               extern_file_ids, extern_count,
+	                               force_figatree_fixup,
+	                               /* explicit_reloc */ nullptr);
 }
 
 /**
@@ -873,12 +1034,19 @@ extern "C" void portRelocLoadFileFromBytes(
  * via the CharacterEngine post-reset callback) because nothing here
  * touches lbRelocInternBuffer or other per-scene engine state.
  */
-extern "C" void portRelocLoadFileFromBytesPrivate(
+/* Extended form: `explicit_intern_pairs` is a flat u32 array of
+ * (slot_byte_off, target_byte_off) pairs (chain order) for mod bytes whose
+ * chain was pre-relocated away — i.e. a mod re-serving a deblobbed
+ * bundle's synthesized data (docs/deblob.md). Pass nullptr/0 for ordinary
+ * chain-intact reloc bytes; C-flat layout so libtcc mods can call it. */
+extern "C" void portRelocLoadFileFromBytesPrivateEx(
 	void           *ram_dst,
 	unsigned int    dst_size,
 	const void     *src_bytes,
 	unsigned int    src_size,
-	unsigned short  reloc_intern_offset)
+	unsigned short  reloc_intern_offset,
+	const unsigned int *explicit_intern_pairs,
+	unsigned int    explicit_pair_count)
 {
 	if (src_bytes == nullptr || src_size == 0 || ram_dst == nullptr) {
 		return;
@@ -933,11 +1101,32 @@ extern "C" void portRelocLoadFileFromBytesPrivate(
 	 * DL range for this buffer, so re-loads must re-register). */
 	port_dl_range_register(ram_dst, copySize, "(mod-private)");
 
-	// Intern chain walk: each chain entry is a u32 holding [next_offset_words][target_offset_words];
-	// register a token for the in-file target pointer and stamp the token
-	// into the slot. Same logic as portRelocLoadFileFromBytes' intern walk
-	// but without texture-fixup (no SETTIMG-driven texture cache for the
-	// mod-private buffer) and without figatree halfswap.
+	// Intern relocation. Same per-slot logic as the public loader (shared
+	// helper) but without texture-fixup (no SETTIMG-driven texture cache
+	// for the mod-private buffer), figatree halfswap, or chain-slot notes.
+	if (explicit_intern_pairs != nullptr)
+	{
+		// Explicit flat list: (slot, target) byte-offset pairs, for
+		// pre-relocated (deblobbed-bundle) bytes whose chain is gone.
+		for (unsigned int i = 0; i < explicit_pair_count; i++)
+		{
+			uint32_t slot_off = explicit_intern_pairs[i * 2];
+			uint32_t target_off = explicit_intern_pairs[i * 2 + 1];
+			if ((size_t)slot_off + sizeof(u32) > copySize ||
+			    (size_t)target_off >= copySize)
+			{
+				spdlog::error("portRelocLoadFileFromBytesPrivateEx: explicit slot {} OOB "
+				              "(slot=0x{:X} target=0x{:X} size=0x{:X})",
+				              i, slot_off, target_off, copySize);
+				break;
+			}
+			portRelocApplyInternSlot(ram_dst, copySize, slot_off, target_off,
+			                         /* texture_fixup */ false,
+			                         /* note_chain */ false, nullptr);
+		}
+		return;
+	}
+
 	u16 reloc_intern = reloc_intern_offset;
 	u32 intern_steps = 0;
 	while (reloc_intern != 0xFFFF) {
@@ -960,12 +1149,26 @@ extern "C" void portRelocLoadFileFromBytesPrivate(
 			break;
 		}
 
-		void *target = (void *)((uintptr_t)ram_dst + (words_num * sizeof(u32)));
-		u32 token = portRelocRegisterPointer(target);
-		*slot = token;
+		portRelocApplyInternSlot(ram_dst, copySize,
+		                         (uint32_t)(reloc_intern * sizeof(u32)),
+		                         (uint32_t)(words_num * sizeof(u32)),
+		                         /* texture_fixup */ false,
+		                         /* note_chain */ false, nullptr);
 
 		reloc_intern = next_reloc;
 	}
+}
+
+/* Stable C ABI kept for already-shipped TCC mods (ce_load_reloc_blob). */
+extern "C" void portRelocLoadFileFromBytesPrivate(
+	void           *ram_dst,
+	unsigned int    dst_size,
+	const void     *src_bytes,
+	unsigned int    src_size,
+	unsigned short  reloc_intern_offset)
+{
+	portRelocLoadFileFromBytesPrivateEx(ram_dst, dst_size, src_bytes, src_size,
+	                                    reloc_intern_offset, nullptr, 0);
 }
 
 /**
@@ -984,7 +1187,20 @@ void lbRelocLoadAndRelocFile(u32 file_id, void *ram_dst, u32 bytes_num, s32 loc)
 		return;
 	}
 
-	portRelocLoadFileFromBytes(
+	// Synthesized (deblobbed) bundles carry explicit slot lists instead of
+	// walkable in-data chains (docs/deblob.md).
+	PortRelocExplicitRelocation explicit_reloc;
+	const PortRelocExplicitRelocation *explicit_ptr = nullptr;
+	if (relocFile->HasExplicitRelocation)
+	{
+		explicit_reloc.intern_slots = relocFile->ExplicitInternSlots.data();
+		explicit_reloc.intern_count = relocFile->ExplicitInternSlots.size();
+		explicit_reloc.extern_slots = relocFile->ExplicitExternSlots.data();
+		explicit_reloc.extern_count = relocFile->ExplicitExternSlots.size();
+		explicit_ptr = &explicit_reloc;
+	}
+
+	portRelocLoadFileFromBytesImpl(
 		(unsigned int)file_id,
 		ram_dst,
 		bytes_num,
@@ -995,7 +1211,8 @@ void lbRelocLoadAndRelocFile(u32 file_id, void *ram_dst, u32 bytes_num, s32 loc)
 		relocFile->RelocExternOffset,
 		relocFile->ExternFileIds.data(),
 		(unsigned int)relocFile->ExternFileIds.size(),
-		/* force_figatree_fixup = */ 0);
+		/* force_figatree_fixup = */ 0,
+		explicit_ptr);
 }
 
 // // // // // // // // // // // //

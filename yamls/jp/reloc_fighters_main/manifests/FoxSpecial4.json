@@ -1,0 +1,60 @@
+{
+ "category": "fighters_main",
+ "content_hash": "feabd796777c4a6472d2809150ae4f5a08b1ad8a",
+ "extern_file_ids": [],
+ "extern_slots": [],
+ "file_id": 291,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 0
+  }
+ ],
+ "parent_path": "reloc_fighters_main/FoxSpecial4",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version jp",
+  "rom_sha1": "4b71f0e01878696733eefa9c80d11c147ecb4984",
+  "version": "jp"
+ },
+ "reloc_extern_offset": 65535,
+ "reloc_intern_offset": 25,
+ "relocated_view_crc32": 514178763,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 185,
+    "target": 64
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "count": 4,
+   "kind": "vtx",
+   "name": "dFoxSpecial4_Vtx_0x0000",
+   "offset": 0,
+   "size": 64
+  },
+  {
+   "count": 9,
+   "kind": "gfx",
+   "name": "dFoxSpecial4_Gfx_0x0040",
+   "offset": 64,
+   "size": 72
+  },
+  {
+   "kind": "pad",
+   "name": "dFoxSpecial4_pad_0x0088",
+   "offset": 136,
+   "size": 8
+  }
+ ],
+ "symbol": "FoxSpecial4",
+ "vanilla_data_size": 144
+}

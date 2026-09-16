@@ -1,0 +1,1980 @@
+{
+ "category": "fighters_main",
+ "content_hash": "c23570447c5d1151fd2143f85093c5375b309a89",
+ "extern_file_ids": [],
+ "extern_slots": [],
+ "file_id": 273,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 136,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 0
+  },
+  {
+   "slot_offset_in_slice": 224,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 268,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 312,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 400,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 488,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 532,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 576,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 708,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 752,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 840,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 928,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 972,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 12
+  },
+  {
+   "slot_offset_in_slice": 1060,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 13
+  },
+  {
+   "slot_offset_in_slice": 1104,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 14
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 17
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 18
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 19
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 20
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 21
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 22
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 23
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 24
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 25
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 26
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 27
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 28
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 29
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 30
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 31
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 32
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 34
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 35
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 36
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 37
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 38
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 39
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 40
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 41
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 42
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 43
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 44
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 45
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 46
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 47
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 48
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 33,
+   "target_offset_in_slice": 0,
+   "target_slice": 49
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 51
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 52
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 53
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 54
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 55
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 56
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 57
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 58
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 59
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 60
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 61
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 62
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 63
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 64
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 65
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 50,
+   "target_offset_in_slice": 0,
+   "target_slice": 66
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 68
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 69
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 70
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 71
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 72
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 73
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 74
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 75
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 76
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 77
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 78
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 79
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 80
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 81
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 82
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 67,
+   "target_offset_in_slice": 0,
+   "target_slice": 83
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 85
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 86
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 87
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 88
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 89
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 90
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 91
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 92
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 93
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 94
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 95
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 96
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 97
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 98
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 99
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 84,
+   "target_offset_in_slice": 0,
+   "target_slice": 100
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 102
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 103
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 104
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 105
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 106
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 107
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 108
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 109
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 110
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 111
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 112
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 113
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 114
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 115
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 116
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 101,
+   "target_offset_in_slice": 0,
+   "target_slice": 117
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 119
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 120
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 121
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 122
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 123
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 124
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 125
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 126
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 127
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 128
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 129
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 130
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 131
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 132
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 133
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 118,
+   "target_offset_in_slice": 0,
+   "target_slice": 134
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 136
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 137
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 138
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 139
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 140
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 141
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 142
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 143
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 144
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 145
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 146
+  },
+  {
+   "slot_offset_in_slice": 76,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 147
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 148
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 149
+  },
+  {
+   "slot_offset_in_slice": 96,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 150
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 135,
+   "target_offset_in_slice": 0,
+   "target_slice": 151
+  }
+ ],
+ "parent_path": "reloc_fighters_main/MarioShieldPose",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version jp",
+  "rom_sha1": "4b71f0e01878696733eefa9c80d11c147ecb4984",
+  "version": "jp"
+ },
+ "reloc_extern_offset": 65535,
+ "reloc_intern_offset": 94,
+ "relocated_view_crc32": 2182351437,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 178,
+    "target": 240
+   },
+   {
+    "from_file_id": 178,
+    "target": 1440
+   },
+   {
+    "from_file_id": 178,
+    "target": 2576
+   },
+   {
+    "from_file_id": 178,
+    "target": 3712
+   },
+   {
+    "from_file_id": 178,
+    "target": 4848
+   },
+   {
+    "from_file_id": 178,
+    "target": 6048
+   },
+   {
+    "from_file_id": 178,
+    "target": 7264
+   },
+   {
+    "from_file_id": 178,
+    "target": 8416
+   },
+   {
+    "from_file_id": 178,
+    "target": 9536
+   },
+   {
+    "from_file_id": 181,
+    "target": 240
+   },
+   {
+    "from_file_id": 181,
+    "target": 1440
+   },
+   {
+    "from_file_id": 181,
+    "target": 2576
+   },
+   {
+    "from_file_id": 181,
+    "target": 3712
+   },
+   {
+    "from_file_id": 181,
+    "target": 4848
+   },
+   {
+    "from_file_id": 181,
+    "target": 6048
+   },
+   {
+    "from_file_id": 181,
+    "target": 7264
+   },
+   {
+    "from_file_id": 181,
+    "target": 8416
+   },
+   {
+    "from_file_id": 181,
+    "target": 9536
+   },
+   {
+    "from_file_id": 182,
+    "target": 240
+   },
+   {
+    "from_file_id": 182,
+    "target": 1440
+   },
+   {
+    "from_file_id": 182,
+    "target": 2576
+   },
+   {
+    "from_file_id": 182,
+    "target": 3712
+   },
+   {
+    "from_file_id": 182,
+    "target": 4848
+   },
+   {
+    "from_file_id": 182,
+    "target": 6048
+   },
+   {
+    "from_file_id": 182,
+    "target": 7264
+   },
+   {
+    "from_file_id": 182,
+    "target": 8416
+   },
+   {
+    "from_file_id": 182,
+    "target": 9536
+   },
+   {
+    "from_file_id": 196,
+    "target": 240
+   },
+   {
+    "from_file_id": 196,
+    "target": 1440
+   },
+   {
+    "from_file_id": 196,
+    "target": 2576
+   },
+   {
+    "from_file_id": 196,
+    "target": 3712
+   },
+   {
+    "from_file_id": 196,
+    "target": 4848
+   },
+   {
+    "from_file_id": 196,
+    "target": 6048
+   },
+   {
+    "from_file_id": 196,
+    "target": 7264
+   },
+   {
+    "from_file_id": 196,
+    "target": 8416
+   },
+   {
+    "from_file_id": 196,
+    "target": 9536
+   },
+   {
+    "from_file_id": 198,
+    "target": 240
+   },
+   {
+    "from_file_id": 198,
+    "target": 1440
+   },
+   {
+    "from_file_id": 198,
+    "target": 2576
+   },
+   {
+    "from_file_id": 198,
+    "target": 3712
+   },
+   {
+    "from_file_id": 198,
+    "target": 4848
+   },
+   {
+    "from_file_id": 198,
+    "target": 6048
+   },
+   {
+    "from_file_id": 198,
+    "target": 7264
+   },
+   {
+    "from_file_id": 198,
+    "target": 8416
+   },
+   {
+    "from_file_id": 198,
+    "target": 9536
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0000",
+   "offset": 0,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0010",
+   "offset": 16,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0020",
+   "offset": 32,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0030",
+   "offset": 48,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0040",
+   "offset": 64,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0050",
+   "offset": 80,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0060",
+   "offset": 96,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0070",
+   "offset": 112,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0080",
+   "offset": 128,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0090",
+   "offset": 144,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x00A0",
+   "offset": 160,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x00B0",
+   "offset": 176,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x00C0",
+   "offset": 192,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x00D0",
+   "offset": 208,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x00E0",
+   "offset": 224,
+   "size": 16
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x00F0",
+   "offset": 240,
+   "size": 1200
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x05A0",
+   "offset": 1440,
+   "size": 104
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0608",
+   "offset": 1544,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0628",
+   "offset": 1576,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0674",
+   "offset": 1652,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x06CC",
+   "offset": 1740,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x070C",
+   "offset": 1804,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x074C",
+   "offset": 1868,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x07A4",
+   "offset": 1956,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x07D8",
+   "offset": 2008,
+   "size": 28
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x07F4",
+   "offset": 2036,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x081C",
+   "offset": 2076,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0874",
+   "offset": 2164,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x08A8",
+   "offset": 2216,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0900",
+   "offset": 2304,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0958",
+   "offset": 2392,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x098C",
+   "offset": 2444,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x09E4",
+   "offset": 2532,
+   "size": 44
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0A10",
+   "offset": 2576,
+   "size": 104
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0A78",
+   "offset": 2680,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0A98",
+   "offset": 2712,
+   "size": 80
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0AE8",
+   "offset": 2792,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0B40",
+   "offset": 2880,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0B74",
+   "offset": 2932,
+   "size": 68
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0BB8",
+   "offset": 3000,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0C10",
+   "offset": 3088,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0C40",
+   "offset": 3136,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0C60",
+   "offset": 3168,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0C88",
+   "offset": 3208,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0CE0",
+   "offset": 3296,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0D14",
+   "offset": 3348,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0D6C",
+   "offset": 3436,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0DC4",
+   "offset": 3524,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0DF8",
+   "offset": 3576,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0E50",
+   "offset": 3664,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0E80",
+   "offset": 3712,
+   "size": 104
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0EE8",
+   "offset": 3816,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0F08",
+   "offset": 3848,
+   "size": 80
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0F58",
+   "offset": 3928,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0FB0",
+   "offset": 4016,
+   "size": 44
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x0FDC",
+   "offset": 4060,
+   "size": 68
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1020",
+   "offset": 4128,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1078",
+   "offset": 4216,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x10A8",
+   "offset": 4264,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x10C8",
+   "offset": 4296,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x10F0",
+   "offset": 4336,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1148",
+   "offset": 4424,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x117C",
+   "offset": 4476,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x11D4",
+   "offset": 4564,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x122C",
+   "offset": 4652,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1260",
+   "offset": 4704,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x12B8",
+   "offset": 4792,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x12F0",
+   "offset": 4848,
+   "size": 104
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1358",
+   "offset": 4952,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1378",
+   "offset": 4984,
+   "size": 92
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x13D4",
+   "offset": 5076,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x142C",
+   "offset": 5164,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x145C",
+   "offset": 5212,
+   "size": 68
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x14A0",
+   "offset": 5280,
+   "size": 116
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1514",
+   "offset": 5396,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1560",
+   "offset": 5472,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1580",
+   "offset": 5504,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x15A8",
+   "offset": 5544,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1600",
+   "offset": 5632,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1634",
+   "offset": 5684,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x168C",
+   "offset": 5772,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x16E4",
+   "offset": 5860,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1718",
+   "offset": 5912,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1770",
+   "offset": 6000,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x17A0",
+   "offset": 6048,
+   "size": 104
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1808",
+   "offset": 6152,
+   "size": 28
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1824",
+   "offset": 6180,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x187C",
+   "offset": 6268,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x18D4",
+   "offset": 6356,
+   "size": 68
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1918",
+   "offset": 6424,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1958",
+   "offset": 6488,
+   "size": 132
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x19DC",
+   "offset": 6620,
+   "size": 72
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1A24",
+   "offset": 6692,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1A44",
+   "offset": 6724,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1A6C",
+   "offset": 6764,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1AC4",
+   "offset": 6852,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1AF8",
+   "offset": 6904,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1B50",
+   "offset": 6992,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1BA8",
+   "offset": 7080,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1BDC",
+   "offset": 7132,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1C34",
+   "offset": 7220,
+   "size": 44
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1C60",
+   "offset": 7264,
+   "size": 104
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1CC8",
+   "offset": 7368,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1CE8",
+   "offset": 7400,
+   "size": 92
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1D44",
+   "offset": 7492,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1D9C",
+   "offset": 7580,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1DCC",
+   "offset": 7628,
+   "size": 68
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1E10",
+   "offset": 7696,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1E68",
+   "offset": 7784,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1E9C",
+   "offset": 7836,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1EBC",
+   "offset": 7868,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1EE4",
+   "offset": 7908,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1F3C",
+   "offset": 7996,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1F70",
+   "offset": 8048,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x1FC8",
+   "offset": 8136,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2020",
+   "offset": 8224,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2054",
+   "offset": 8276,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x20AC",
+   "offset": 8364,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x20E0",
+   "offset": 8416,
+   "size": 104
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2148",
+   "offset": 8520,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2160",
+   "offset": 8544,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x21A0",
+   "offset": 8608,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x21F8",
+   "offset": 8696,
+   "size": 72
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2240",
+   "offset": 8768,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2274",
+   "offset": 8820,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x22CC",
+   "offset": 8908,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2300",
+   "offset": 8960,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2320",
+   "offset": 8992,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2348",
+   "offset": 9032,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x23A0",
+   "offset": 9120,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x23D4",
+   "offset": 9172,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x242C",
+   "offset": 9260,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2484",
+   "offset": 9348,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x24B8",
+   "offset": 9400,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2510",
+   "offset": 9488,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2540",
+   "offset": 9536,
+   "size": 104
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x25A8",
+   "offset": 9640,
+   "size": 28
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x25C4",
+   "offset": 9668,
+   "size": 68
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2608",
+   "offset": 9736,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2660",
+   "offset": 9824,
+   "size": 76
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x26AC",
+   "offset": 9900,
+   "size": 56
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x26E4",
+   "offset": 9956,
+   "size": 116
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2758",
+   "offset": 10072,
+   "size": 100
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x27BC",
+   "offset": 10172,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x27DC",
+   "offset": 10204,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2804",
+   "offset": 10244,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x285C",
+   "offset": 10332,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2890",
+   "offset": 10384,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x28E8",
+   "offset": 10472,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2940",
+   "offset": 10560,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x2974",
+   "offset": 10612,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioShieldPose_blob_0x29CC",
+   "offset": 10700,
+   "size": 52
+  }
+ ],
+ "symbol": "MarioShieldPose",
+ "vanilla_data_size": 10752
+}

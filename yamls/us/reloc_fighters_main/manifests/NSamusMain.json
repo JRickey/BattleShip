@@ -1,0 +1,266 @@
+{
+ "category": "fighters_main",
+ "content_hash": "04312dfceb7e53f922021e2254e46dd9d6414687",
+ "extern_file_ids": [
+  216,
+  309,
+  309,
+  309,
+  309,
+  309,
+  309,
+  309,
+  309,
+  345,
+  322,
+  322,
+  322,
+  322,
+  322,
+  322,
+  322,
+  322,
+  322
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 216,
+   "dep_word_offset": 33,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 1792,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 4
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 1792,
+   "slot_offset_in_slice": 20,
+   "slot_slice": 4
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 3836,
+   "slot_offset_in_slice": 40,
+   "slot_slice": 4
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 3836,
+   "slot_offset_in_slice": 60,
+   "slot_slice": 4
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 4696,
+   "slot_offset_in_slice": 80,
+   "slot_slice": 4
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 4696,
+   "slot_offset_in_slice": 100,
+   "slot_slice": 4
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 2692,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 6
+  },
+  {
+   "dep_file_id": 309,
+   "dep_word_offset": 2692,
+   "slot_offset_in_slice": 16,
+   "slot_slice": 6
+  },
+  {
+   "dep_file_id": 345,
+   "dep_word_offset": 174,
+   "slot_offset_in_slice": 8,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 322,
+   "dep_word_offset": 60,
+   "slot_offset_in_slice": 740,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 322,
+   "dep_word_offset": 348,
+   "slot_offset_in_slice": 744,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 322,
+   "dep_word_offset": 616,
+   "slot_offset_in_slice": 748,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 322,
+   "dep_word_offset": 888,
+   "slot_offset_in_slice": 752,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 322,
+   "dep_word_offset": 1156,
+   "slot_offset_in_slice": 756,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 322,
+   "dep_word_offset": 1428,
+   "slot_offset_in_slice": 760,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 322,
+   "dep_word_offset": 1700,
+   "slot_offset_in_slice": 764,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 322,
+   "dep_word_offset": 1976,
+   "slot_offset_in_slice": 768,
+   "slot_slice": 8
+  },
+  {
+   "dep_file_id": 322,
+   "dep_word_offset": 2244,
+   "slot_offset_in_slice": 772,
+   "slot_slice": 8
+  }
+ ],
+ "file_id": 219,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 5,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 680,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 684,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 732,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 736,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 820,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 836,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 844,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  }
+ ],
+ "parent_path": "reloc_fighters_main/NSamusMain",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 0,
+ "reloc_intern_offset": 89,
+ "relocated_view_crc32": 1046808035,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "pad",
+   "name": "dNSamusMain_pad_0x0000",
+   "offset": 0,
+   "size": 4
+  },
+  {
+   "kind": "blob",
+   "name": "dNSamusMain_blob_0x0004",
+   "offset": 4,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dNSamusMain_blob_0x000C",
+   "offset": 12,
+   "size": 8
+  },
+  {
+   "kind": "blob",
+   "name": "dNSamusMain_blob_0x0014",
+   "offset": 20,
+   "size": 208
+  },
+  {
+   "kind": "blob",
+   "name": "dNSamusMain_blob_0x00E4",
+   "offset": 228,
+   "size": 120
+  },
+  {
+   "kind": "blob",
+   "name": "dNSamusMain_blob_0x015C",
+   "offset": 348,
+   "size": 132
+  },
+  {
+   "kind": "blob",
+   "name": "dNSamusMain_blob_0x01E0",
+   "offset": 480,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dNSamusMain_blob_0x0200",
+   "offset": 512,
+   "size": 432
+  },
+  {
+   "kind": "blob",
+   "name": "dNSamusMain_blob_0x03B0",
+   "offset": 944,
+   "size": 864
+  }
+ ],
+ "symbol": "NSamusMain",
+ "vanilla_data_size": 1808
+}

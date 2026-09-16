@@ -1,0 +1,559 @@
+{
+ "category": "fighters_main",
+ "content_hash": "b118da5706a90b9878d7be19b93a4c3a289e5a81",
+ "extern_file_ids": [
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201,
+  201
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 470,
+   "slot_offset_in_slice": 32,
+   "slot_slice": 3
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 0,
+   "slot_offset_in_slice": 40,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 25,
+   "slot_offset_in_slice": 84,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 50,
+   "slot_offset_in_slice": 140,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 75,
+   "slot_offset_in_slice": 192,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 104,
+   "slot_offset_in_slice": 224,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 125,
+   "slot_offset_in_slice": 252,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 146,
+   "slot_offset_in_slice": 308,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 172,
+   "slot_offset_in_slice": 344,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 201,
+   "slot_offset_in_slice": 368,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 222,
+   "slot_offset_in_slice": 396,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 243,
+   "slot_offset_in_slice": 436,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 268,
+   "slot_offset_in_slice": 472,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 293,
+   "slot_offset_in_slice": 500,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 318,
+   "slot_offset_in_slice": 532,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 343,
+   "slot_offset_in_slice": 588,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 368,
+   "slot_offset_in_slice": 632,
+   "slot_slice": 14
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 397,
+   "slot_offset_in_slice": 16,
+   "slot_slice": 15
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 427,
+   "slot_offset_in_slice": 240,
+   "slot_slice": 21
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 433,
+   "slot_offset_in_slice": 252,
+   "slot_slice": 21
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 435,
+   "slot_offset_in_slice": 264,
+   "slot_slice": 21
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 444,
+   "slot_offset_in_slice": 284,
+   "slot_slice": 21
+  },
+  {
+   "dep_file_id": 201,
+   "dep_word_offset": 451,
+   "slot_offset_in_slice": 304,
+   "slot_slice": 21
+  }
+ ],
+ "file_id": 202,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 0
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 0
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 0
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 1
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 2,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 3,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 3,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 4,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 6,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 8,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 28,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 7,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 8,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 9,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 40,
+   "slot_slice": 10,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 11,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 40,
+   "slot_slice": 12,
+   "target_offset_in_slice": 0,
+   "target_slice": 12
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 13,
+   "target_offset_in_slice": 0,
+   "target_slice": 13
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 14,
+   "target_offset_in_slice": 0,
+   "target_slice": 14
+  },
+  {
+   "slot_offset_in_slice": 32,
+   "slot_slice": 15,
+   "target_offset_in_slice": 0,
+   "target_slice": 15
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 16
+  },
+  {
+   "slot_offset_in_slice": 84,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 16
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 16,
+   "target_offset_in_slice": 0,
+   "target_slice": 16
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 17,
+   "target_offset_in_slice": 0,
+   "target_slice": 17
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 18
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 19,
+   "target_offset_in_slice": 0,
+   "target_slice": 19
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 20,
+   "target_offset_in_slice": 0,
+   "target_slice": 20
+  },
+  {
+   "slot_offset_in_slice": 60,
+   "slot_slice": 21,
+   "target_offset_in_slice": 0,
+   "target_slice": 21
+  },
+  {
+   "slot_offset_in_slice": 276,
+   "slot_slice": 21,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 296,
+   "slot_slice": 21,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 22,
+   "target_offset_in_slice": 0,
+   "target_slice": 22
+  },
+  {
+   "slot_offset_in_slice": 64,
+   "slot_slice": 23,
+   "target_offset_in_slice": 0,
+   "target_slice": 23
+  },
+  {
+   "slot_offset_in_slice": 224,
+   "slot_slice": 24,
+   "target_offset_in_slice": 0,
+   "target_slice": 24
+  }
+ ],
+ "parent_path": "reloc_fighters_main/MarioMainMotion",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 116,
+ "reloc_intern_offset": 11,
+ "relocated_view_crc32": 2653045102,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 203,
+    "target": 36
+   },
+   {
+    "from_file_id": 206,
+    "target": 36
+   },
+   {
+    "from_file_id": 207,
+    "target": 36
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0000",
+   "offset": 0,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0024",
+   "offset": 36,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x007C",
+   "offset": 124,
+   "size": 308
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x01B0",
+   "offset": 432,
+   "size": 92
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x020C",
+   "offset": 524,
+   "size": 72
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0254",
+   "offset": 596,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0274",
+   "offset": 628,
+   "size": 32
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0294",
+   "offset": 660,
+   "size": 296
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x03BC",
+   "offset": 956,
+   "size": 664
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0654",
+   "offset": 1620,
+   "size": 96
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x06B4",
+   "offset": 1716,
+   "size": 108
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0720",
+   "offset": 1824,
+   "size": 96
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0780",
+   "offset": 1920,
+   "size": 108
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x07EC",
+   "offset": 2028,
+   "size": 24
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0804",
+   "offset": 2052,
+   "size": 680
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0AAC",
+   "offset": 2732,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0AD0",
+   "offset": 2768,
+   "size": 140
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0B5C",
+   "offset": 2908,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0B8C",
+   "offset": 2956,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0BB4",
+   "offset": 2996,
+   "size": 124
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0C30",
+   "offset": 3120,
+   "size": 148
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x0CC4",
+   "offset": 3268,
+   "size": 2452
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x1658",
+   "offset": 5720,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x1688",
+   "offset": 5768,
+   "size": 68
+  },
+  {
+   "kind": "blob",
+   "name": "dMarioMainMotion_blob_0x16CC",
+   "offset": 5836,
+   "size": 724
+  }
+ ],
+ "symbol": "MarioMainMotion",
+ "vanilla_data_size": 6560
+}

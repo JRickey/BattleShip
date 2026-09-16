@@ -1,0 +1,52 @@
+{
+ "category": "fighters_main",
+ "content_hash": "f92f07ebbe4b10db8557105a0c982823dfaceac6",
+ "extern_file_ids": [
+  321
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 321,
+   "dep_word_offset": 156,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 0
+  }
+ ],
+ "file_id": 218,
+ "intern_slots": [],
+ "parent_path": "reloc_fighters_main/SamusSpecial1",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 0,
+ "reloc_intern_offset": 65535,
+ "relocated_view_crc32": 1645210457,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 217,
+    "target": 0
+   },
+   {
+    "from_file_id": 230,
+    "target": 0
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "blob",
+   "name": "dSamusSpecial1_blob_0x0000",
+   "offset": 0,
+   "size": 64
+  }
+ ],
+ "symbol": "SamusSpecial1",
+ "vanilla_data_size": 64
+}

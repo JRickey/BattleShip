@@ -1,0 +1,63 @@
+{
+ "category": "fighters_main",
+ "content_hash": "7a473894252bd0e2ab0a0146ce0c0d7142849e26",
+ "extern_file_ids": [
+  297,
+  297
+ ],
+ "extern_slots": [
+  {
+   "dep_file_id": 297,
+   "dep_word_offset": 106,
+   "slot_offset_in_slice": 0,
+   "slot_slice": 0
+  },
+  {
+   "dep_file_id": 297,
+   "dep_word_offset": 54,
+   "slot_offset_in_slice": 4,
+   "slot_slice": 0
+  }
+ ],
+ "file_id": 204,
+ "intern_slots": [],
+ "parent_path": "reloc_fighters_main/MarioSpecial1",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version us",
+  "rom_sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf",
+  "version": "us"
+ },
+ "reloc_extern_offset": 0,
+ "reloc_intern_offset": 65535,
+ "relocated_view_crc32": 3097573554,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 203,
+    "target": 0
+   },
+   {
+    "from_file_id": 206,
+    "target": 0
+   },
+   {
+    "from_file_id": 230,
+    "target": 0
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "blob",
+   "name": "dMarioSpecial1_blob_0x0000",
+   "offset": 0,
+   "size": 64
+  }
+ ],
+ "symbol": "MarioSpecial1",
+ "vanilla_data_size": 64
+}

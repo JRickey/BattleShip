@@ -1,0 +1,1692 @@
+{
+ "category": "fighters_main",
+ "content_hash": "b1b55b15916519aadac8ca2cf5091fb591935ff1",
+ "extern_file_ids": [],
+ "extern_slots": [],
+ "file_id": 309,
+ "intern_slots": [
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 2
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 3
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 4
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 5
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 6
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 7
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 8
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 9
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 10
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 11
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 12
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 13
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 14
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 15
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 16
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 1,
+   "target_offset_in_slice": 0,
+   "target_slice": 17
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 19
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 20
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 21
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 22
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 23
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 24
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 25
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 26
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 27
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 28
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 29
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 30
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 31
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 32
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 33
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 18,
+   "target_offset_in_slice": 0,
+   "target_slice": 34
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 36
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 37
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 38
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 39
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 40
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 41
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 42
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 43
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 44
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 45
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 46
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 47
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 48
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 49
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 50
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 35,
+   "target_offset_in_slice": 0,
+   "target_slice": 51
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 53
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 54
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 55
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 56
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 57
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 58
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 59
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 60
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 61
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 62
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 63
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 64
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 65
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 66
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 67
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 52,
+   "target_offset_in_slice": 0,
+   "target_slice": 68
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 70
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 71
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 72
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 73
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 74
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 75
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 76
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 77
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 78
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 79
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 80
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 81
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 82
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 83
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 84
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 69,
+   "target_offset_in_slice": 0,
+   "target_slice": 85
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 87
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 88
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 89
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 90
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 91
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 92
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 93
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 94
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 95
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 96
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 97
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 98
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 99
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 100
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 101
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 86,
+   "target_offset_in_slice": 0,
+   "target_slice": 102
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 104
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 105
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 106
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 107
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 108
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 109
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 110
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 111
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 112
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 113
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 114
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 115
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 116
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 117
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 118
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 103,
+   "target_offset_in_slice": 0,
+   "target_slice": 119
+  },
+  {
+   "slot_offset_in_slice": 4,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 121
+  },
+  {
+   "slot_offset_in_slice": 12,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 122
+  },
+  {
+   "slot_offset_in_slice": 20,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 123
+  },
+  {
+   "slot_offset_in_slice": 24,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 124
+  },
+  {
+   "slot_offset_in_slice": 36,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 125
+  },
+  {
+   "slot_offset_in_slice": 44,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 126
+  },
+  {
+   "slot_offset_in_slice": 48,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 127
+  },
+  {
+   "slot_offset_in_slice": 52,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 128
+  },
+  {
+   "slot_offset_in_slice": 56,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 129
+  },
+  {
+   "slot_offset_in_slice": 68,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 130
+  },
+  {
+   "slot_offset_in_slice": 72,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 131
+  },
+  {
+   "slot_offset_in_slice": 80,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 132
+  },
+  {
+   "slot_offset_in_slice": 88,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 133
+  },
+  {
+   "slot_offset_in_slice": 92,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 134
+  },
+  {
+   "slot_offset_in_slice": 100,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 135
+  },
+  {
+   "slot_offset_in_slice": 104,
+   "slot_slice": 120,
+   "target_offset_in_slice": 0,
+   "target_slice": 136
+  }
+ ],
+ "parent_path": "reloc_fighters_main/CaptainShieldPose",
+ "provenance": {
+  "generator": "tools/generate_fighter_slices.py v1.0",
+  "regen": "python tools/generate_fighter_slices.py --version jp",
+  "rom_sha1": "4b71f0e01878696733eefa9c80d11c147ecb4984",
+  "version": "jp"
+ },
+ "reloc_extern_offset": 65535,
+ "reloc_intern_offset": 309,
+ "relocated_view_crc32": 2891483471,
+ "reports": {
+  "demotions": [],
+  "flat_scan_unclaimed": [],
+  "incoming_extern_refs": [
+   {
+    "from_file_id": 211,
+    "target": 0
+   },
+   {
+    "from_file_id": 211,
+    "target": 1232
+   },
+   {
+    "from_file_id": 211,
+    "target": 2432
+   },
+   {
+    "from_file_id": 211,
+    "target": 3664
+   },
+   {
+    "from_file_id": 211,
+    "target": 4896
+   },
+   {
+    "from_file_id": 211,
+    "target": 6112
+   },
+   {
+    "from_file_id": 211,
+    "target": 7328
+   },
+   {
+    "from_file_id": 211,
+    "target": 8576
+   },
+   {
+    "from_file_id": 211,
+    "target": 9808
+   },
+   {
+    "from_file_id": 212,
+    "target": 0
+   },
+   {
+    "from_file_id": 212,
+    "target": 1232
+   },
+   {
+    "from_file_id": 212,
+    "target": 2432
+   },
+   {
+    "from_file_id": 212,
+    "target": 3664
+   },
+   {
+    "from_file_id": 212,
+    "target": 4896
+   },
+   {
+    "from_file_id": 212,
+    "target": 6112
+   },
+   {
+    "from_file_id": 212,
+    "target": 7328
+   },
+   {
+    "from_file_id": 212,
+    "target": 8576
+   },
+   {
+    "from_file_id": 212,
+    "target": 9808
+   }
+  ],
+  "mid_slice_targets": []
+ },
+ "slices": [
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0000",
+   "offset": 0,
+   "size": 1232
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x04D0",
+   "offset": 1232,
+   "size": 108
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x053C",
+   "offset": 1340,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0560",
+   "offset": 1376,
+   "size": 112
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x05D0",
+   "offset": 1488,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0628",
+   "offset": 1576,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x065C",
+   "offset": 1628,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x069C",
+   "offset": 1692,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x06F4",
+   "offset": 1780,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0728",
+   "offset": 1832,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0768",
+   "offset": 1896,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0790",
+   "offset": 1936,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x07E8",
+   "offset": 2024,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x081C",
+   "offset": 2076,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0874",
+   "offset": 2164,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x08CC",
+   "offset": 2252,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0900",
+   "offset": 2304,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0958",
+   "offset": 2392,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0980",
+   "offset": 2432,
+   "size": 108
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x09EC",
+   "offset": 2540,
+   "size": 44
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0A18",
+   "offset": 2584,
+   "size": 128
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0A98",
+   "offset": 2712,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0AF0",
+   "offset": 2800,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0B24",
+   "offset": 2852,
+   "size": 68
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0B68",
+   "offset": 2920,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0BC0",
+   "offset": 3008,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0BF4",
+   "offset": 3060,
+   "size": 72
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0C3C",
+   "offset": 3132,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0C64",
+   "offset": 3172,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0CBC",
+   "offset": 3260,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0CF0",
+   "offset": 3312,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0D48",
+   "offset": 3400,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0DA0",
+   "offset": 3488,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0DD4",
+   "offset": 3540,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0E2C",
+   "offset": 3628,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0E50",
+   "offset": 3664,
+   "size": 108
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0EBC",
+   "offset": 3772,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0EF0",
+   "offset": 3824,
+   "size": 128
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0F70",
+   "offset": 3952,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0FC8",
+   "offset": 4040,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x0FFC",
+   "offset": 4092,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1038",
+   "offset": 4152,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1090",
+   "offset": 4240,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x10C4",
+   "offset": 4292,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1100",
+   "offset": 4352,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1128",
+   "offset": 4392,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1180",
+   "offset": 4480,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x11B4",
+   "offset": 4532,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x120C",
+   "offset": 4620,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1264",
+   "offset": 4708,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1298",
+   "offset": 4760,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x12F0",
+   "offset": 4848,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1320",
+   "offset": 4896,
+   "size": 108
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x138C",
+   "offset": 5004,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x13C0",
+   "offset": 5056,
+   "size": 124
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x143C",
+   "offset": 5180,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1494",
+   "offset": 5268,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x14C8",
+   "offset": 5320,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1504",
+   "offset": 5380,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x155C",
+   "offset": 5468,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1590",
+   "offset": 5520,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x15CC",
+   "offset": 5580,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x15F4",
+   "offset": 5620,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x164C",
+   "offset": 5708,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1680",
+   "offset": 5760,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x16D8",
+   "offset": 5848,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1730",
+   "offset": 5936,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1764",
+   "offset": 5988,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x17BC",
+   "offset": 6076,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x17E0",
+   "offset": 6112,
+   "size": 108
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x184C",
+   "offset": 6220,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1880",
+   "offset": 6272,
+   "size": 120
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x18F8",
+   "offset": 6392,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1950",
+   "offset": 6480,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1984",
+   "offset": 6532,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x19C0",
+   "offset": 6592,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1A18",
+   "offset": 6680,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1A4C",
+   "offset": 6732,
+   "size": 64
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1A8C",
+   "offset": 6796,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1AB4",
+   "offset": 6836,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1B0C",
+   "offset": 6924,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1B40",
+   "offset": 6976,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1B98",
+   "offset": 7064,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1BF0",
+   "offset": 7152,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1C24",
+   "offset": 7204,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1C7C",
+   "offset": 7292,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1CA0",
+   "offset": 7328,
+   "size": 108
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1D0C",
+   "offset": 7436,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1D40",
+   "offset": 7488,
+   "size": 140
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1DCC",
+   "offset": 7628,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1E24",
+   "offset": 7716,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1E58",
+   "offset": 7768,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1E94",
+   "offset": 7828,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1EEC",
+   "offset": 7916,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1F20",
+   "offset": 7968,
+   "size": 68
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1F64",
+   "offset": 8036,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1F8C",
+   "offset": 8076,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x1FE4",
+   "offset": 8164,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2018",
+   "offset": 8216,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2070",
+   "offset": 8304,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x20C8",
+   "offset": 8392,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x20FC",
+   "offset": 8444,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2154",
+   "offset": 8532,
+   "size": 44
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2180",
+   "offset": 8576,
+   "size": 108
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x21EC",
+   "offset": 8684,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2220",
+   "offset": 8736,
+   "size": 124
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x229C",
+   "offset": 8860,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x22F4",
+   "offset": 8948,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2328",
+   "offset": 9000,
+   "size": 60
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2364",
+   "offset": 9060,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x23BC",
+   "offset": 9148,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x23F0",
+   "offset": 9200,
+   "size": 68
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2434",
+   "offset": 9268,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x245C",
+   "offset": 9308,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x24B4",
+   "offset": 9396,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x24E8",
+   "offset": 9448,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2540",
+   "offset": 9536,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2598",
+   "offset": 9624,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x25CC",
+   "offset": 9676,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2624",
+   "offset": 9764,
+   "size": 44
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2650",
+   "offset": 9808,
+   "size": 108
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x26BC",
+   "offset": 9916,
+   "size": 36
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x26E0",
+   "offset": 9952,
+   "size": 116
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2754",
+   "offset": 10068,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x27AC",
+   "offset": 10156,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x27E0",
+   "offset": 10208,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2810",
+   "offset": 10256,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2868",
+   "offset": 10344,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x289C",
+   "offset": 10396,
+   "size": 48
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x28CC",
+   "offset": 10444,
+   "size": 40
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x28F4",
+   "offset": 10484,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x294C",
+   "offset": 10572,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2980",
+   "offset": 10624,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x29D8",
+   "offset": 10712,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2A30",
+   "offset": 10800,
+   "size": 52
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2A64",
+   "offset": 10852,
+   "size": 88
+  },
+  {
+   "kind": "blob",
+   "name": "dCaptainShieldPose_blob_0x2ABC",
+   "offset": 10940,
+   "size": 36
+  }
+ ],
+ "symbol": "CaptainShieldPose",
+ "vanilla_data_size": 10976
+}
