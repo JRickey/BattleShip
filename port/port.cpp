@@ -13,6 +13,7 @@
 #include <libultraship/controller/controldeck/ControlDeck.h>
 #include <fast/Fast3dWindow.h>
 #include <ship/resource/File.h>
+#include <chrono>
 #include <string>
 #include <vector>
 #include <cstdio>
@@ -52,6 +53,7 @@
 #include "port_log.h"
 #include "fighter_registry.h"
 #include "focus.h"
+#include "shaders/fast3d_shader_manifest.h"
 
 #ifndef DISABLE_SCRIPTING
 #include <ship/scripting/ScriptLoader.h>
@@ -990,6 +992,19 @@ static int PortInitImpl(int argc, char* argv[]) {
 			return 1;
 		}
 		port_log("SSB64: game archive registered\n");
+	}
+
+	{
+		auto window = std::dynamic_pointer_cast<Fast::Fast3dWindow>(sContext->GetWindow());
+		if (window != nullptr) {
+			const auto start = std::chrono::steady_clock::now();
+			const auto progress = window->PrewarmShaders(ssb64::GetFast3dShaderManifest());
+			const double elapsedMs = std::chrono::duration<double, std::milli>(
+				std::chrono::steady_clock::now() - start).count();
+			port_log("SSB64: Fast3D warmup complete=%d compiled=%zu cached=%zu failed=%zu skipped=%zu ms=%.2f\n",
+			         progress.complete ? 1 : 0, progress.compiled, progress.alreadyCached,
+			         progress.failed, progress.skipped, elapsedMs);
+		}
 	}
 
 	{
