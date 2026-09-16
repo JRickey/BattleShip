@@ -1220,7 +1220,13 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
             ApplicationInfo applicationInfo = getContext().getPackageManager().getApplicationInfo(getContext().getPackageName(), PackageManager.GET_META_DATA);
             Bundle bundle = applicationInfo.metaData;
             if (bundle == null) {
-                return false;
+                // No SDL_ENV.* metadata is a successfully loaded empty
+                // environment. Returning false makes SDL's native side retry
+                // this JNI call on every SDL_getenv(). BattleShip's N64
+                // threads use stack-switched coroutines, where entering ART
+                // from the alternate stack is invalid and is reported as a
+                // StackOverflowError on older Android releases.
+                return true;
             }
             String prefix = "SDL_ENV.";
             final int trimLength = prefix.length();
@@ -2117,4 +2123,3 @@ class SDLClipboardHandler implements
         SDLActivity.onNativeClipboardChanged();
     }
 }
-
