@@ -157,7 +157,7 @@ static double port_perf_percentile(const std::vector<double>& values, double fra
 	std::sort(sorted.begin(), sorted.end());
 	double index = fraction * static_cast<double>(sorted.size() - 1);
 	size_t low = static_cast<size_t>(index);
-	size_t high = std::min(low + 1, sorted.size() - 1);
+	size_t high = (low + 1 < sorted.size()) ? low + 1 : sorted.size() - 1;
 	double weight = index - static_cast<double>(low);
 	return sorted[low] * (1.0 - weight) + sorted[high] * weight;
 }
