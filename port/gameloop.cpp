@@ -34,6 +34,7 @@
 #include <fast/interpreter.h>
 
 #include <cstdio>
+#include <algorithm>
 #include <chrono>
 #include <thread>
 #include <unordered_map>
@@ -66,6 +67,9 @@ extern "C" int portFastCaptureBackbufferPNG(const char *path);
 extern "C" void port_vi_simulate_vblank(void);
 
 extern "C" void lbBackupApplyCheats(void);
+
+extern "C" unsigned char port_diag_get_scene_curr(void);
+extern "C" const char *port_diag_get_scene_name(unsigned char id);
 
 /* ========================================================================= */
 /*  External game symbols (C linkage)                                        */
@@ -115,6 +119,136 @@ static PortCoroutine *sGameCoroutine = NULL;
 /* VI frame counter (incremented once per PortPushFrame, below). Lives up here
  * so the DL-submission path can stamp diagnostics with it. */
 static int sFrameCount = 0;
+
+/* Low-overhead frame telemetry for remote targets where system ETW/WPR is
+ * unavailable (notably retail Xbox consoles in UWP Developer Mode). One
+ * aggregate line per second is cheap enough to leave enabled in the tracing
+ * build while still exposing true presentation cadence and tail latency. */
+struct PortPerfTraceState {
+	bool initialized = false;
+	bool enabled = false;
+	std::chrono::steady_clock::time_point window_start;
+	std::chrono::steady_clock::time_point last_present;
+	bool have_last_present = false;
+	int ticks = 0;
+	int presents = 0;
+	int draw_presents = 0;
+	int idle_presents = 0;
+	int rejected_presents = 0;
+	std::vector<double> tick_ms;
+	std::vector<double> present_interval_ms;
+	std::vector<double> present_call_ms;
+};
+
+static PortPerfTraceState sPerfTrace;
+
+static double port_perf_average(const std::vector<double>& values)
+{
+	if (values.empty()) return 0.0;
+	double sum = 0.0;
+	for (double value : values) sum += value;
+	return sum / static_cast<double>(values.size());
+}
+
+static double port_perf_percentile(const std::vector<double>& values, double fraction)
+{
+	if (values.empty()) return 0.0;
+	std::vector<double> sorted(values);
+	std::sort(sorted.begin(), sorted.end());
+	double index = fraction * static_cast<double>(sorted.size() - 1);
+	size_t low = static_cast<size_t>(index);
+	size_t high = std::min(low + 1, sorted.size() - 1);
+	double weight = index - static_cast<double>(low);
+	return sorted[low] * (1.0 - weight) + sorted[high] * weight;
+}
+
+static double port_perf_max(const std::vector<double>& values)
+{
+	return values.empty() ? 0.0 : *std::max_element(values.begin(), values.end());
+}
+
+static void port_perf_init_once(void)
+{
+	if (sPerfTrace.initialized) return;
+	sPerfTrace.initialized = true;
+#if defined(BATTLESHIP_UWP)
+	sPerfTrace.enabled = true;
+#else
+	sPerfTrace.enabled = std::getenv("SSB64_PERF_TRACE") != nullptr;
+#endif
+	if (!sPerfTrace.enabled) return;
+	sPerfTrace.window_start = std::chrono::steady_clock::now();
+	sPerfTrace.tick_ms.reserve(128);
+	sPerfTrace.present_interval_ms.reserve(256);
+	sPerfTrace.present_call_ms.reserve(256);
+	port_log("[perf] frame telemetry enabled\n");
+}
+
+static void port_perf_note_present(bool presented, bool idle,
+	std::chrono::steady_clock::time_point begin,
+	std::chrono::steady_clock::time_point end)
+{
+	port_perf_init_once();
+	if (!sPerfTrace.enabled) return;
+	sPerfTrace.present_call_ms.push_back(std::chrono::duration<double, std::milli>(end - begin).count());
+	if (!presented) {
+		sPerfTrace.rejected_presents++;
+		return;
+	}
+	if (sPerfTrace.have_last_present) {
+		sPerfTrace.present_interval_ms.push_back(
+			std::chrono::duration<double, std::milli>(end - sPerfTrace.last_present).count());
+	}
+	sPerfTrace.last_present = end;
+	sPerfTrace.have_last_present = true;
+	sPerfTrace.presents++;
+	if (idle) sPerfTrace.idle_presents++;
+	else sPerfTrace.draw_presents++;
+}
+
+static void port_perf_finish_tick(std::chrono::steady_clock::time_point begin,
+	std::chrono::steady_clock::time_point end)
+{
+	port_perf_init_once();
+	if (!sPerfTrace.enabled) return;
+	sPerfTrace.ticks++;
+	sPerfTrace.tick_ms.push_back(std::chrono::duration<double, std::milli>(end - begin).count());
+	if (std::chrono::duration<double>(end - sPerfTrace.window_start).count() < 1.0) return;
+
+	unsigned char scene = port_diag_get_scene_curr();
+	auto context = Ship::Context::GetInstance();
+	auto window = context
+		? std::dynamic_pointer_cast<Fast::Fast3dWindow>(context->GetWindow())
+		: nullptr;
+	int target_fps = window ? window->GetTargetFps() : 0;
+	unsigned int refresh_hz = window ? window->GetCurrentRefreshRate() : 0;
+	int late_18 = static_cast<int>(std::count_if(sPerfTrace.present_interval_ms.begin(),
+		sPerfTrace.present_interval_ms.end(), [](double ms) { return ms > 18.0; }));
+	int late_35 = static_cast<int>(std::count_if(sPerfTrace.present_interval_ms.begin(),
+		sPerfTrace.present_interval_ms.end(), [](double ms) { return ms > 35.0; }));
+
+	port_log("[perf] scene=%s(%u) ticks=%d presents=%d draw=%d idle=%d rejected=%d "
+		"target=%d refresh=%u tick_ms(avg/p95/max)=%.2f/%.2f/%.2f "
+		"interval_ms(avg/p95/max)=%.2f/%.2f/%.2f late18=%d late35=%d "
+		"present_call_ms(avg/p95/max)=%.2f/%.2f/%.2f\n",
+		port_diag_get_scene_name(scene), static_cast<unsigned int>(scene),
+		sPerfTrace.ticks, sPerfTrace.presents, sPerfTrace.draw_presents,
+		sPerfTrace.idle_presents, sPerfTrace.rejected_presents, target_fps, refresh_hz,
+		port_perf_average(sPerfTrace.tick_ms), port_perf_percentile(sPerfTrace.tick_ms, 0.95),
+		port_perf_max(sPerfTrace.tick_ms), port_perf_average(sPerfTrace.present_interval_ms),
+		port_perf_percentile(sPerfTrace.present_interval_ms, 0.95),
+		port_perf_max(sPerfTrace.present_interval_ms), late_18, late_35,
+		port_perf_average(sPerfTrace.present_call_ms),
+		port_perf_percentile(sPerfTrace.present_call_ms, 0.95),
+		port_perf_max(sPerfTrace.present_call_ms));
+
+	sPerfTrace.window_start = end;
+	sPerfTrace.ticks = sPerfTrace.presents = sPerfTrace.draw_presents = 0;
+	sPerfTrace.idle_presents = sPerfTrace.rejected_presents = 0;
+	sPerfTrace.tick_ms.clear();
+	sPerfTrace.present_interval_ms.clear();
+	sPerfTrace.present_call_ms.clear();
+}
 
 /* ========================================================================= */
 /*  Game coroutine entry point                                               */
@@ -506,7 +640,9 @@ extern "C" void port_drain_pending_display_list(void)
 		sFrameRectPx = 0;
 		sFrameLoadBytes = 0;
 		try {
-			window->DrawAndRunGraphicsCommands(dl, portInterpGetReplacements(sub, subframes));
+			auto present_begin = std::chrono::steady_clock::now();
+			bool presented = window->DrawAndRunGraphicsCommands(dl, portInterpGetReplacements(sub, subframes));
+			port_perf_note_present(presented, false, present_begin, std::chrono::steady_clock::now());
 		} catch (long hr) {
 			port_log("SSB64: CAUGHT DX shader exception HRESULT=0x%08lX\n", hr);
 			portInterpEndDraw();
@@ -823,7 +959,9 @@ void PortPushFrame(void)
 				 * off (single present, old behavior). */
 				int idleSubframes = portInterpActiveSubframes();
 				for (int sub = 0; sub < idleSubframes; sub++) {
+					auto present_begin = std::chrono::steady_clock::now();
 					idlePresented = window->PresentCurrentFramebuffer();
+					port_perf_note_present(idlePresented, true, present_begin, std::chrono::steady_clock::now());
 					if (!idlePresented) {
 						break;
 					}
@@ -851,8 +989,10 @@ void PortPushFrame(void)
 	/* Feed the interpolation auto-throttle the wall duration of this tick;
 	 * if the host cannot sustain 60 ticks/s at the configured subframe
 	 * count, it steps the render rate down to protect the game clock. */
+	auto frameEnd = std::chrono::steady_clock::now();
 	portInterpNoteTicDuration(std::chrono::duration_cast<std::chrono::microseconds>(
-		std::chrono::steady_clock::now() - frameStart).count());
+		frameEnd - frameStart).count());
+	port_perf_finish_tick(frameStart, frameEnd);
 
 	/* Tell the hang watchdog a frame completed. */
 	port_watchdog_note_frame_end();
