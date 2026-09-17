@@ -1233,10 +1233,10 @@ endif()
 # per-build-dir sink (${CMAKE_BINARY_DIR}/extracted) instead, then stage it
 # next to the binary. Torch writes config.yml's `output.binary`
 # (BattleShip.o2r, identical for both regions) into its `-d` dir,
-# independent of `-s` (where it reads config/yamls). The runtime archive
-# name stays the fixed "BattleShip.o2r"; only the dev-build location is
-# isolated. Packaged-release first-run extraction (sidecar torch +
-# config.yml, its own -d) is unaffected.
+# independent of `-s` (where it reads config/yamls). The staged runtime
+# name follows SSB64_APP_NAME (BattleShip.o2r or BattleShip-JP.o2r), while
+# the extracted build artifact stays fixed. Packaged-release first-run
+# extraction (sidecar torch + config.yml, its own -d) is unaffected.
 set(SSB64_O2R_DIR ${CMAKE_BINARY_DIR}/extracted)
 set(SSB64_O2R     ${SSB64_O2R_DIR}/BattleShip.o2r)
 
@@ -1280,8 +1280,8 @@ if(EXISTS "${SSB64_BASEROM}")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${SSB64_O2R}
-            $<TARGET_FILE_DIR:${PROJECT_NAME}>/BattleShip.o2r
-        COMMENT "Staging BattleShip.o2r next to ssb64 binary"
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>/${SSB64_APP_NAME}.o2r
+        COMMENT "Staging ${SSB64_APP_NAME}.o2r next to ssb64 binary"
     )
 else()
     add_custom_target(ExtractAssets
