@@ -3,7 +3,7 @@ name: build-uwp
 on:
   workflow_dispatch:
   push:
-    branches: [codex/uwp-xbox]
+    branches: [main, codex/uwp-xbox]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
