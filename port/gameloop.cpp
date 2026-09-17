@@ -493,10 +493,10 @@ extern "C" void port_drain_pending_display_list(void)
 	/* Enhanced framerate mode: render this tick's DL as `subframes` paced
 	 * presents, each with matrices lerped between the previous and current
 	 * tick (the last subframe uses an empty map = bit-exact game memory).
-	 * Each DrawAndRunGraphicsCommands call paces itself to 1/(60k) s via
-	 * SetTargetFps(60*k), so the whole tick still occupies one VI period and
-	 * the 60 Hz game clock is untouched. subframes == 1 when the feature is
-	 * off, reproducing the old single-call behavior exactly. */
+	 * Each DrawAndRunGraphicsCommands call paces itself to the configured
+	 * render rate. Display-match mode distributes fractional frame counts
+	 * across ticks (for example 90 Hz alternates one and two presents) while
+	 * keeping the 60 Hz game clock untouched. */
 	int subframes = portInterpActiveSubframes();
 	portInterpBeginDraw();
 	bool costLatched = false;
@@ -733,7 +733,9 @@ void PortPushFrame(void)
 	port_widescreen_tick();
 
 #if !defined(__ANDROID__)
+#if !defined(BATTLESHIP_UWP)
 	ssb64::enhancements::TickDiscordPresence(); // DRP
+#endif
 #endif
 
 #if defined(__ANDROID__)

@@ -1,0 +1,11 @@
+BattleShip for Xbox Developer Mode (US ROM only)
+
+1. Install the signed MSIX bundle and its certificate through Xbox Device Portal.
+2. On a PC, run Prepare-BattleShip-US.ps1 from the companion asset-tool archive.
+3. Copy the generated BattleShip folder to the root of the Xbox USB drive.
+   The final path on Xbox must be E:\BattleShip\BattleShip.o2r.
+4. Launch BattleShip. Press the Xbox View/Back button for the ImGui menu.
+
+Writable configuration and saves use the app's LocalState. Optional mods and
+ROM-derived CSS stage preview PNGs can be placed below E:\BattleShip\mods and
+E:\BattleShip\assets\css_icons respectively.

@@ -6,7 +6,7 @@
  *
  *   game draw phase (decomp)  -> portInterpRecordMtx() per emitted gSPMatrix
  *   port_drain_pending_display_list:
- *     portInterpActiveSubframes()   -> k, applies SetTargetFps(60*k)
+ *     portInterpActiveSubframes()   -> frames for this tick, applies target FPS
  *     portInterpBeginDraw()         -> decode + pair cur vs prev by key
  *     for j in 1..k:
  *       portInterpGetReplacements(j, k) -> lerped map (empty when j == k)
@@ -78,9 +78,15 @@ std::unordered_map<Mtx *, MtxF> sReplacements;
 const std::unordered_map<Mtx *, MtxF> sEmptyReplacements;
 
 bool sConfigInited = false;
+bool sEnvInited = false;
+int sEnvFps = -1;
 int sConfigK = 1;       /* k requested by CVar/env */
 int sThrottleCapK = 4;  /* upper bound imposed by the auto-throttle */
 int sAppliedK = 1;      /* last k applied via SetTargetFps */
+int sConfigTargetFps = 60;
+int sAppliedTargetFps = 60;
+int sCadenceAccumulator = 0;
+int sCadencePhaseStart = 0;
 bool sForceDisabled = false;
 float sSnapDist = 500.0f;
 bool sStatsLog = false;
@@ -173,19 +179,34 @@ Fast::Fast3dWindow *get_fast3d_window()
     return dynamic_cast<Fast::Fast3dWindow *>(context->GetWindow().get());
 }
 
-void apply_effective_k(int k)
+int clamp_display_fps(uint32_t refresh)
 {
-    if (k == sAppliedK) {
+    int fps = static_cast<int>(refresh);
+    if (fps < 60) fps = 60;
+    if (fps > 60 * kMaxSubframes) fps = 60 * kMaxSubframes;
+    return fps;
+}
+
+bool display_match_enabled()
+{
+    return CVarGetInteger(PORT_INTERP_CVAR_MATCH_DISPLAY, 0) != 0;
+}
+
+void apply_effective_rate(int targetFps)
+{
+    if (targetFps == sAppliedTargetFps) {
         return;
     }
     auto *window = get_fast3d_window();
     if (window == nullptr) {
         return; /* window not up yet; retry next tick */
     }
-    window->SetTargetFps(60 * k);
-    port_log("SSB64: interp — render rate set to %d fps (%d subframe%s per tick)\n",
-             60 * k, k, (k == 1) ? "" : "s");
-    sAppliedK = k;
+    window->SetTargetFps(targetFps);
+    sAppliedTargetFps = targetFps;
+    sAppliedK = (targetFps + 59) / 60;
+    sCadenceAccumulator = 0;
+    port_log("SSB64: interp — render rate set to %d fps (up to %d subframe%s per tick)\n",
+             targetFps, sAppliedK, (sAppliedK == 1) ? "" : "s");
 }
 
 } // namespace
@@ -199,8 +220,6 @@ extern "C" void portInterpApplyConfig(void)
     sConfigInited = true;
 
     /* One-shot env reads. */
-    static bool sEnvInited = false;
-    static int sEnvFps = -1;
     if (!sEnvInited) {
         sEnvInited = true;
         const char *env = std::getenv("SSB64_INTERP_FPS");
@@ -216,20 +235,33 @@ extern "C" void portInterpApplyConfig(void)
     }
 
     int fps = (sEnvFps >= 0) ? sEnvFps : CVarGetInteger(PORT_INTERP_CVAR_FPS, 0);
-    int k = (fps >= 60) ? (fps + 30) / 60 : 1;
+    if (sEnvFps < 0 && display_match_enabled()) {
+        auto* window = get_fast3d_window();
+        const uint32_t refresh = window != nullptr ? window->GetCurrentRefreshRate() : 60;
+        // Keep the 60 Hz simulation fixed while matching arbitrary display
+        // rates. A fractional cadence distributes ceil(fps / 60) subframes
+        // across ticks and computes their true temporal phases, so 90, 144,
+        // and 165 Hz panels are paced exactly instead of being rounded down.
+        fps = clamp_display_fps(refresh);
+        port_log("SSB64: interp — display reports %u Hz; match mode selected %d fps\n", refresh, fps);
+    }
+    const bool matchDisplay = sEnvFps < 0 && display_match_enabled();
+    int k = (fps >= 60) ? (matchDisplay ? (fps + 59) / 60 : (fps + 30) / 60) : 1;
     if (k < 1) k = 1;
     if (k > kMaxSubframes) k = kMaxSubframes;
 
     sConfigK = sForceDisabled ? 1 : k;
+    sConfigTargetFps = sForceDisabled ? 60 : (matchDisplay ? fps : 60 * k);
     sThrottleCapK = kMaxSubframes; /* a config change re-arms the throttle */
     sOverrunTics = 0;
     sWarmupRemaining = kWarmupTics;
     sTicEmaUs = 16667.0;
     sRecordArmed = (sConfigK > 1);
+    sCadenceAccumulator = 0;
 
     if (sConfigK > 1) {
         port_log("SSB64: interp — enhanced framerate requested: %d fps (snap_dist=%.0f)\n",
-                 60 * sConfigK, static_cast<double>(sSnapDist));
+                 sConfigTargetFps, static_cast<double>(sSnapDist));
     }
 }
 
@@ -238,17 +270,51 @@ extern "C" int portInterpActiveSubframes(void)
     if (!sConfigInited) {
         portInterpApplyConfig();
     }
+
+    // Refresh can change without a settings callback: desktop windows can
+    // move between monitors and mobile displays can switch adaptive-refresh
+    // modes while the app is running. Re-sample it at the game-tick boundary
+    // and restart only the render cadence when the reported rate changes.
+    if (sEnvFps < 0 && display_match_enabled()) {
+        auto* window = get_fast3d_window();
+        if (window != nullptr) {
+            const uint32_t refresh = window->GetCurrentRefreshRate();
+            const int targetFps = clamp_display_fps(refresh);
+            if (targetFps != sConfigTargetFps) {
+                sConfigTargetFps = targetFps;
+                sConfigK = (targetFps + 59) / 60;
+                sThrottleCapK = kMaxSubframes;
+                sOverrunTics = 0;
+                sWarmupRemaining = kWarmupTics;
+                sCadenceAccumulator = 0;
+                sRecordArmed = sConfigK > 1;
+                port_log("SSB64: interp — display changed to %u Hz; match mode selected %d fps\n",
+                         refresh, targetFps);
+            }
+        }
+    }
     if (sConfigK <= 1) {
-        apply_effective_k(1);
+        apply_effective_rate(60);
+        sCadencePhaseStart = 0;
         return 1;
     }
     if (gbi_trace_is_enabled()) {
-        apply_effective_k(1);
+        apply_effective_rate(60);
+        sCadencePhaseStart = 0;
         return 1;
     }
     int k = (sConfigK < sThrottleCapK) ? sConfigK : sThrottleCapK;
-    apply_effective_k(k);
-    return k;
+    const int targetFps = (k < sConfigK) ? 60 * k : sConfigTargetFps;
+    apply_effective_rate(targetFps);
+
+    // Bresenham-style cadence: over 60 simulation ticks, emit exactly
+    // targetFps frames. Preserve the phase at tick start so replacement
+    // matrices land at uniform display-time positions within the tick.
+    sCadencePhaseStart = sCadenceAccumulator;
+    sCadenceAccumulator += targetFps;
+    const int subframes = sCadenceAccumulator / 60;
+    sCadenceAccumulator %= 60;
+    return subframes;
 }
 
 extern "C" void portInterpRecordMtx(void *mtx, void *owner, int ordinal, int tag)
@@ -338,10 +404,12 @@ extern "C" void portInterpBeginDraw(void)
 
 const std::unordered_map<Mtx *, MtxF> &portInterpGetReplacements(int subframe, int total)
 {
-    if (subframe >= total || sPairs.empty()) {
+    (void)total;
+    const float f = static_cast<float>(subframe * 60 - sCadencePhaseStart) /
+                    static_cast<float>(sAppliedTargetFps);
+    if (f >= 1.0f || sPairs.empty()) {
         return sEmptyReplacements;
     }
-    float f = static_cast<float>(subframe) / static_cast<float>(total);
     sReplacements.clear();
     sReplacements.reserve(sPairs.size());
     for (const PairEntry &pair : sPairs) {
@@ -393,7 +461,7 @@ extern "C" void portInterpNoteTicDuration(long long micros)
             sWarmupRemaining = kWarmupTics;
             port_log("SSB64: interp — host cannot sustain %d fps (tick avg %.1f ms > 16.7 ms); "
                      "stepping down to %d fps to protect the 60 Hz game clock\n",
-                     60 * sAppliedK, sTicEmaUs / 1000.0, 60 * sThrottleCapK);
+                     sAppliedTargetFps, sTicEmaUs / 1000.0, 60 * sThrottleCapK);
         }
     } else {
         sOverrunTics = 0;

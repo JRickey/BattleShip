@@ -2,7 +2,7 @@
 // the .so via dlsym("SDL_main"), so we let SDL_main.h's `#define main SDL_main`
 // rename the entry point during preprocessing — which is exactly what
 // SDL_MAIN_HANDLED would suppress.
-#if !defined(__ANDROID__)
+#if !defined(__ANDROID__) && !defined(BATTLESHIP_UWP)
 #define SDL_MAIN_HANDLED
 #endif
 #include "port.h"
@@ -123,7 +123,7 @@ extern "C" void* sModBridgeAnchorDataFilesRef = (void*)&dFTManagerDataFiles_Ref;
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(BATTLESHIP_UWP)
 #include <windows.h>
 #include <dbghelp.h>
 #include <psapi.h>
@@ -460,7 +460,15 @@ void MountModsDir() {
 	auto am = rm->GetArchiveManager();
 	if (!am) return;
 
+#ifdef BATTLESHIP_UWP
+	const fs::path usbMods(ssb64::ExternalDataPath("mods"));
+	std::error_code rootEc;
+	const fs::path modsDir = fs::is_directory(usbMods, rootEc)
+	                           ? usbMods
+	                           : fs::path(Ship::Context::GetAppDirectoryPath()) / "mods";
+#else
 	const fs::path modsDir(ssb64::RealAppBundlePath() + "/mods");
+#endif
 	std::error_code ec;
 	if (!fs::exists(modsDir, ec)) {
 		return;
@@ -675,6 +683,16 @@ static int PortInitImpl(int argc, char* argv[]) {
 	if (!sContext->InitConfiguration()) { port_log("SSB64: InitConfiguration failed\n"); return 1; }
 	if (!sContext->InitConsoleVariables()) { port_log("SSB64: InitConsoleVariables failed\n"); return 1; }
 	port_log("SSB64: Config + CVars OK\n");
+
+#ifdef BATTLESHIP_UWP
+	// Xbox is controller-first. Set this before the first ImGui frame so
+	// View/Back can open the menu and A/B + D-pad/stick can operate it.
+	sContext->GetConsoleVariables()->SetInteger("gControlNav", 1);
+	// Use the CoreWindow swap-chain path validated by the Xbox UWP wrapper.
+	sContext->GetConfig()->SetInt("Window.Backend.Id",
+	                            static_cast<int>(Ship::WindowBackend::FAST3D_DXGI_DX11));
+	sContext->GetConfig()->SetString("Window.Backend.Name", "DirectX 11");
+#endif
 
 	/* Latch the Classic Co-op menu choice for this launch — the toggle
 	 * swaps which CSS overlay Classic mode enters, so it only applies on
@@ -897,7 +915,7 @@ static int PortInitImpl(int argc, char* argv[]) {
 			port_log("SSB64: Port menu attached\n");
 		}
 
-#if !defined(__ANDROID__)
+#if !defined(__ANDROID__) && !defined(BATTLESHIP_UWP)
 		// Linux: WMs only show the app icon if SDL_SetWindowIcon is called
 		// on the live window. .ico/.icns paths are baked into the .exe /
 		// .app on Windows / macOS so this is a no-op there. Android pulls
@@ -930,6 +948,18 @@ static int PortInitImpl(int argc, char* argv[]) {
 	 *      render loop until the user provides a ROM and extraction
 	 *      succeeds — or quits the window. */
 	{
+#ifdef BATTLESHIP_UWP
+		// A UWP app cannot launch the desktop Torch sidecar or browse arbitrary
+		// files. Assets are prepared on a PC and copied to E:/BattleShip.
+		std::error_code ec;
+		const std::string archive = PortLocateFile(SSB64_O2R_NAME);
+		if (!std::filesystem::exists(archive, ec)) {
+			port_log("SSB64: missing E:/BattleShip/%s; run the packaged US asset tool and copy its output to USB\n",
+			         SSB64_O2R_NAME);
+			PortShutdown();
+			return 1;
+		}
+#else
 		const std::string targetO2r =
 			Ship::Context::GetPathRelativeToAppDirectory(SSB64_O2R_NAME);
 		// silent=true: any failure during this auto-attempt should land in
@@ -953,6 +983,7 @@ static int PortInitImpl(int argc, char* argv[]) {
 				return 1;
 			}
 		}
+#endif
 	}
 
 	{
@@ -1240,6 +1271,7 @@ int main(int argc, char* argv[]) {
 		}
 		port_log_init(logPath.c_str());
 	}
+	port_log("SSB64: main entered\n");
 
 #ifdef __APPLE__
 	/* Disable the macOS press-and-hold accent/diacritic popup for this app.
@@ -1256,7 +1288,7 @@ int main(int argc, char* argv[]) {
 	CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication);
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(BATTLESHIP_UWP)
 	SetUnhandledExceptionFilter(portWindowsCrashFilter);
 	AddVectoredExceptionHandler(1, portWindowsVectoredHandler);
 	std::atexit([]() {
@@ -1282,6 +1314,7 @@ int main(int argc, char* argv[]) {
 	// Initialize RenderDoc trigger BEFORE PortInit so the RenderDoc DLL
 	// can hook D3D11 before LUS creates the device.
 	portRenderDocInit();
+	port_log("SSB64: RenderDoc hook initialized\n");
 
 	if (PortInit(argc, argv) != 0) {
 		return 1;

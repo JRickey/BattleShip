@@ -1,0 +1,130 @@
+name: build-uwp
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/uwp-xbox]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-uwp:
+    runs-on: windows-2022
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install asset-generation dependencies
+        shell: pwsh
+        run: |
+          $python = (Get-Command python3).Source
+          & $python -m pip install --disable-pip-version-check Pillow
+          & $python -c "from PIL import Image; print('Pillow ready')"
+          "BATTLESHIP_PYTHON=$python" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Restore native dependencies and objects
+        id: native-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            vcpkg
+            build-windows
+          key: ${{ runner.os }}-vs2022-battleship-uwp-${{ hashFiles('CMakeLists.txt', 'cmake/**', 'port/**', 'decomp/**', 'libultraship/**') }}
+          restore-keys: |
+            ${{ runner.os }}-vs2022-battleship-uwp-
+
+      - name: Build BattleShip native DLL and asset tool
+        shell: pwsh
+        env:
+          VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+        run: |
+          cmake -S . -B build-windows -G "Visual Studio 17 2022" -T v143 -A x64 `
+            -DBATTLESHIP_UWP=ON `
+            -DSSB64_VERSION=us `
+            -DPython3_EXECUTABLE="$env:BATTLESHIP_PYTHON" `
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-windows --config Release --parallel 10
+
+      - name: Save native dependencies and objects
+        if: always() && steps.native-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            vcpkg
+            build-windows
+          key: ${{ steps.native-cache.outputs.cache-primary-key }}
+
+      - name: Configure UWP package
+        shell: pwsh
+        run: |
+          cmake -S uwp -B build-uwp -G "Visual Studio 17 2022" -A x64 `
+            -DBATTLESHIP_BUILD_DIR="${{ github.workspace }}/build-windows" `
+            -DBATTLESHIP_PACKAGE_VERSION="1.0.${{ github.run_number }}.0"
+
+      - name: Build and sign MSIX bundle
+        shell: pwsh
+        env:
+          UWP_SIGNING_PFX_BASE64: ${{ secrets.UWP_SIGNING_PFX_BASE64 }}
+          UWP_SIGNING_PFX_PASSWORD: ${{ secrets.UWP_SIGNING_PFX_PASSWORD }}
+        run: |
+          if ($env:UWP_SIGNING_PFX_BASE64 -and $env:UWP_SIGNING_PFX_PASSWORD) {
+            $pfxPath = Join-Path $env:RUNNER_TEMP "BattleShip-UWP.pfx"
+            [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:UWP_SIGNING_PFX_BASE64))
+            $securePassword = ConvertTo-SecureString $env:UWP_SIGNING_PFX_PASSWORD -AsPlainText -Force
+            $cert = Import-PfxCertificate -FilePath $pfxPath `
+              -CertStoreLocation "Cert:\CurrentUser\My" -Password $securePassword
+          } else {
+            Write-Warning "Stable signing secrets are unavailable; generating a one-run development certificate."
+            $cert = New-SelfSignedCertificate `
+              -Type Custom `
+              -Subject "CN=JRickey" `
+              -KeyUsage DigitalSignature `
+              -FriendlyName "BattleShip UWP CI fallback" `
+              -CertStoreLocation "Cert:\CurrentUser\My" `
+              -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
+          }
+          msbuild build-uwp/BattleShip-UWP.vcxproj `
+            /p:Configuration=Release `
+            /p:Platform=x64 `
+            /p:AppxBundle=Always `
+            /p:AppxBundlePlatforms=x64 `
+            /p:UapAppxPackageBuildMode=SideloadOnly `
+            /p:AppxPackageSigningEnabled=true `
+            /p:PackageCertificateThumbprint=$($cert.Thumbprint)
+
+      - name: Stage US asset tool
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist/asset-tool/yamls | Out-Null
+          Copy-Item build-windows/TorchExternal/src/TorchExternal-build/Release/torch.exe dist/asset-tool/torch.exe
+          Copy-Item tools/Prepare-BattleShip-US.ps1 dist/asset-tool/
+          Copy-Item config.yml dist/asset-tool/config.yml
+          Copy-Item -Recurse yamls/us dist/asset-tool/yamls/us
+
+      - name: Upload UWP package
+        uses: actions/upload-artifact@v4
+        with:
+          name: BattleShip-UWP-US-x64
+          if-no-files-found: error
+          path: |
+            build-uwp/AppPackages/**/*.msixbundle
+            build-uwp/AppPackages/**/*.appxbundle
+            build-uwp/AppPackages/**/*.msix
+            build-uwp/AppPackages/**/*.appx
+            build-uwp/AppPackages/**/*.cer
+
+      - name: Upload US asset tool
+        uses: actions/upload-artifact@v4
+        with:
+          name: BattleShip-US-asset-tool
+          if-no-files-found: error
+          path: dist/asset-tool

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap mp rescap">
+  <Identity Name="BattleShip.UWP" Publisher="CN=JRickey" Version="@BATTLESHIP_PACKAGE_VERSION@" />
+  <mp:PhoneIdentity PhoneProductId="e589f78c-bd52-4882-adb2-1c3fbe53515e"
+                    PhonePublisherId="00000000-0000-0000-0000-000000000000" />
+  <Properties>
+    <DisplayName>BattleShip</DisplayName>
+    <PublisherDisplayName>BattleShip Community UWP</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+    <!-- BattleShip and the packaged SDL/UWP libraries use the app-container
+         MSVC runtime. Declaring the framework makes those DLLs part of the
+         package dependency graph on Xbox (shipping the dependency APPX next
+         to the bundle is not sufficient by itself). -->
+    <PackageDependency Name="Microsoft.VCLibs.140.00"
+                       MinVersion="14.0.33519.0"
+                       Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" />
+  </Dependencies>
+  <Resources><Resource Language="x-generate" /></Resources>
+  <Applications>
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="uwp.App">
+      <uap:VisualElements
+        DisplayName="BattleShip"
+        Description="Super Smash Bros. 64 native port for Xbox developer mode"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="broadFileSystemAccess" />
+    <rescap:Capability Name="expandedResources" />
+    <uap:Capability Name="removableStorage" />
+    <Capability Name="codeGeneration" />
+    <Capability Name="internetClient" />
+    <Capability Name="privateNetworkClientServer" />
+  </Capabilities>
+</Package>
