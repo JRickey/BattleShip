@@ -1234,6 +1234,7 @@ void PortShutdown(void) {
 			// AllRumble → sContext.reset() — same singleton-reentry caveat
 			// applies as the rumble cleanup below.
 			cd->ShutdownRaphnet();
+			cd->ShutdownGCAdapter();
 			cd->StopAllRumble();
 		}
 	}
