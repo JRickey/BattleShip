@@ -90,6 +90,47 @@ it with `-G "Visual Studio 17 2022" -T v143` if a runner has several.
   generated `port/resource/RelocFileTable.<ver>.cpp` are treated as
   source inputs, not rebuilt on every compile.
 
+### GameCube adapter (WUP-028) device access
+
+The native GameCube adapter driver talks to the adapter over libusb, so the
+adapter has to be reachable from user space. This is a one-time OS-level
+setup, unrelated to building, and it is the same setup Dolphin needs.
+
+**Linux** — by default udev creates USB device nodes `0664 root:root`, which a
+normal user cannot open, so the adapter is silently unavailable. Install a
+rule granting access:
+
+```bash
+sudo tee /etc/udev/rules.d/51-gcadapter.rules >/dev/null <<'EOF'
+# Nintendo WUP-028 GameCube Controller Adapter
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="0337", MODE="0660", TAG+="uaccess"
+EOF
+sudo udevadm control --reload-rules
+```
+
+Then unplug and replug the adapter. `TAG+="uaccess"` is what actually grants
+the logged-in user an ACL on the device node; `MODE` alone is a blunter
+alternative. You may already have this via another package — `steam-devices`
+ships an identical rule, and Dolphin's instructions add one too — in which
+case the adapter works without any action here.
+
+The kernel's `usbhid` driver binding the adapter is **not** a problem: the
+driver detaches it at claim time (`libusb_set_auto_detach_kernel_driver`) and
+the kernel reattaches it on exit. No auto-detach rule is needed.
+
+**Windows** — the adapter must be bound to the **WinUSB** driver, using
+[Zadig](https://zadig.akeo.ie/) or Dolphin's adapter driver installer. With
+the stock driver Windows will not start the device in a way libusb can open.
+This is the same requirement Dolphin and Slippi have, so a machine already set
+up for those needs nothing further.
+
+**macOS** — nothing to install. The adapter is usable as soon as it is plugged
+in.
+
+If the adapter is not detected, run with logging and look for `[gcadapter]`
+lines in `logs/BattleShip.log`; a permission or driver problem is reported
+there with the fix for your platform.
+
 ### Advanced / manual targets
 
 Normally unnecessary (the build does these for you). Append the target to
