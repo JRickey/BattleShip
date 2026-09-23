@@ -91,6 +91,7 @@ Everything below is toggleable in-game from the ESC menu.
 
 - Controller and rumble support powered by **SDL2**, with plug-and-play routing for up to 4 pads
 - Native **Raphnet** adapter support up to 4 channels through **hidapi**
+- Native **GameCube adapter** support (WUP-028 and compatible clones) over **libusb**, driven directly rather than through SDL — all 4 adapter ports, hotplug, and fully remappable like any other device. Each adapter port feeds the matching player by default and can be reassigned to any player. *(Desktop only. On Windows the adapter must be bound to the WinUSB driver.)*
 - Per-controller configuration UI and a bundled `gamecontrollerdb.txt` mapping database
 
 ### Platform & quality-of-life
