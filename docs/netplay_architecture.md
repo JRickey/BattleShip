@@ -122,7 +122,9 @@ For full-match debug replay files, `netinput.c` also keeps a separate replay fra
 | `syNetInputGetHistoryFrame()` | Read the resolved input actually published for a player/tick. |
 | `syNetInputGetPublishedFrame()` | Read the latest published input for a player. |
 | `syNetInputGetHistoryChecksum()` | Produce a lightweight checksum over resolved input history for validation. |
-| `syNetInputGetHistoryInputChecksum()` | Produce a source-independent checksum over published buttons/sticks for replay validation. |
+| `syNetInputSetPublishedChecksumLimit()` | Freeze the published-input checksum once exactly N ticks have been advanced (set by replay playback to the file's frame count). |
+| `syNetInputGetPublishedTickCount()` | Number of VS ticks advanced by `syNetInputFuncRead()` this session. |
+| `syNetInputGetPublishedInputChecksum()` | Source-independent checksum over every published frame of every advanced tick (frozen at the limit if one is set). Accumulated as ticks advance — never re-read from the 720-entry history ring. |
 | `syNetInputGetHistoryInputValueChecksumForPlayer()` | Source-independent checksum for one player across a contiguous tick span in `sSYNetInputHistory`. |
 | `syNetInputGetHistoryInputValueChecksumWindow()` | Per-player checksums plus a folded combined checksum for a tick window. |
 | `syNetInputSetRecordingEnabled()` | Enable or disable recording of resolved VS input frames. |
@@ -181,6 +183,10 @@ SSB64_REPLAY_PLAY=/tmp/test.ssb64r ./BattleShip
 ```
 
 `SSB64_REPLAY_RECORD_FRAMES` is optional and defaults to 1800 frames. Record mode still uses the normal VS menus; playback mode loads the file and jumps directly into VS battle using the saved metadata.
+
+Playback verification compares the file checksum against `syNetInputGetPublishedInputChecksum()`, which `syNetInputFuncRead()` accumulates at the same point it advances the VS tick (so a tick re-published while the P2P start barrier holds is counted once, exactly like the recorder) and freezes at the replay's frame count. It never reads the 720-entry history ring, so it is valid for any replay length up to `SYNETINPUT_REPLAY_MAX_FRAMES`. Set `SSB64_RIG_EXIT=1` to have the process exit right after the verdict for scripted batch runs: code 0 PASS, 1 FAIL, 2 INCOMPLETE (the match ended before the replay stream did), 3 LOADFAIL (the file failed to open or validate; nothing armed playback), 4 DESYNC (inputs replayed identically but the gameplay-state trace diverged or was shorter than the run). The loader rejects `frame_count == 0`.
+
+Gameplay-state trace (`sys/netsync.c`): `SSB64_SYNC_TRACE=<file>` writes, once per simulated tick from `scVSBattleFuncUpdate()` right after `ifCommonBattleUpdateInterfaceAll()`, a line of twelve FNV-1a hashes (`full rng battle fighters items weapons stage objman input joints camera vars`; the first eight are gated). `SSB64_SYNC_VERIFY=<file>` compares the running match against a recorded trace tick by tick and logs the first divergent tick per column; the verdict feeds the `SSB64_RIG_EXIT` code. Object identity in the hash is `syNetSyncObjectKey()`: player slot for fighters, per-match `spawn_serial` (stamped by `itManager`/`wpManager` at creation, PORT only) for items and weapons — never an address, and never `gobj->id`, which is only the kind. Design, column contents and results: `docs/state_trace.md`. See `docs/bugs/replay_verify_ring_window_2026-08-29.md`.
 
 ## Debug P2P Netplay
 
@@ -244,7 +250,7 @@ Before adding sockets or rollback state restoration, use the saved-input path to
 2. Capture `sSYNetInputHistory` through `syNetInputGetHistoryFrame()`.
 3. Re-stage those samples with `syNetInputSetSavedInput()`.
 4. Set the relevant slots to `nSYNetInputSourceSaved`.
-5. Compare `syNetInputGetHistoryInputChecksum()` against the replay file checksum.
+5. Compare `syNetInputGetPublishedInputChecksum()` (with the limit set to the replay's frame count) against the replay file checksum.
 
 This verifies the input layer can reproduce the same per-tick controller stream before introducing rollback state rewind.
 

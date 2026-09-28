@@ -29,6 +29,13 @@ __attribute__((format(printf, 1, 2)))
 #endif
 void port_log(const char *fmt, ...);
 
+/* Flush the log (and all stdio streams) and terminate the process with
+ * `code` immediately: no destructors, no atexit handlers, no DLL detach
+ * callbacks. For batch/rig modes that report a verdict through the exit
+ * code from inside a game coroutine, where normal teardown is not safe
+ * (render/audio threads are mid-frame). */
+void port_exit_process(int code);
+
 #ifdef __cplusplus
 }
 #endif
