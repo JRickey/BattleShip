@@ -1,68 +1,79 @@
-# `FTItemThrowFlags` reads the wrong bits on every host compiler (`union FTCommandVars`: 20 bytes on MSVC, 16 on clang, 16 on the N64)
+# `FTCommandVars` item-throw overlay used host-dependent bitfield layout
 
-**Date:** 2026-08-29
-**Status:** OPEN (decomp `port-patches`, `src/ft/fttypes.h` / `ft/ftcommon/ftcommonitemthrow.c`) — found by review while building the state trace; not fixed in that PR
-**Class:** compiler-dependent bitfield layout in a union that is written through one view and read through another → scripted item throws use the wrong damage/velocity/angle on both PC hosts (differently)
+**Date found:** 2026-08-29
 
-## Symptom
+**Fixed:** 2026-09-28
 
-Not visible in the 18-replay determinism sweep (no scripted item throw was exercised) — and the
-two hosts would each be *consistently* wrong, so a trace between them would not necessarily
-show it. It surfaces in the state trace's startup layout probe:
+**Status:** FIXED in the decomp port (`src/ft/fttypes.h`, `ft/ftcommon/ftcommonitemthrow.c`)
 
-```
-SSB64 SyncTrace: sizeof FTStruct=3768 ITStruct=1216 WPStruct=864 MPCollData=224 FTCommandVars=20 ... SCBattleState=520   (MSVC 14.43)
-SSB64 SyncTrace: sizeof FTStruct=3760 ITStruct=1200 WPStruct=864 MPCollData=224 FTCommandVars=16 ... SCBattleState=512   (clang 18)
-```
+**Class:** a union written through raw words and read through compiler-dependent bitfields
 
-## Root cause
+## What was proven
 
-`FTStruct.motion_vars` is a union of two views of the same bytes:
+`FTStruct.motion_vars` contains four words written by motion-script `SetFlag0..3` events. The
+port also exposed the same storage through this item-throw view:
 
 ```c
-union FTCommandVars {
-    struct FTCommandFlags   { u32 flag0, flag1, flag2, flag3; } flags;
-    struct FTItemThrowFlags { sb32 is_throw_item; u8 unk1; u32 damage : 24; u8 unk2; u32 vel : 12; s32 angle : 12; } item_throw;
-} motion_vars;
+struct FTItemThrowFlags {
+    sb32 is_throw_item;
+    u8 unk1;
+    u32 damage : 24;
+    u8 unk2;
+    u32 vel : 12;
+    s32 angle : 12;
+};
 ```
 
-Motion scripts write through the `flags` view (`ft/ftmain.c`, `nFTMotionEventSetFlag0..3`: `flag1`
-carries the damage word, `flag2` the vel/angle word). `ft/ftcommon/ftcommonitemthrow.c:57-66` reads
-through the `item_throw` view. The two views only agree under the N64 compiler's rules:
+That overlay only has the intended layout with the N64 compiler:
 
-- **N64 (MIPS, big-endian, IDO):** `unk1` and `damage:24` share the 32-bit unit at bytes 4–7 with
-  bitfields allocated from the MSB, so `damage == flag1 & 0xFFFFFF`; `unk2`, `vel:12`, `angle:12`
-  share bytes 8–11: `vel == (flag2 >> 12) & 0xFFF`, `angle == flag2 & 0xFFF`. 16 bytes.
-- **clang/GCC x86-64 (little-endian, SysV):** same 16-byte size, but bitfields allocate from the
-  LSB: `unk1` is bits 0–7 of word 1, so `damage == flag1 >> 8`, `vel == (flag2 >> 8) & 0xFFF`,
-  `angle == flag2 >> 20`. Linux reads shifted values. There is no `IS_BIG_ENDIAN` reversal of this
-  struct in `fttypes.h` (unlike `FTAnimDesc`, `GMStatFlags`).
-- **MSVC:** a bitfield after a member of a different type starts a new storage unit, so `damage`
-  lands at bytes 8–11 (`flag2`'s word) and `vel/angle` at bytes 16–19 — still inside the
-  20-byte union, in bytes the `flags` view never writes. Windows reads a different kind of garbage.
+- N64 IDO: 16 bytes; `damage = flag1 & 0xFFFFFF`,
+  `vel = (flag2 >> 12) & 0xFFF`, and `angle` is signed bits 11..0.
+- clang/GCC on little-endian hosts: 16 bytes, but the bitfields occupy different bit positions.
+- MSVC: 20 bytes; `damage` moves into the third word and `vel`/`angle` move beyond the four words
+  written through the `flags` view.
 
-The same MSVC rule also inflates `ITStruct` (+16) and `SCBattleState` (+8); those are harmless
-because their bitfields are only accessed by name.
+The state trace's startup layout probe exposed the MSVC size difference. Source inspection then
+proved that any nonzero item-throw `flag1` or `flag2` would be decoded incorrectly on the port.
 
-## Fix (upstream decision)
+## Gameplay scope
 
-The reads must reproduce the N64 bit positions regardless of host layout. Make the
-`item_throw` view explicit words with accessors — e.g. in `ftcommonitemthrow.c`
-`damage = flags.flag1 & 0xFFFFFF`, `vel = (flags.flag2 >> 12) & 0xFFF`, `angle` sign-extended from
-`flags.flag2 & 0xFFF`, `is_throw_item = flags.flag0` — and delete the bitfield struct, or keep it
-only for the N64 build. A `_Static_assert(sizeof(union FTCommandVars) == 16)` alone would make
-Windows match Linux's *wrong* answer; add it after the accessor fix so the layout cannot drift
-again.
+No player-visible failure from this overlay has been reproduced. The stock Mario item-throw
+scripts inspected during follow-up use `flag0` to release the item and `flag3` for turn timing;
+the throw state otherwise retains its default damage multiplier, velocity multiplier, and angle.
+The replay corpus that found the layout discrepancy did not exercise a `flag1`/`flag2` override.
 
-## Verification plan
+This is therefore a definite layout defect and a potentially reachable gameplay bug, not evidence
+that the earlier Mario Fireball regression returned. The Fireball issue was the separate, resolved
+`WPAttributes` ROM-layout bug documented in `wpattributes_bitfield_padding_2026-04-20.md`.
 
-A corpus replay in which a human slot smash-throws items (scripted `flag1/flag2`). Compare the
-resulting item velocities/damage against the N64 ROM under an emulator for the same inputs (the
-two PC hosts agreeing with each other is not enough here).
+## Fix
+
+For `PORT` builds, the item-throw bitfield member is no longer part of `FTCommandVars`.
+`ftCommonItemThrowProcUpdate` decodes the N64-defined command words directly:
+
+```c
+damage = flag1 & 0x00FFFFFF;
+vel = (flag2 >> 12) & 0xFFF;
+angle = BITFIELD_SEXT(flag2 & 0xFFF, 12);
+is_throw_item = flag0;
+```
+
+The original bitfield view and accesses remain in the non-port build so the matching N64 build is
+unchanged. A port-side static assertion now requires `sizeof(union FTCommandVars) == 16`, preventing
+MSVC or a future declaration change from silently moving subsequent `FTStruct` fields again.
+
+## Verification
+
+- GCC 16 full `ssb64` build passes with the corrected port path and the 16-byte assertion.
+- Build both a clang/GCC host and MSVC; the static assertion must pass and the startup probe must
+  report `FTCommandVars=16` on both.
+- Exercise ordinary and smash item throws to ensure the existing `flag0`/`flag3` behavior remains
+  unchanged.
+- If a script using `flag1`/`flag2` is identified, compare its resulting damage, velocity, and
+  angle directly against the N64 ROM. Host-to-host agreement alone is not an N64 correctness test.
 
 ## Audit hook
 
-Any union written through one member and read through another, where a member mixes bitfields
-with plain members or mixes bitfield base types, is host-compiler-dependent. Grep for
-`motion_vars.`, `item_vars.`, `weapon_vars.` accesses that alternate views, and for
-`u8 x; u32 y : n;` sequences inside unions; check each against the N64 (MSB-first) bit positions.
+Any union written through one member and read through another is suspect when either member mixes
+plain fields and bitfields. Prefer raw fixed-width words plus masks and shifts at the interpretation
+site; never use host bitfield placement as an interchange format.

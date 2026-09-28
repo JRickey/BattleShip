@@ -81,19 +81,18 @@ divergent tick per column and exits 1 on any gated difference.
 - MSVC 14.43 (Windows) vs clang 18 (Linux): identical on **all 12 columns** — gated and ungated,
   including `vars` — on the 4-file corpus (~10k ticks) and on an 18-file sweep covering all 9 VS
   stages, all 12 fighters, items on, random human inputs (18 × 1800 ticks). `vars` matching means
-  the per-kind unions have the same word layout under both compilers; `FTCommandVars` (below) is
-  the known outlier and is hashed by field name.
+  the per-kind unions have the same word layout under both compilers.
 - Sensitivity control: replaying a recording with one button flipped at tick 900 against the
   clean trace reports `FIRST DIVERGENCE tick=900 column=fighters`.
-- Layout probe: the two compilers lay out several structs differently (`FTStruct` 3768/3760,
-  `ITStruct` 1216/1200, `SCBattleState` 520/512, `union FTCommandVars` 20/16 — MSVC starts a new
-  storage unit when bitfield types change). The simulation still matches because the code
-  accesses fields by name; the exception is `FTItemThrowFlags` (see `docs/bugs/`), where the
-  `item_throw` bitfield view of `FTCommandVars` matches the script-written `flags` words only
-  under the N64's MSB-first allocation — both PC hosts read wrong bits, each differently.
+- Layout probe: the two compilers originally laid out several structs differently (`FTStruct`
+  3768/3760, `ITStruct` 1216/1200, `SCBattleState` 520/512, and `union FTCommandVars` 20/16).
+  Most differences are harmless because fields are accessed by name. `FTCommandVars` was the
+  exception: item-throw code overlaid bitfields on script-written words. The port now decodes
+  those N64 bit positions explicitly, omits the overlay under `PORT`, and asserts that the union
+  is 16 bytes on every host (see `docs/bugs/ftcommandvars_msvc_layout_2026-08-29.md`).
 - What the trace cannot see: two hosts that are *consistently* wrong in the same way (or in
   ways a given replay never exercises) still match. The trace proves "same as the other build",
-  not "same as the N64"; the bug above was found by reading, and its verification needs the ROM.
+  not "same as the N64"; layout-sensitive code still needs direct comparison with the ROM.
 - A hashed field written from a draw proc (`is_magnify_show`, `ftDisplayMainProcDisplay()`)
   produced isolated single-tick `fighters` divergences between hosts when the renderer dropped
   a draw pass (`syTaskmanRunTask` skips `task_draw` when no gfx context is free). Rule: fields
