@@ -1,3 +1,57 @@
+diff --git a/src/if/ifcommon.c b/src/if/ifcommon.c
+index 262fdc3..023780f 100644
+--- a/src/if/ifcommon.c
++++ b/src/if/ifcommon.c
+@@ -7,6 +7,7 @@
+ #include <sys/video.h>
+ #include <sys/rdp.h>
+ #include <reloc_data.h>
++#include <sys/netlobby.h>
+ 
+ extern alSoundEffect* func_800269C0_275C0(u16);
+ 
+@@ -2026,6 +2027,17 @@ void ifCommonPlayerTagProcDisplay(GObj *interface_gobj)
+                 SObjGetStruct(interface_gobj)->pos.y = (s32) ((gGMCameraStruct.viewport_center_y - y) - SObjGetStruct(interface_gobj)->sprite.height);
+ 
+                 lbCommonDrawSObjAttr(interface_gobj);
++#ifdef PORT
++                /* Online play: let the port overlay draw the player's name above this tag. */
++                if (syNetLobbyIsMatch() != FALSE)
++                {
++                    extern void portNetplayReportNameTag(int player, float center_x, float top_y);
++
++                    portNetplayReportNameTag(player,
++                        (f32)SObjGetStruct(interface_gobj)->pos.x + (SObjGetStruct(interface_gobj)->sprite.width * 0.5F),
++                        (f32)SObjGetStruct(interface_gobj)->pos.y);
++                }
++#endif
+             }
+         }
+     }
+diff --git a/src/mn/mnplayers/mnplayersvs.c b/src/mn/mnplayers/mnplayersvs.c
+index 9e161b9..19e54cd 100644
+--- a/src/mn/mnplayers/mnplayersvs.c
++++ b/src/mn/mnplayers/mnplayersvs.c
+@@ -1,4 +1,5 @@
+ 
++#include <sys/netlobby.h>
+ #include <ft/fighter.h>
+ #include <if/interface.h>
+ #include <mn/menu.h>
+@@ -4841,7 +4842,13 @@ sb32 mnPlayersVSCheckReady(void)
+ 		}
+ 	}
+ #endif
++#ifdef PORT
++	/* Online play: connected clients count as opponents (they are injected
++	 * into the match when it starts), so the host alone may press Start. */
++	if ((mnPlayersVSGetReadyPlayerCount() + syNetLobbyGetRemoteCount()) < 2)
++#else
+ 	if (mnPlayersVSGetReadyPlayerCount() < 2)
++#endif
+ 	{
+ 		is_ready = FALSE;
+ 	}
 diff --git a/src/sc/sccommon/scvsbattle.c b/src/sc/sccommon/scvsbattle.c
 index 51ca7f2..19259db 100644
 --- a/src/sc/sccommon/scvsbattle.c
@@ -143,10 +197,10 @@ index c6ecef7..a1d7c73 100644
  
 diff --git a/src/sys/netlobby.c b/src/sys/netlobby.c
 new file mode 100644
-index 0000000..f70231a
+index 0000000..afd97af
 --- /dev/null
 +++ b/src/sys/netlobby.c
-@@ -0,0 +1,266 @@
+@@ -0,0 +1,309 @@
 +#include <sys/netlobby.h>
 +
 +#ifdef PORT
@@ -174,8 +228,8 @@ index 0000000..f70231a
 +
 +static const char *sSYNetLobbyFighterNames[] =
 +{
-+	"Mario", "Donkey Kong", "Link", "Samus", "Yoshi", "Kirby",
-+	"Fox", "Pikachu", "Luigi", "Captain Falcon", "Jigglypuff", "Ness"
++	"Mario", "Fox", "Donkey Kong", "Samus", "Luigi", "Link",
++	"Yoshi", "Captain Falcon", "Kirby", "Pikachu", "Jigglypuff", "Ness"
 +};
 +
 +s32 syNetLobbyGetFighterCount(void)
@@ -204,6 +258,24 @@ index 0000000..f70231a
 +sb32 syNetLobbyIsMatch(void)
 +{
 +	return sSYNetLobbyIsMatch;
++}
++
++s32 syNetLobbyGetRemoteCount(void)
++{
++	s32 slot, count = 0;
++
++	if (np_state() != NP_HOSTING)
++	{
++		return 0;
++	}
++	for (slot = 1; slot < MAXCONTROLLERS; slot++)
++	{
++		if (np_slot_used(slot) != 0)
++		{
++			count++;
++		}
++	}
++	return count;
 +}
 +
 +sb32 syNetLobbyIsParticipant(s32 player)
@@ -238,9 +310,33 @@ index 0000000..f70231a
 +
 +			np_slot_choice(slot, &fighter, &costume);
 +
++			s32 other, tries;
++
 +			gSCManagerBattleState->players[slot].pkind = nFTPlayerKindMan;
 +			gSCManagerBattleState->players[slot].fkind = syNetLobbyGetFighterKind(fighter);
-+			gSCManagerBattleState->players[slot].costume = (costume & 3);
++			costume &= 3;
++
++			/* Same fighter + same costume as an earlier slot looks identical: bump the costume. */
++			for (tries = 0; tries < 4; tries++)
++			{
++				sb32 is_used = FALSE;
++
++				for (other = 0; other < slot; other++)
++				{
++					if ((gSCManagerBattleState->players[other].pkind != nFTPlayerKindNot) &&
++					    (gSCManagerBattleState->players[other].fkind == gSCManagerBattleState->players[slot].fkind) &&
++					    (gSCManagerBattleState->players[other].costume == costume))
++					{
++						is_used = TRUE;
++					}
++				}
++				if (is_used == FALSE)
++				{
++					break;
++				}
++				costume = (costume + 1) & 3;
++			}
++			gSCManagerBattleState->players[slot].costume = costume;
 +		}
 +	}
 +	syNetReplayCaptureBattleMetadata(gSCManagerBattleState, &metadata);
@@ -398,6 +494,7 @@ index 0000000..f70231a
 +#else /* !PORT */
 +
 +sb32 syNetLobbyIsMatch(void) { return FALSE; }
++s32 syNetLobbyGetRemoteCount(void) { return 0; }
 +void syNetLobbyFrame(void) {}
 +void syNetLobbyBeginHostMatch(void) {}
 +void syNetLobbyStartVSSession(void) {}
@@ -415,10 +512,10 @@ index 0000000..f70231a
 +#endif
 diff --git a/src/sys/netlobby.h b/src/sys/netlobby.h
 new file mode 100644
-index 0000000..ce88e3f
+index 0000000..a3b4655
 --- /dev/null
 +++ b/src/sys/netlobby.h
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,26 @@
 +#ifndef _SYNETLOBBY_H_
 +#define _SYNETLOBBY_H_
 +
@@ -429,6 +526,7 @@ index 0000000..ce88e3f
 + * and the game. See docs/netplay.md. */
 +
 +extern sb32 syNetLobbyIsMatch(void);
++extern s32 syNetLobbyGetRemoteCount(void);         /* connected clients while hosting, else 0 */
 +extern void syNetLobbyFrame(void);                 /* once per frame, from the port loop */
 +extern void syNetLobbyBeginHostMatch(void);        /* top of scVSBattleStartBattle */
 +extern void syNetLobbyStartVSSession(void);        /* after syNetInputStartVSSession */

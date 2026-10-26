@@ -29,6 +29,9 @@ namespace ssb64 { void MountModsDir(); void UnmountMissingMods(); }
 
 #include <imgui.h>
 #include "../netplay/netplay.h"
+#include "../widescreen/widescreen.h"
+#include <chrono>
+#include <cfloat>
 
 #include <SDL2/SDL.h>
 #include <spdlog/fmt/fmt.h>
@@ -1997,8 +2000,57 @@ void PortMenu::UpdateElement() {
     Ship::Menu::UpdateElement();
 }
 
+namespace {
+
+// Player names drawn above the fighters during an online match. The decomp
+// reports where it draws each fighter's P1/P2/.. tag (320x240 screen space);
+// we draw the name right above it with ImGui.
+struct NameTag {
+    float x = 0, y = 0;
+    std::chrono::steady_clock::time_point stamp{};
+    bool valid = false;
+};
+NameTag sNameTags[4];
+
+void DrawNetplayNameTags() {
+    if (!np_match_active()) return;
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    float gx = vp->Pos.x, gy = vp->Pos.y, gw = vp->Size.x, gh = vp->Size.y;
+    if (!port_widescreen_enabled()) {
+        // 4:3 image centered in the window
+        const float w43 = gh * 4.0f / 3.0f;
+        if (w43 <= gw) { gx += (gw - w43) * 0.5f; gw = w43; }
+        else { const float h43 = gw * 3.0f / 4.0f; gy += (gh - h43) * 0.5f; gh = h43; }
+    }
+    static const ImU32 colors[4] = { IM_COL32(237, 54, 54, 255), IM_COL32(78, 78, 233, 255),
+                                     IM_COL32(255, 223, 26, 255), IM_COL32(78, 185, 78, 255) };
+    ImDrawList* dl = ImGui::GetForegroundDrawList();
+    ImFont* font = ImGui::GetFont();
+    const float fontSize = std::max(14.0f, gh / 34.0f);
+    const auto now = std::chrono::steady_clock::now();
+    for (int p = 0; p < 4; p++) {
+        NameTag& t = sNameTags[p];
+        if (!t.valid || !np_slot_used(p)) continue;
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - t.stamp).count() > 120) continue;
+        const char* name = np_slot_name(p);
+        const ImVec2 sz = font->CalcTextSizeA(fontSize, FLT_MAX, 0.0f, name);
+        const float px = gx + (t.x / 320.0f) * gw - sz.x * 0.5f;
+        const float py = gy + (t.y / 240.0f) * gh - sz.y - 2.0f;
+        dl->AddText(font, fontSize, ImVec2(px + 1, py + 1), IM_COL32(0, 0, 0, 230), name);
+        dl->AddText(font, fontSize, ImVec2(px, py), colors[p], name);
+    }
+}
+
+} // namespace
+
+extern "C" void portNetplayReportNameTag(int player, float centerX, float topY) {
+    if (player < 0 || player > 3) return;
+    sNameTags[player] = { centerX, topY, std::chrono::steady_clock::now(), true };
+}
+
 void PortMenu::Draw() {
     Ship::Menu::Draw();
+    DrawNetplayNameTags();
 }
 
 void PortMenu::DrawElement() {
