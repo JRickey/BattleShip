@@ -2083,7 +2083,7 @@ void DrawNetplayBanner(const char* text, ImU32 color) {
     const ImGuiViewport* vp = ImGui::GetMainViewport();
     ImDrawList* dl = ImGui::GetForegroundDrawList();
     ImFont* font = ImGui::GetFont();
-    const float size = std::max(16.0f, vp->Size.y / 28.0f);
+    const float size = (std::max)(16.0f, vp->Size.y / 28.0f);
     const ImVec2 sz = font->CalcTextSizeA(size, FLT_MAX, 0.0f, text);
     const float x = vp->Pos.x + (vp->Size.x - sz.x) * 0.5f;
     const float y = vp->Pos.y + vp->Size.y * 0.04f;
@@ -2115,7 +2115,7 @@ void DrawNetplayNameTags() {
                                      IM_COL32(255, 223, 26, 255), IM_COL32(78, 185, 78, 255) };
     ImDrawList* dl = ImGui::GetForegroundDrawList();
     ImFont* font = ImGui::GetFont();
-    const float fontSize = std::max(14.0f, gh / 34.0f);
+    const float fontSize = (std::max)(14.0f, gh / 34.0f);
     const auto now = std::chrono::steady_clock::now();
     for (int p = 0; p < 4; p++) {
         NameTag& t = sNameTags[p];
