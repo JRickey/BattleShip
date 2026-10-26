@@ -1030,7 +1030,7 @@ endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows" AND NOT BATTLESHIP_UWP)
     target_link_options(${PROJECT_NAME} PRIVATE /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup)
-    target_link_libraries(${PROJECT_NAME} PRIVATE shell32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE shell32 ws2_32)
     # DMA functions (osEPiStartDma, osPiStartDma) are provided by LUS.
     # Game DMA code is no-opped via #ifdef PORT in dma.c, so no /FORCE needed.
     target_compile_options(${PROJECT_NAME} PRIVATE /utf-8)

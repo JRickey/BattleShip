@@ -32,6 +32,7 @@ class PortMenu : public Ship::Menu {
     void AddMenuElements();
     void AddMenuSettings();
     void AddMenuAssets();
+    void AddMenuNetplay();
     void AddMenuAbout();
 #ifndef DISABLE_SCRIPTING
     void AddMenuMods();

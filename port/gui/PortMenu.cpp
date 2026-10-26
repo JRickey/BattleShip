@@ -28,6 +28,7 @@ namespace ssb64 { void MountModsDir(); void UnmountMissingMods(); }
 #endif
 
 #include <imgui.h>
+#include "../netplay/netplay.h"
 
 #include <SDL2/SDL.h>
 #include <spdlog/fmt/fmt.h>
@@ -1682,6 +1683,142 @@ void PortMenu::AddMenuMods() {
 }
 #endif
 
+
+extern "C" {
+int syNetLobbyGetFighterCount(void);
+const char* syNetLobbyGetFighterName(int index);
+}
+
+namespace {
+
+// Online / LAN multiplayer panel (host = Player 1, up to 3 clients = P2..P4).
+// See docs/netplay.md.
+void RenderNetplayPanel(WidgetInfo& /*widget*/) {
+    static char name[17] = "";
+    static char hostIp[64] = "";
+    static int port = 7777;
+    static int delay = 5;
+    static int fighter = 0;
+    static int costume = 0;
+    static bool loaded = false;
+    if (!loaded) {
+        loaded = true;
+        snprintf(name, sizeof(name), "%s", CVarGetString("gNetplay.Name", "Player"));
+        snprintf(hostIp, sizeof(hostIp), "%s", CVarGetString("gNetplay.HostIp", "26.0.0.1"));
+        port = CVarGetInteger("gNetplay.Port", 7777);
+        delay = CVarGetInteger("gNetplay.Delay", 5);
+        fighter = CVarGetInteger("gNetplay.Fighter", 0);
+        costume = CVarGetInteger("gNetplay.Costume", 0);
+    }
+    auto save = [&] {
+        CVarSetString("gNetplay.Name", name);
+        CVarSetString("gNetplay.HostIp", hostIp);
+        CVarSetInteger("gNetplay.Port", port);
+        CVarSetInteger("gNetplay.Delay", delay);
+        CVarSetInteger("gNetplay.Fighter", fighter);
+        CVarSetInteger("gNetplay.Costume", costume);
+        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
+    };
+
+    const int state = np_state();
+    const bool idle = (state == NP_IDLE || state == NP_FAILED);
+
+    ImGui::TextWrapped("Everybody must run the exact same build with the same settings. "
+                       "Open the UDP port in the firewall on the host. Radmin VPN: the host shares "
+                       "its Radmin IP (26.x.x.x).");
+    ImGui::Separator();
+
+    if (idle) {
+        ImGui::InputText("Your name", name, sizeof(name));
+        ImGui::InputInt("UDP port", &port);
+        port = std::clamp(port, 1024, 65535);
+
+        ImGui::Separator();
+        ImGui::Text("Host a game (you are Player 1)");
+        ImGui::SliderInt("Input delay (frames)", &delay, 1, 12);
+        ImGui::TextDisabled("Higher = smoother over bad connections, but more input lag. 4-6 is good on Radmin.");
+        if (ImGui::Button("Host game")) {
+            save();
+            np_set_input_delay(delay);
+            np_host((uint16_t)port, name);
+        }
+
+        ImGui::Separator();
+        ImGui::Text("Join a game (you become Player 2, 3 or 4)");
+        ImGui::InputText("Host IP", hostIp, sizeof(hostIp));
+        const int n = syNetLobbyGetFighterCount();
+        if (ImGui::BeginCombo("Your fighter", syNetLobbyGetFighterName(fighter))) {
+            for (int i = 0; i < n; i++) {
+                if (ImGui::Selectable(syNetLobbyGetFighterName(i), i == fighter)) fighter = i;
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::SliderInt("Costume", &costume, 0, 3);
+        if (ImGui::Button("Join game")) {
+            save();
+            np_join(hostIp, (uint16_t)port, name);
+            np_set_choice(fighter, costume);
+        }
+        if (state == NP_FAILED) {
+            ImGui::TextColored(ImVec4(0.95f, 0.45f, 0.35f, 1.0f), "%s", np_status());
+        }
+        return;
+    }
+
+    ImGui::Text("%s", np_status());
+    ImGui::Separator();
+    for (int s = 0; s < 4; s++) {
+        if (np_slot_used(s)) {
+            int f = 0, c = 0;
+            np_slot_choice(s, &f, &c);
+            if (s == 0) {
+                ImGui::Text("P1  %s  (host)%s", np_slot_name(s), np_local_slot() == 0 ? "  <- you" : "");
+            } else {
+                ImGui::Text("P%d  %s  -  %s (costume %d)%s", s + 1, np_slot_name(s), syNetLobbyGetFighterName(f), c + 1,
+                            np_local_slot() == s ? "  <- you" : "");
+            }
+        } else {
+            ImGui::TextDisabled("P%d  (empty)", s + 1);
+        }
+    }
+    ImGui::Separator();
+    if (np_is_host()) {
+        ImGui::TextWrapped("Go to the VS character select screen, pick P1 and the rules/stage, then press "
+                           "Start as usual: connected players are pulled into the match automatically "
+                           "with the fighter they chose here.");
+    } else {
+        const int n = syNetLobbyGetFighterCount();
+        if (ImGui::BeginCombo("Your fighter", syNetLobbyGetFighterName(fighter))) {
+            for (int i = 0; i < n; i++) {
+                if (ImGui::Selectable(syNetLobbyGetFighterName(i), i == fighter)) {
+                    fighter = i;
+                    np_set_choice(fighter, costume);
+                    save();
+                }
+            }
+            ImGui::EndCombo();
+        }
+        if (ImGui::SliderInt("Costume", &costume, 0, 3)) {
+            np_set_choice(fighter, costume);
+            save();
+        }
+        ImGui::TextWrapped("Wait for the host to start the match. Plug your controller into port 1.");
+    }
+    if (ImGui::Button(np_is_host() ? "Close lobby" : "Leave")) {
+        np_stop();
+    }
+}
+
+} // namespace
+
+void PortMenu::AddMenuNetplay() {
+    AddMenuEntry("Online", CVAR_SETTING("Menu.OnlineSidebarSection"));
+    WidgetPath path = { "Online", "Multiplayer", SECTION_COLUMN_1 };
+    AddSidebarEntry("Online", "Multiplayer", 1);
+    AddWidget(path, "Online / LAN Multiplayer (up to 4 players)", WIDGET_SEPARATOR_TEXT);
+    AddWidget(path, "Online Panel", WIDGET_CUSTOM).RaceDisable(false).CustomFunction(RenderNetplayPanel);
+}
+
 void PortMenu::AddMenuAbout() {
     AddMenuEntry("About", CVAR_SETTING("Menu.AboutSidebarSection"));
 
@@ -1782,6 +1919,7 @@ void PortMenu::AddMenuAbout() {
 
 void PortMenu::AddMenuElements() {
     AddMenuSettings();
+    AddMenuNetplay();
     AddMenuAssets();
 #ifndef DISABLE_SCRIPTING
     AddMenuMods();

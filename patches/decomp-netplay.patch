@@ -1,0 +1,471 @@
+diff --git a/src/sc/sccommon/scvsbattle.c b/src/sc/sccommon/scvsbattle.c
+index 51ca7f2..19259db 100644
+--- a/src/sc/sccommon/scvsbattle.c
++++ b/src/sc/sccommon/scvsbattle.c
+@@ -6,6 +6,7 @@ extern void port_coroutine_yield(void);
+ #include <gr/ground.h>
+ #include <sc/scene.h>
+ #include <sys/netinput.h>
++#include <sys/netlobby.h>
+ #include <sys/netpeer.h>
+ #include <sys/netreplay.h>
+ #include <sys/netsync.h>
+@@ -260,10 +261,12 @@ void scVSBattleStartBattle(void)
+ 	FTDesc desc;
+ 	SYColorRGBA color;
+ 
++	syNetLobbyBeginHostMatch();
+ 	syNetInputStartVSSession();
+ 	syNetReplayStartVSSession(gSCManagerBattleState);
+ 	syNetSyncStartVSSession();
+ 	syNetPeerStartVSSession();
++	syNetLobbyStartVSSession();
+ 
+ 	gSCManagerSceneData.is_reset = FALSE;
+ 	gSCManagerSceneData.is_suddendeath = FALSE;
+@@ -709,6 +712,7 @@ void scVSBattleStartScene(void)
+ 	syNetSyncFinishVSSession();
+ 	syNetReplayFinishVSSession();
+ 	syNetPeerStopVSSession();
++	syNetLobbyStopVSSession();
+ 	gSCManagerSceneData.scene_prev = gSCManagerSceneData.scene_curr;
+ 	gSCManagerSceneData.scene_curr = nSCKindVSResults;
+ 
+diff --git a/src/sc/scmanager.c b/src/sc/scmanager.c
+index 93de722..5358cd5 100644
+--- a/src/sc/scmanager.c
++++ b/src/sc/scmanager.c
+@@ -1914,6 +1914,26 @@ void portSCManagerRequestReset(void)
+ 	syTaskmanSetLoadScene();
+ }
+ 
++/* Online play: force every peer into a scene (the client side of "the host
++ * pressed Start on the character select screen"). Same unwinding mechanism as
++ * portSCManagerRequestReset, but with an explicit target scene. */
++void portSCManagerRequestScene(s32 scene)
++{
++	extern void func_800266A0_272A0(void);
++
++	sPortResetTarget = scene;
++	sPortResetPending = TRUE;
++
++	gSCManagerSceneData.is_reset = (gSCManagerSceneData.scene_curr == nSCKindVSBattle) ? TRUE : FALSE;
++
++	func_800266A0_272A0();
++
++	gSCManagerSceneData.scene_prev = scene;
++	gSCManagerSceneData.scene_curr = scene;
++
++	syTaskmanSetLoadScene();
++}
++
+ /* If a reset is pending: re-apply the target scene (undoing any scene_curr
+  * writes a nested manager made since the request), clear the pending flag,
+  * and return TRUE so nested managers know to unwind to scManagerRunLoop. */
+diff --git a/src/sys/netinput.c b/src/sys/netinput.c
+index c6ecef7..a1d7c73 100644
+--- a/src/sys/netinput.c
++++ b/src/sys/netinput.c
+@@ -1,5 +1,6 @@
+ #include <sys/netinput.h>
+ 
++#include <sys/netlobby.h>
+ #include <sys/netpeer.h>
+ #include <sys/taskman.h>
+ 
+@@ -532,12 +533,67 @@ sb32 syNetInputGetReplayMetadata(SYNetInputReplayMetadata *out_metadata)
+ 	return TRUE;
+ }
+ 
++#ifdef PORT
++/* Online lockstep read. Every slot (including the local one) is driven by the
++ * confirmed input for tick T; the local sample taken now is only applied at
++ * T + delay on every peer. If any participant's input for T has not arrived,
++ * the tick is held: nothing is published and battle execution stays blocked. */
++static void syNetInputFuncReadNetplay(void)
++{
++	SYNetInputFrame frame;
++	u32 tick;
++	s32 player;
++	u16 buttons;
++	s8 stick_x, stick_y;
++
++	syControllerFuncRead();
++	tick = sSYNetInputTick;
++
++	if (syNetLobbyCheckInputsReady(tick) == FALSE)
++	{
++		syNetLobbySetHeld(TRUE);
++		return;
++	}
++	syNetLobbySampleLocal(tick);
++	syNetLobbySetHeld(FALSE);
++
++	for (player = 0; player < MAXCONTROLLERS; player++)
++	{
++		syNetLobbyGetFrame(player, tick, &buttons, &stick_x, &stick_y);
++		syNetInputMakeFrame(&frame, tick, buttons, stick_x, stick_y, nSYNetInputSourceRemoteConfirmed, FALSE);
++		sSYNetInputSlots[player].last_confirmed = frame;
++		syNetInputPublishFrame(player, &frame);
++
++		if (sSYNetInputIsRecording != FALSE)
++		{
++			syNetInputSetReplayFrame(player, tick, &frame);
++		}
++	}
++	syNetInputPublishMainController();
++
++	for (player = 0; player < MAXCONTROLLERS; player++)
++	{
++		sSYNetInputPublishedChecksum = syNetInputAccumulateInputChecksum(
++			sSYNetInputPublishedChecksum, player, &sSYNetInputSlots[player].last_published);
++	}
++	sSYNetInputPublishedTickCount++;
++	sSYNetInputTick++;
++}
++#endif
++
+ void syNetInputFuncRead(void)
+ {
+ 	SYNetInputFrame frame;
+ 	u32 tick;
+ 	s32 player;
+ 
++#ifdef PORT
++	if (syNetLobbyIsMatch() != FALSE)
++	{
++		syNetInputFuncReadNetplay();
++		return;
++	}
++#endif
+ 	syControllerFuncRead();
+ 	tick = syNetInputGetTick();
+ 
+diff --git a/src/sys/netlobby.c b/src/sys/netlobby.c
+new file mode 100644
+index 0000000..f70231a
+--- /dev/null
++++ b/src/sys/netlobby.c
+@@ -0,0 +1,266 @@
++#include <sys/netlobby.h>
++
++#ifdef PORT
++
++#include <ft/fighter.h>
++#include <sc/scmanager.h>
++#include <sys/controller.h>
++#include <sys/netinput.h>
++#include <sys/netreplay.h>
++#include <sys/utils.h>
++
++#include <string.h>
++
++#include <netplay/netplay.h>
++
++extern void portSCManagerRequestScene(s32 scene);
++extern void portSCManagerRequestReset(void);
++extern void port_log(const char *fmt, ...);
++
++static sb32 sSYNetLobbyIsMatch;
++static sb32 sSYNetLobbyIsHeld;
++static s32 sSYNetLobbyLocalSlot;
++static u32 sSYNetLobbyMask;
++static u32 sSYNetLobbyDelay;
++
++static const char *sSYNetLobbyFighterNames[] =
++{
++	"Mario", "Donkey Kong", "Link", "Samus", "Yoshi", "Kirby",
++	"Fox", "Pikachu", "Luigi", "Captain Falcon", "Jigglypuff", "Ness"
++};
++
++s32 syNetLobbyGetFighterCount(void)
++{
++	return nFTKindPlayableEnd - nFTKindPlayableStart + 1;
++}
++
++const char *syNetLobbyGetFighterName(s32 index)
++{
++	if ((index < 0) || (index >= syNetLobbyGetFighterCount()))
++	{
++		return "?";
++	}
++	return sSYNetLobbyFighterNames[index];
++}
++
++s32 syNetLobbyGetFighterKind(s32 index)
++{
++	if ((index < 0) || (index >= syNetLobbyGetFighterCount()))
++	{
++		index = 0;
++	}
++	return nFTKindPlayableStart + index;
++}
++
++sb32 syNetLobbyIsMatch(void)
++{
++	return sSYNetLobbyIsMatch;
++}
++
++sb32 syNetLobbyIsParticipant(s32 player)
++{
++	return ((player >= 0) && (player < MAXCONTROLLERS) && (sSYNetLobbyMask & (1U << player))) ? TRUE : FALSE;
++}
++
++static void syNetLobbyLeaveMatch(void)
++{
++	sSYNetLobbyIsMatch = FALSE;
++	sSYNetLobbyIsHeld = FALSE;
++	sSYNetLobbyMask = 0;
++}
++
++/* Host: freeze lobby into a match. Remote slots become human fighters with the
++ * peer's chosen character; everything is funnelled through the replay metadata
++ * so host and clients build the battle from byte-identical data. */
++void syNetLobbyBeginHostMatch(void)
++{
++	SYNetInputReplayMetadata metadata;
++	s32 slot;
++
++	if ((sSYNetLobbyIsMatch != FALSE) || (np_state() != NP_HOSTING) || (np_player_count() < 2))
++	{
++		return;
++	}
++	for (slot = 1; slot < MAXCONTROLLERS; slot++)
++	{
++		if (np_slot_used(slot) != 0)
++		{
++			int fighter, costume;
++
++			np_slot_choice(slot, &fighter, &costume);
++
++			gSCManagerBattleState->players[slot].pkind = nFTPlayerKindMan;
++			gSCManagerBattleState->players[slot].fkind = syNetLobbyGetFighterKind(fighter);
++			gSCManagerBattleState->players[slot].costume = (costume & 3);
++		}
++	}
++	syNetReplayCaptureBattleMetadata(gSCManagerBattleState, &metadata);
++
++	if (np_host_begin_match(&metadata, sizeof(metadata)) == 0)
++	{
++		return;
++	}
++	syNetReplayApplyBattleMetadata(&metadata);
++	syUtilsSetRandomSeed(metadata.rng_seed);
++
++	sSYNetLobbyIsMatch = TRUE;
++	sSYNetLobbyIsHeld = TRUE;
++	sSYNetLobbyLocalSlot = 0;
++	sSYNetLobbyMask = np_match_mask();
++	sSYNetLobbyDelay = np_match_delay();
++	port_log("SSB64 NetLobby: host match begin mask=0x%x delay=%u seed=%u\n", sSYNetLobbyMask, sSYNetLobbyDelay, metadata.rng_seed);
++}
++
++void syNetLobbyStartVSSession(void)
++{
++	s32 slot;
++	u32 tick;
++
++	if (sSYNetLobbyIsMatch == FALSE)
++	{
++		return;
++	}
++	sSYNetLobbyIsHeld = TRUE;
++
++	for (slot = 0; slot < MAXCONTROLLERS; slot++)
++	{
++		if (syNetLobbyIsParticipant(slot) != FALSE)
++		{
++			syNetInputSetSlotSource(slot, nSYNetInputSourceRemoteConfirmed);
++
++			/* Neutral inputs for the first `delay` ticks, identical on every peer. */
++			for (tick = 0; tick < sSYNetLobbyDelay; tick++)
++			{
++				np_put_input(slot, tick, 0, 0, 0);
++			}
++		}
++		else syNetInputSetSlotSource(slot, nSYNetInputSourceSaved); /* idle: neutral input */
++	}
++	np_ready();
++}
++
++void syNetLobbyStopVSSession(void)
++{
++	if (sSYNetLobbyIsMatch != FALSE)
++	{
++		np_end_match();
++		syNetLobbyLeaveMatch();
++	}
++}
++
++sb32 syNetLobbyCheckExecutionReady(void)
++{
++	return ((np_start_released() != 0) && (sSYNetLobbyIsHeld == FALSE)) ? TRUE : FALSE;
++}
++
++void syNetLobbySetHeld(sb32 is_held)
++{
++	sSYNetLobbyIsHeld = is_held;
++}
++
++sb32 syNetLobbyCheckInputsReady(u32 tick)
++{
++	s32 slot;
++
++	if (np_start_released() == 0)
++	{
++		return FALSE;
++	}
++	for (slot = 0; slot < MAXCONTROLLERS; slot++)
++	{
++		if (syNetLobbyIsParticipant(slot) != FALSE)
++		{
++			if (np_get_input(slot, tick, NULL, NULL, NULL) == 0)
++			{
++				return FALSE;
++			}
++		}
++	}
++	return TRUE;
++}
++
++/* The local player always uses physical controller port 0. The sample taken at
++ * tick T is applied at T + delay by every peer, including this one. */
++void syNetLobbySampleLocal(u32 tick)
++{
++	SYController *controller = &gSYControllerDevices[0];
++
++	np_put_input(sSYNetLobbyLocalSlot, tick + sSYNetLobbyDelay, controller->button_hold,
++	             controller->stick_range.x, controller->stick_range.y);
++}
++
++sb32 syNetLobbyGetFrame(s32 player, u32 tick, u16 *buttons, s8 *stick_x, s8 *stick_y)
++{
++	*buttons = 0;
++	*stick_x = 0;
++	*stick_y = 0;
++
++	if (syNetLobbyIsParticipant(player) == FALSE)
++	{
++		return FALSE;
++	}
++	return (np_get_input(player, tick, buttons, stick_x, stick_y) != 0) ? TRUE : FALSE;
++}
++
++static void syNetLobbyAbort(void)
++{
++	port_log("SSB64 NetLobby: match aborted (%s)\n", np_abort_reason());
++	np_end_match();
++	syNetLobbyLeaveMatch();
++	portSCManagerRequestReset();
++}
++
++void syNetLobbyFrame(void)
++{
++	np_poll();
++
++	if (np_consume_abort() != 0)
++	{
++		syNetLobbyAbort();
++		return;
++	}
++	if ((sSYNetLobbyIsMatch != FALSE) && (np_state() != NP_HOSTING) && (np_state() != NP_CONNECTED))
++	{
++		syNetLobbyAbort();
++		return;
++	}
++	if ((np_state() == NP_CONNECTED) && (sSYNetLobbyIsMatch == FALSE))
++	{
++		SYNetInputReplayMetadata metadata;
++
++		if (np_client_take_match(&metadata, sizeof(metadata)) == (s32)sizeof(metadata))
++		{
++			syNetReplayApplyBattleMetadata(&metadata);
++			syUtilsSetRandomSeed(metadata.rng_seed);
++
++			sSYNetLobbyIsMatch = TRUE;
++			sSYNetLobbyIsHeld = TRUE;
++			sSYNetLobbyLocalSlot = np_local_slot();
++			sSYNetLobbyMask = np_match_mask();
++			sSYNetLobbyDelay = np_match_delay();
++			port_log("SSB64 NetLobby: client match begin slot=%d mask=0x%x delay=%u seed=%u\n",
++			         sSYNetLobbyLocalSlot, sSYNetLobbyMask, sSYNetLobbyDelay, metadata.rng_seed);
++
++			portSCManagerRequestScene(nSCKindVSBattle);
++		}
++	}
++}
++
++#else /* !PORT */
++
++sb32 syNetLobbyIsMatch(void) { return FALSE; }
++void syNetLobbyFrame(void) {}
++void syNetLobbyBeginHostMatch(void) {}
++void syNetLobbyStartVSSession(void) {}
++void syNetLobbyStopVSSession(void) {}
++sb32 syNetLobbyCheckExecutionReady(void) { return TRUE; }
++sb32 syNetLobbyCheckInputsReady(u32 tick) { return TRUE; }
++void syNetLobbySetHeld(sb32 is_held) {}
++void syNetLobbySampleLocal(u32 tick) {}
++sb32 syNetLobbyGetFrame(s32 player, u32 tick, u16 *buttons, s8 *stick_x, s8 *stick_y) { return FALSE; }
++sb32 syNetLobbyIsParticipant(s32 player) { return FALSE; }
++s32 syNetLobbyGetFighterCount(void) { return 0; }
++const char *syNetLobbyGetFighterName(s32 index) { return ""; }
++s32 syNetLobbyGetFighterKind(s32 index) { return 0; }
++
++#endif
+diff --git a/src/sys/netlobby.h b/src/sys/netlobby.h
+new file mode 100644
+index 0000000..ce88e3f
+--- /dev/null
++++ b/src/sys/netlobby.h
+@@ -0,0 +1,25 @@
++#ifndef _SYNETLOBBY_H_
++#define _SYNETLOBBY_H_
++
++#include <PR/ultratypes.h>
++#include <ssb_types.h>
++
++/* Port-only: glue between the UDP lobby/lockstep transport (port/netplay)
++ * and the game. See docs/netplay.md. */
++
++extern sb32 syNetLobbyIsMatch(void);
++extern void syNetLobbyFrame(void);                 /* once per frame, from the port loop */
++extern void syNetLobbyBeginHostMatch(void);        /* top of scVSBattleStartBattle */
++extern void syNetLobbyStartVSSession(void);        /* after syNetInputStartVSSession */
++extern void syNetLobbyStopVSSession(void);
++extern sb32 syNetLobbyCheckExecutionReady(void);
++extern sb32 syNetLobbyCheckInputsReady(u32 tick);  /* called by syNetInputFuncRead */
++extern void syNetLobbySetHeld(sb32 is_held);
++extern void syNetLobbySampleLocal(u32 tick);       /* sample hardware, store for tick + delay */
++extern sb32 syNetLobbyGetFrame(s32 player, u32 tick, u16 *buttons, s8 *stick_x, s8 *stick_y);
++extern sb32 syNetLobbyIsParticipant(s32 player);
++extern s32 syNetLobbyGetFighterCount(void);
++extern const char *syNetLobbyGetFighterName(s32 index);
++extern s32 syNetLobbyGetFighterKind(s32 index);
++
++#endif
+diff --git a/src/sys/netpeer.c b/src/sys/netpeer.c
+index b3c4960..22df878 100644
+--- a/src/sys/netpeer.c
++++ b/src/sys/netpeer.c
+@@ -4,6 +4,7 @@
+ #include <gr/ground.h>
+ #include <sc/scmanager.h>
+ #include <sys/netinput.h>
++#include <sys/netlobby.h>
+ #include <sys/netreplay.h>
+ #include <sys/netsync.h>
+ #include <sys/utils.h>
+@@ -903,6 +904,12 @@ void syNetPeerStartVSSession(void)
+ 
+ sb32 syNetPeerCheckBattleExecutionReady(void)
+ {
++#ifdef PORT
++	if (syNetLobbyIsMatch() != FALSE)
++	{
++		return syNetLobbyCheckExecutionReady();
++	}
++#endif
+ 	if ((sSYNetPeerIsEnabled == FALSE) || (sSYNetPeerBootstrapIsEnabled == FALSE) ||
+ 		(sSYNetPeerBattleBarrierEnabled == FALSE))
+ 	{

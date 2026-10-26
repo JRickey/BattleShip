@@ -680,8 +680,13 @@ static void port_screenshot_maybe_capture(int frame)
 	}
 }
 
+extern "C" void syNetLobbyFrame(void);
+
 void PortPushFrame(void)
 {
+	/* Online play: pump the UDP lobby/lockstep transport once per frame. */
+	syNetLobbyFrame();
+
 	// Process cheats safely before the frame updates
 	lbBackupApplyCheats();
 
