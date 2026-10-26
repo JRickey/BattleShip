@@ -60,6 +60,8 @@ assets/*
 !assets/icon-jp.icns
 !assets/macos_dmg_banner.png
 !assets/BattleShip.svg
+!assets/BattleShipIcon.icon
+!assets/BattleShipIcon.icon/**
 !assets/readme-stats/
 !assets/readme-stats/*.svg
 !assets/custom/
