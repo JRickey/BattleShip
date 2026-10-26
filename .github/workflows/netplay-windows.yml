@@ -1,0 +1,74 @@
+name: Netplay Windows build
+
+# Builds the Windows (MSVC) package of BattleShip WITH the 4-player online/LAN
+# netplay patch. ROM-independent: BattleShip.o2r is NOT built here, each player
+# extracts it from their own ROM on first launch.
+#
+# The netplay changes to the decomposition (ssb-decomp-re submodule) live in
+# patches/decomp-netplay.patch and are applied here, so you do not need your
+# own fork of the decomp repo.
+#
+# Run it from the "Actions" tab ("Run workflow") or by pushing to main.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: netplay-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  transport-test:
+    name: Netplay transport self-test (4 peers, packet loss)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and run loopback test
+        run: |
+          g++ -std=c++17 -O1 -Iport/netplay tools/netplay_test.cpp port/netplay/netplay_session.cpp -o netplay_test
+          ./netplay_test 0
+          ./netplay_test 0.3
+
+  windows:
+    name: Windows (MSVC) + netplay
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Apply netplay patch to the decomp submodule
+        shell: bash
+        run: |
+          cd decomp
+          if [ -f src/sys/netlobby.c ]; then
+            echo "Netplay patch already applied."
+          else
+            git apply --whitespace=nowarn ../patches/decomp-netplay.patch
+            echo "Netplay patch applied."
+          fi
+          git status --short
+      - name: Install build deps
+        run: |
+          choco install ninja -y
+          python -m pip install --upgrade pip
+          python -m pip install Pillow
+        shell: pwsh
+      - name: Package Windows zip
+        env:
+          SSB64_VERSION: us
+          SSB64_ENABLE_SCRIPTING: "1"
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-windows.ps1
+        shell: pwsh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BattleShip-netplay-windows
+          path: dist/BattleShip-windows.zip
+          if-no-files-found: error
