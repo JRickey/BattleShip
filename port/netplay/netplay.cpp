@@ -43,6 +43,19 @@ void np_set_choice(int f, int c) { S().SetChoice(f, c); }
 void np_set_name(const char *n) { S().SetLocalName(n); }
 void np_set_input_delay(int f) { S().SetInputDelay(f); }
 int np_get_input_delay(void) { return S().InputDelay(); }
+void np_set_mode(int m) { S().SetMode(m); }
+int np_get_mode(void) { return S().Mode(); }
+void np_set_max_players(int n) { S().SetMaxPlayers(n); }
+int np_get_max_players(void) { return S().MaxPlayers(); }
+
+static int sRunDifficulty = 2; // Normal
+static int sRunStocks = 2;     // 3 lives
+void np_set_run_options(int difficulty, int stock_count) {
+    sRunDifficulty = difficulty < 0 ? 0 : (difficulty > 4 ? 4 : difficulty);
+    sRunStocks = stock_count < 0 ? 0 : (stock_count > 4 ? 4 : stock_count);
+}
+int np_get_run_difficulty(void) { return sRunDifficulty; }
+int np_get_run_stocks(void) { return sRunStocks; }
 
 int np_host_begin_match(const void *b, int n) { return S().HostBeginMatch(b, n) ? 1 : 0; }
 int np_client_take_match(void *out, int cap) { return S().ClientTakeMatch(out, cap); }

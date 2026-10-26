@@ -66,6 +66,10 @@ class Session {
     int ConnectedCount() const;     // players in lobby, including self
     void SetChoice(int fighter, int costume);
     void SetInputDelay(int d);      // host only; sent with the match config
+    void SetMode(int m) { mMode = m; mRosterDirtyFlag = true; }   // 0 = VS, 1 = 1P co-op (host only)
+    int Mode() const { return mMode; }
+    void SetMaxPlayers(int n);      // host only, 2..4
+    int MaxPlayers() const { return mMaxPlayers; }
     int InputDelay() const { return mDelay; }
     void SetLocalName(const char* name);
 
@@ -105,6 +109,9 @@ class Session {
     std::string mStatus = "Idle";
     RosterEntry mRoster[kMaxSlots];
     int mDelay = 5;
+    int mMode = 0;
+    int mMaxPlayers = 4;
+    bool mRosterDirtyFlag = false;
     bool mMatchActive = false;
     int mMatchMask = 0;
     int mMatchDelay = 5;

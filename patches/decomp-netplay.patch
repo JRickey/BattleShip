@@ -29,7 +29,7 @@ index 262fdc3..023780f 100644
          }
      }
 diff --git a/src/mn/mnplayers/mnplayersvs.c b/src/mn/mnplayers/mnplayersvs.c
-index 9e161b9..19e54cd 100644
+index 9e161b9..946020a 100644
 --- a/src/mn/mnplayers/mnplayersvs.c
 +++ b/src/mn/mnplayers/mnplayersvs.c
 @@ -1,4 +1,5 @@
@@ -38,11 +38,16 @@ index 9e161b9..19e54cd 100644
  #include <ft/fighter.h>
  #include <if/interface.h>
  #include <mn/menu.h>
-@@ -4841,7 +4842,13 @@ sb32 mnPlayersVSCheckReady(void)
+@@ -4841,7 +4842,18 @@ sb32 mnPlayersVSCheckReady(void)
  		}
  	}
  #endif
 +#ifdef PORT
++	/* Online clients cannot start matches; only the host can. */
++	if (syNetLobbyIsClient() != FALSE)
++	{
++		return FALSE;
++	}
 +	/* Online play: connected clients count as opponents (they are injected
 +	 * into the match when it starts), so the host alone may press Start. */
 +	if ((mnPlayersVSGetReadyPlayerCount() + syNetLobbyGetRemoteCount()) < 2)
@@ -52,6 +57,42 @@ index 9e161b9..19e54cd 100644
  	{
  		is_ready = FALSE;
  	}
+@@ -5098,6 +5110,7 @@ void mnPlayersVSFuncRun(GObj *gobj)
+ 					gSCManagerSceneData.scene_curr = nSCKind1PGame;
+ 
+ 					mnPlayersVSSetSceneDataClassicCoop();
++					syNetLobbyBeginHostRun(); /* online: send the run config to the connected player */
+ 					port_classic_coop_set_context(0);
+ 					syTaskmanSetLoadScene();
+ 					return;
+diff --git a/src/sc/sc1pmode/sc1pmanager.c b/src/sc/sc1pmode/sc1pmanager.c
+index 95e709d..0ea505c 100644
+--- a/src/sc/sc1pmode/sc1pmanager.c
++++ b/src/sc/sc1pmode/sc1pmanager.c
+@@ -1,3 +1,4 @@
++#include <sys/netlobby.h>
+ #include <gr/ground.h>
+ #include <ft/fighter.h>
+ #include <sc/scene.h>
+@@ -131,7 +132,7 @@ sb32 sc1PManagerIsCoopActive(void)
+ {
+ 	extern int port_enhancement_classic_coop(void);
+ 
+-	return (port_enhancement_classic_coop() != 0) && (gSCManagerSceneData.coop_player2 != SCCOMMON_COOP_NO_PLAYER2);
++	return ((port_enhancement_classic_coop() != 0) || (syNetLobbyIsRun() != FALSE)) && (gSCManagerSceneData.coop_player2 != SCCOMMON_COOP_NO_PLAYER2);
+ }
+ #endif
+ 
+@@ -300,6 +301,9 @@ void sc1PManagerUpdateScene(void)
+     s32 player;
+     s32 spgame_stage;
+ 
++#ifdef PORT
++    syNetLobbyStartRunSession(); /* online co-op: the whole run is one lockstep session */
++#endif
+     sSC1PManagerScenePrev = gSCManagerSceneData.scene_prev;
+ 
+     gSCManager1PGameBattleState.is_team_battle = TRUE;
 diff --git a/src/sc/sccommon/scvsbattle.c b/src/sc/sccommon/scvsbattle.c
 index 51ca7f2..19259db 100644
 --- a/src/sc/sccommon/scvsbattle.c
@@ -86,28 +127,52 @@ index 51ca7f2..19259db 100644
  	gSCManagerSceneData.scene_curr = nSCKindVSResults;
  
 diff --git a/src/sc/scmanager.c b/src/sc/scmanager.c
-index 93de722..5358cd5 100644
+index 93de722..a94dbac 100644
 --- a/src/sc/scmanager.c
 +++ b/src/sc/scmanager.c
-@@ -1914,6 +1914,26 @@ void portSCManagerRequestReset(void)
+@@ -1887,6 +1887,7 @@ void scManagerRunPrintGObjStatus(void)
+  * stores that taskman/scmanager consume at the next frame boundary. */
+ static ub32 sPortResetPending = FALSE;
+ static s32 sPortResetTarget = nSCKindOpeningRoom;
++static s32 sPortResetTargetPrev = -1; /* -1 = same as target */
+ 
+ void portSCManagerRequestReset(void)
+ {
+@@ -1894,6 +1895,7 @@ void portSCManagerRequestReset(void)
+ 	extern int port_enhancement_boot_to_vs_css(void);
+ 
+ 	sPortResetTarget = port_enhancement_boot_to_vs_css() ? nSCKindPlayersVS : nSCKindOpeningRoom;
++	sPortResetTargetPrev = -1;
+ 	sPortResetPending = TRUE;
+ 
+ 	/* Speak the game's native match-abort language: is_reset is what the
+@@ -1914,6 +1916,34 @@ void portSCManagerRequestReset(void)
  	syTaskmanSetLoadScene();
  }
  
 +/* Online play: force every peer into a scene (the client side of "the host
 + * pressed Start on the character select screen"). Same unwinding mechanism as
 + * portSCManagerRequestReset, but with an explicit target scene. */
++void portSCManagerRequestSceneEx(s32 scene, s32 scene_prev);
++
 +void portSCManagerRequestScene(s32 scene)
++{
++	portSCManagerRequestSceneEx(scene, -1);
++}
++
++void portSCManagerRequestSceneEx(s32 scene, s32 scene_prev)
 +{
 +	extern void func_800266A0_272A0(void);
 +
 +	sPortResetTarget = scene;
++	sPortResetTargetPrev = scene_prev;
 +	sPortResetPending = TRUE;
 +
 +	gSCManagerSceneData.is_reset = (gSCManagerSceneData.scene_curr == nSCKindVSBattle) ? TRUE : FALSE;
 +
 +	func_800266A0_272A0();
 +
-+	gSCManagerSceneData.scene_prev = scene;
++	gSCManagerSceneData.scene_prev = (scene_prev >= 0) ? scene_prev : scene;
 +	gSCManagerSceneData.scene_curr = scene;
 +
 +	syTaskmanSetLoadScene();
@@ -116,6 +181,15 @@ index 93de722..5358cd5 100644
  /* If a reset is pending: re-apply the target scene (undoing any scene_curr
   * writes a nested manager made since the request), clear the pending flag,
   * and return TRUE so nested managers know to unwind to scManagerRunLoop. */
+@@ -1925,7 +1955,7 @@ sb32 portSCManagerConsumeReset(void)
+ 	}
+ 	sPortResetPending = FALSE;
+ 
+-	gSCManagerSceneData.scene_prev = sPortResetTarget;
++	gSCManagerSceneData.scene_prev = (sPortResetTargetPrev >= 0) ? sPortResetTargetPrev : sPortResetTarget;
+ 	gSCManagerSceneData.scene_curr = sPortResetTarget;
+ 
+ 	return TRUE;
 diff --git a/src/sys/netinput.c b/src/sys/netinput.c
 index c6ecef7..a1d7c73 100644
 --- a/src/sys/netinput.c
@@ -197,10 +271,10 @@ index c6ecef7..a1d7c73 100644
  
 diff --git a/src/sys/netlobby.c b/src/sys/netlobby.c
 new file mode 100644
-index 0000000..afd97af
+index 0000000..3832db4
 --- /dev/null
 +++ b/src/sys/netlobby.c
-@@ -0,0 +1,309 @@
+@@ -0,0 +1,522 @@
 +#include <sys/netlobby.h>
 +
 +#ifdef PORT
@@ -214,13 +288,34 @@ index 0000000..afd97af
 +
 +#include <string.h>
 +
++#include <sys/taskman.h>
++#include <lb/lbbackup.h>
++
 +#include <netplay/netplay.h>
 +
 +extern void portSCManagerRequestScene(s32 scene);
++extern void portSCManagerRequestSceneEx(s32 scene, s32 scene_prev);
 +extern void portSCManagerRequestReset(void);
 +extern void port_log(const char *fmt, ...);
 +
++#define SYNETLOBBY_RUN_MAGIC 0x53524E31 /* "SRN1" */
++
++/* Config for an online 1P co-op run (sent host -> client instead of VS metadata). */
++typedef struct SYNetLobbyRunConfig
++{
++	u32 magic;
++	u32 rng_seed;
++	u8 player, fkind, costume, shade;
++	u8 coop_player2, coop_fkind2, coop_costume2, coop_shade2;
++	u8 coop_pkind2, coop_level2, spgame_stage, difficulty;
++	u8 stock_count, pad[3];
++
++} SYNetLobbyRunConfig;
++
 +static sb32 sSYNetLobbyIsMatch;
++static sb32 sSYNetLobbyIsRun;
++static sb32 sSYNetLobbyIsSession; /* lockstep started (StartVSSession / StartRunSession ran) */
++static u32 sSYNetLobbyRunSeed;
 +static sb32 sSYNetLobbyIsHeld;
 +static s32 sSYNetLobbyLocalSlot;
 +static u32 sSYNetLobbyMask;
@@ -260,6 +355,11 @@ index 0000000..afd97af
 +	return sSYNetLobbyIsMatch;
 +}
 +
++sb32 syNetLobbyIsClient(void)
++{
++	return (np_state() == NP_CONNECTED) ? TRUE : FALSE;
++}
++
 +s32 syNetLobbyGetRemoteCount(void)
 +{
 +	s32 slot, count = 0;
@@ -286,8 +386,163 @@ index 0000000..afd97af
 +static void syNetLobbyLeaveMatch(void)
 +{
 +	sSYNetLobbyIsMatch = FALSE;
++	sSYNetLobbyIsRun = FALSE;
++	sSYNetLobbyIsSession = FALSE;
 +	sSYNetLobbyIsHeld = FALSE;
 +	sSYNetLobbyMask = 0;
++}
++
++sb32 syNetLobbyIsRun(void)
++{
++	return sSYNetLobbyIsRun;
++}
++
++static void syNetLobbyApplyRunConfig(const SYNetLobbyRunConfig *cfg)
++{
++	gSCManagerSceneData.player = cfg->player;
++	gSCManagerSceneData.fkind = cfg->fkind;
++	gSCManagerSceneData.costume = cfg->costume;
++	gSCManagerSceneData.spgame_stage = cfg->spgame_stage;
++	gSCManagerSceneData.coop_player2 = cfg->coop_player2;
++	gSCManagerSceneData.coop_fkind2 = cfg->coop_fkind2;
++	gSCManagerSceneData.coop_costume2 = cfg->coop_costume2;
++	gSCManagerSceneData.coop_shade2 = cfg->coop_shade2;
++	gSCManagerSceneData.coop_pkind2 = cfg->coop_pkind2;
++	gSCManagerSceneData.coop_level2 = cfg->coop_level2;
++	gSCManagerBackupData.spgame_difficulty = cfg->difficulty;
++	gSCManagerBackupData.spgame_stock_count = cfg->stock_count;
++	sSYNetLobbyRunSeed = cfg->rng_seed;
++}
++
++/* Host, VS CSS in classic (1P co-op) context: the host pressed Start. Freeze the
++ * lobby into an online run: P1 = host, P2 = the connected client. */
++sb32 syNetLobbyBeginHostRun(void)
++{
++	SYNetLobbyRunConfig cfg;
++	int fighter, costume;
++
++	if ((sSYNetLobbyIsMatch != FALSE) || (np_state() != NP_HOSTING) || (np_get_mode() != 1) ||
++	    (np_player_count() != 2))
++	{
++		return FALSE;
++	}
++	np_slot_choice(1, &fighter, &costume);
++
++	memset(&cfg, 0, sizeof(cfg));
++	cfg.magic = SYNETLOBBY_RUN_MAGIC;
++	cfg.rng_seed = syUtilsRandSeed();
++	cfg.player = 0;
++	cfg.fkind = gSCManagerSceneData.fkind;
++	cfg.costume = gSCManagerSceneData.costume;
++	cfg.spgame_stage = gSCManagerSceneData.spgame_stage;
++	cfg.coop_player2 = 1;
++	cfg.coop_fkind2 = syNetLobbyGetFighterKind(fighter);
++	cfg.coop_costume2 = costume & 3;
++	cfg.coop_shade2 = 0;
++	cfg.coop_pkind2 = nFTPlayerKindMan;
++	cfg.coop_level2 = 0;
++	/* Difficulty and lives come from the host's Online menu, not the CSS. */
++	cfg.difficulty = np_get_run_difficulty();
++	cfg.stock_count = np_get_run_stocks();
++
++	/* Same fighter + costume as P1: use the next costume so they look different. */
++	if ((cfg.coop_fkind2 == cfg.fkind) && (cfg.coop_costume2 == cfg.costume))
++	{
++		cfg.coop_costume2 = (cfg.coop_costume2 + 1) & 3;
++	}
++	if (np_host_begin_match(&cfg, sizeof(cfg)) == 0)
++	{
++		return FALSE;
++	}
++	syNetLobbyApplyRunConfig(&cfg);
++
++	sSYNetLobbyIsMatch = TRUE;
++	sSYNetLobbyIsRun = TRUE;
++	sSYNetLobbyIsHeld = TRUE;
++	sSYNetLobbyLocalSlot = 0;
++	sSYNetLobbyMask = np_match_mask();
++	sSYNetLobbyDelay = np_match_delay();
++	port_log("SSB64 NetLobby: host 1P co-op run begin mask=0x%x delay=%u seed=%u\n", sSYNetLobbyMask, sSYNetLobbyDelay, cfg.rng_seed);
++	return TRUE;
++}
++
++/* Common lockstep setup: every slot driven by confirmed inputs, neutral prefill. */
++static void syNetLobbyStartSession(void)
++{
++	s32 slot;
++	u32 tick;
++
++	sSYNetLobbyIsHeld = TRUE;
++	sSYNetLobbyIsSession = TRUE;
++
++	for (slot = 0; slot < MAXCONTROLLERS; slot++)
++	{
++		if (syNetLobbyIsParticipant(slot) != FALSE)
++		{
++			syNetInputSetSlotSource(slot, nSYNetInputSourceRemoteConfirmed);
++
++			for (tick = 0; tick < sSYNetLobbyDelay; tick++)
++			{
++				np_put_input(slot, tick, 0, 0, 0);
++			}
++		}
++		else syNetInputSetSlotSource(slot, nSYNetInputSourceSaved); /* idle: neutral input */
++	}
++	np_ready();
++}
++
++/* Top of sc1PManagerUpdateScene: the whole 1P run (every sub-scene) is one lockstep session. */
++void syNetLobbyStartRunSession(void)
++{
++	if ((sSYNetLobbyIsRun == FALSE) || (sSYNetLobbyIsSession != FALSE))
++	{
++		return; /* not an online run, or this run's session already started */
++	}
++	syUtilsSetRandomSeed(sSYNetLobbyRunSeed);
++	syNetInputStartVSSession();
++	syNetLobbyStartSession();
++}
++
++void (*syNetLobbyFilterControllerFunc(void (*func)(void)))(void)
++{
++	if (sSYNetLobbyIsRun != FALSE)
++	{
++		switch (gSCManagerSceneData.scene_curr)
++		{
++		case nSCKindTitle:
++		case nSCKindModeSelect:
++		case nSCKind1PMode:
++		case nSCKindVSMode:
++		case nSCKindPlayersVS:
++		case nSCKind1PGamePlayers:
++		case nSCKindOpeningRoom:
++		case nSCKindAutoDemo:
++#if defined(REGION_US)
++		case nSCKindStartup:
++#endif
++			/* Back in the menus: the run is over. */
++			np_end_match();
++			syNetLobbyLeaveMatch();
++			return func;
++
++		default:
++			if (func == syControllerFuncRead)
++			{
++				return syNetInputFuncRead;
++			}
++			break;
++		}
++	}
++	return func;
++}
++
++sb32 syNetLobbyCheckUpdateHeld(void)
++{
++	if ((sSYNetLobbyIsMatch == FALSE) || (sSYNetLobbyIsSession == FALSE))
++	{
++		return FALSE;
++	}
++	return (syNetLobbyCheckExecutionReady() == FALSE) ? TRUE : FALSE;
 +}
 +
 +/* Host: freeze lobby into a match. Remote slots become human fighters with the
@@ -358,35 +613,16 @@ index 0000000..afd97af
 +
 +void syNetLobbyStartVSSession(void)
 +{
-+	s32 slot;
-+	u32 tick;
-+
-+	if (sSYNetLobbyIsMatch == FALSE)
++	if ((sSYNetLobbyIsMatch == FALSE) || (sSYNetLobbyIsRun != FALSE))
 +	{
 +		return;
 +	}
-+	sSYNetLobbyIsHeld = TRUE;
-+
-+	for (slot = 0; slot < MAXCONTROLLERS; slot++)
-+	{
-+		if (syNetLobbyIsParticipant(slot) != FALSE)
-+		{
-+			syNetInputSetSlotSource(slot, nSYNetInputSourceRemoteConfirmed);
-+
-+			/* Neutral inputs for the first `delay` ticks, identical on every peer. */
-+			for (tick = 0; tick < sSYNetLobbyDelay; tick++)
-+			{
-+				np_put_input(slot, tick, 0, 0, 0);
-+			}
-+		}
-+		else syNetInputSetSlotSource(slot, nSYNetInputSourceSaved); /* idle: neutral input */
-+	}
-+	np_ready();
++	syNetLobbyStartSession();
 +}
 +
 +void syNetLobbyStopVSSession(void)
 +{
-+	if (sSYNetLobbyIsMatch != FALSE)
++	if ((sSYNetLobbyIsMatch != FALSE) && (sSYNetLobbyIsRun == FALSE))
 +	{
 +		np_end_match();
 +		syNetLobbyLeaveMatch();
@@ -457,7 +693,30 @@ index 0000000..afd97af
 +
 +void syNetLobbyFrame(void)
 +{
++	static s32 sPrevState = NP_IDLE;
++	s32 state;
++
 +	np_poll();
++
++	/* Joining or hosting takes you to the VS character select screen, where
++	 * everybody waits for the host to start the match. */
++	state = np_state();
++	if (state != sPrevState)
++	{
++		if (((state == NP_HOSTING) || (state == NP_CONNECTED)) && (sSYNetLobbyIsMatch == FALSE) && (np_match_active() == 0))
++		{
++			extern void port_classic_coop_set_context(int);
++
++			/* Host in 1P co-op mode: open the VS CSS in classic (1P) context. */
++			port_classic_coop_set_context((state == NP_HOSTING) && (np_get_mode() == 1));
++			if (state == NP_HOSTING)
++			{
++				gSCManagerTransferBattleState.is_reset_players = TRUE;
++			}
++			portSCManagerRequestScene(nSCKindPlayersVS);
++		}
++		sPrevState = state;
++	}
 +
 +	if (np_consume_abort() != 0)
 +	{
@@ -472,9 +731,31 @@ index 0000000..afd97af
 +	if ((np_state() == NP_CONNECTED) && (sSYNetLobbyIsMatch == FALSE))
 +	{
 +		SYNetInputReplayMetadata metadata;
++		u8 blob[NP_MAX_BLOB];
++		s32 blob_size = np_client_take_match(blob, sizeof(blob));
 +
-+		if (np_client_take_match(&metadata, sizeof(metadata)) == (s32)sizeof(metadata))
++		if ((blob_size == (s32)sizeof(SYNetLobbyRunConfig)) && (((SYNetLobbyRunConfig*)blob)->magic == SYNETLOBBY_RUN_MAGIC))
 +		{
++			SYNetLobbyRunConfig cfg;
++
++			memcpy(&cfg, blob, sizeof(cfg));
++			syNetLobbyApplyRunConfig(&cfg);
++
++			sSYNetLobbyIsMatch = TRUE;
++			sSYNetLobbyIsRun = TRUE;
++			sSYNetLobbyIsHeld = TRUE;
++			sSYNetLobbyLocalSlot = np_local_slot();
++			sSYNetLobbyMask = np_match_mask();
++			sSYNetLobbyDelay = np_match_delay();
++			port_log("SSB64 NetLobby: client 1P co-op run begin slot=%d mask=0x%x delay=%u seed=%u\n",
++			         sSYNetLobbyLocalSlot, sSYNetLobbyMask, sSYNetLobbyDelay, cfg.rng_seed);
++
++			/* Same entry the host takes from the CSS: scene 1P game, previous scene = VS CSS. */
++			portSCManagerRequestSceneEx(nSCKind1PGame, nSCKindPlayersVS);
++		}
++		else if (blob_size == (s32)sizeof(metadata))
++		{
++			memcpy(&metadata, blob, sizeof(metadata));
 +			syNetReplayApplyBattleMetadata(&metadata);
 +			syUtilsSetRandomSeed(metadata.rng_seed);
 +
@@ -494,7 +775,13 @@ index 0000000..afd97af
 +#else /* !PORT */
 +
 +sb32 syNetLobbyIsMatch(void) { return FALSE; }
++sb32 syNetLobbyIsRun(void) { return FALSE; }
++sb32 syNetLobbyBeginHostRun(void) { return FALSE; }
++void syNetLobbyStartRunSession(void) {}
++void (*syNetLobbyFilterControllerFunc(void (*func)(void)))(void) { return func; }
++sb32 syNetLobbyCheckUpdateHeld(void) { return FALSE; }
 +s32 syNetLobbyGetRemoteCount(void) { return 0; }
++sb32 syNetLobbyIsClient(void) { return FALSE; }
 +void syNetLobbyFrame(void) {}
 +void syNetLobbyBeginHostMatch(void) {}
 +void syNetLobbyStartVSSession(void) {}
@@ -512,10 +799,10 @@ index 0000000..afd97af
 +#endif
 diff --git a/src/sys/netlobby.h b/src/sys/netlobby.h
 new file mode 100644
-index 0000000..a3b4655
+index 0000000..8d0dbad
 --- /dev/null
 +++ b/src/sys/netlobby.h
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,32 @@
 +#ifndef _SYNETLOBBY_H_
 +#define _SYNETLOBBY_H_
 +
@@ -526,6 +813,12 @@ index 0000000..a3b4655
 + * and the game. See docs/netplay.md. */
 +
 +extern sb32 syNetLobbyIsMatch(void);
++extern sb32 syNetLobbyIsRun(void);                  /* online 1P co-op run in progress */
++extern sb32 syNetLobbyBeginHostRun(void);           /* host: CSS handoff to 1P game (classic co-op) */
++extern void syNetLobbyStartRunSession(void);        /* top of sc1PManagerUpdateScene */
++extern void (*syNetLobbyFilterControllerFunc(void (*func)(void)))(void); /* taskman scene setup */
++extern sb32 syNetLobbyCheckUpdateHeld(void);        /* taskman: skip scene update this frame? */
++extern sb32 syNetLobbyIsClient(void);               /* connected to someone else's lobby */
 +extern s32 syNetLobbyGetRemoteCount(void);         /* connected clients while hosting, else 0 */
 +extern void syNetLobbyFrame(void);                 /* once per frame, from the port loop */
 +extern void syNetLobbyBeginHostMatch(void);        /* top of scVSBattleStartBattle */
@@ -567,3 +860,49 @@ index b3c4960..22df878 100644
  	if ((sSYNetPeerIsEnabled == FALSE) || (sSYNetPeerBootstrapIsEnabled == FALSE) ||
  		(sSYNetPeerBattleBarrierEnabled == FALSE))
  	{
+diff --git a/src/sys/taskman.c b/src/sys/taskman.c
+index b3ea175..1f64249 100644
+--- a/src/sys/taskman.c
++++ b/src/sys/taskman.c
+@@ -9,6 +9,8 @@
+ #include <sys/video.h>
+ #include <sys/scheduler.h>
+ #include <sys/controller.h>
++#include <sys/netlobby.h>
++#include <sys/netinput.h>
+ 
+ #include <macros.h>
+ #include <ssb_types.h>
+@@ -1164,6 +1166,12 @@ void syTaskmanRunTask(SYTaskFunction *tfunc)
+ void func_800062B4(SYTaskFunction *tfunc)
+ {
+ 	sSYTaskmanFuncController();
++#ifdef PORT
++	if (syNetLobbyCheckUpdateHeld() != FALSE)
++	{
++		return; /* online play: waiting for every player's input for this tick */
++	}
++#endif
+ 	tfunc->scene_update();
+ }
+ 
+@@ -1184,6 +1192,9 @@ void func_800062EC(SYTaskFunction *tfunc)
+ void syTaskmanCommonTaskUpdate(SYTaskFunction *tfunc)
+ {
+ 	sSYTaskmanFuncController();
++#ifdef PORT
++	if (syNetLobbyCheckUpdateHeld() == FALSE)
++#endif
+ 	tfunc->scene_update();
+ 
+ 	if (syTaskmanCheckBreakLoop() != FALSE)
+@@ -1296,6 +1307,9 @@ void syTaskmanLoadScene(SYTaskmanSceneSetup *tscene, void (*func_start)(void))
+ 	syTaskmanSetRdpOutputBuffer(tscene->rdp_output_buffer_kind, syTaskmanMalloc(tscene->rdp_output_buffer_size, 0x10), tscene->rdp_output_buffer_size);
+ 	syRdpSetFuncLights(tscene->func_lights);
+ 	sSYTaskmanFuncController = tscene->func_controller;
++#ifdef PORT
++	sSYTaskmanFuncController = syNetLobbyFilterControllerFunc(sSYTaskmanFuncController);
++#endif
+ 	syControllerSetAutoRead((syControllerScheduleRead != sSYTaskmanFuncController) ? TRUE : FALSE);
+ 
+ 	dSYTaskmanUpdateCount = dSYTaskmanFrameCount = 0;

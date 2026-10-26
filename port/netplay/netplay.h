@@ -29,6 +29,13 @@ void np_set_choice(int fighter, int costume);
 void np_set_name(const char *name);
 void np_set_input_delay(int frames);
 int np_get_input_delay(void);
+void np_set_mode(int mode);                  /* 0 = VS, 1 = 1P co-op (host) */
+int np_get_mode(void);
+void np_set_max_players(int n);              /* 2..4 (host) */
+int np_get_max_players(void);
+void np_set_run_options(int difficulty, int stock_count); /* 1P co-op: difficulty 0..4, stock_count 0..4 (= lives - 1) */
+int np_get_run_difficulty(void);
+int np_get_run_stocks(void);
 
 int np_host_begin_match(const void *blob, int size);
 int np_client_take_match(void *out, int cap);

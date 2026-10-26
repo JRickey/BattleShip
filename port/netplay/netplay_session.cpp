@@ -41,7 +41,7 @@ namespace ssb64net {
 namespace {
 
 constexpr uint32_t kMagic = 0x4E505342; // "BSPN"
-constexpr uint8_t kVersion = 1;
+constexpr uint8_t kVersion = 2;
 
 enum Type : uint8_t {
     T_HELLO = 1, T_WELCOME, T_REJECT, T_ROSTER, T_CHOICE, T_LEAVE,
@@ -268,6 +268,7 @@ void Session::SetChoice(int fighter, int costume) {
 }
 
 void Session::SetInputDelay(int dl) { mDelay = std::max(1, std::min(15, dl)); }
+void Session::SetMaxPlayers(int n) { mMaxPlayers = std::max(2, std::min(4, n)); mRosterDirtyFlag = true; }
 
 bool Session::ConsumeAbort(std::string* reason) {
     if (!d->aborted) return false;
@@ -404,7 +405,8 @@ void Session::Poll() {
                 for (int s = 1; s < kMaxSlots; s++) if (d->peers[s].used && sameAddr(d->peers[s].addr, from)) found = s;
                 if (found < 0) {
                     if (mMatchActive) { Writer w; header(w, T_REJECT, 0); w.u8(2); sendRaw(this, d->sock, from, w, packetsSent); continue; }
-                    for (int s = 1; s < kMaxSlots; s++) if (!d->peers[s].used) { found = s; break; }
+                    if (ConnectedCount() < mMaxPlayers)
+                        for (int s = 1; s < kMaxSlots; s++) if (!d->peers[s].used) { found = s; break; }
                     if (found < 0) { Writer w; header(w, T_REJECT, 0); w.u8(1); sendRaw(this, d->sock, from, w, packetsSent); continue; }
                     Peer& p = d->peers[found];
                     p = Peer(); p.used = true; p.addr = from;
@@ -474,6 +476,8 @@ void Session::Poll() {
                 }
             } else if (type == T_ROSTER && mState == State::Connected) {
                 RosterEntry tmp[kMaxSlots];
+                int rmode = r.u8(); int rmax = r.u8();
+                if (!r.bad) { mMode = rmode; mMaxPlayers = rmax; }
                 for (int s = 0; s < kMaxSlots; s++) {
                     tmp[s].used = r.u8() != 0; tmp[s].fighter = (uint8_t)r.u8(); tmp[s].costume = (uint8_t)r.u8();
                     r.bytes(tmp[s].name, kNameLen); tmp[s].name[kNameLen] = 0;
@@ -572,9 +576,9 @@ void Session::Poll() {
             }
         }
     }
-    if (d->rosterDirty || now - d->lastRoster >= kRosterEveryMs) {
-        d->rosterDirty = false; d->lastRoster = now;
-        Writer w; header(w, T_ROSTER, 0);
+    if (d->rosterDirty || mRosterDirtyFlag || now - d->lastRoster >= kRosterEveryMs) {
+        d->rosterDirty = false; mRosterDirtyFlag = false; d->lastRoster = now;
+        Writer w; header(w, T_ROSTER, 0); w.u8(mMode); w.u8(mMaxPlayers);
         for (int s = 0; s < kMaxSlots; s++) {
             w.u8(mRoster[s].used); w.u8(mRoster[s].fighter); w.u8(mRoster[s].costume);
             char nm[kNameLen]; memset(nm, 0, sizeof(nm)); memcpy(nm, mRoster[s].name, kNameLen); w.bytes(nm, kNameLen);
