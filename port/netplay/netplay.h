@@ -36,6 +36,8 @@ int np_get_max_players(void);
 void np_set_run_options(int difficulty, int stock_count); /* 1P co-op: difficulty 0..4, stock_count 0..4 (= lives - 1) */
 int np_get_run_difficulty(void);
 int np_get_run_stocks(void);
+void np_set_friendly_fire(int on); /* 1P online: allow players to hurt each other (default off) */
+int np_get_friendly_fire(void);
 
 int np_host_begin_match(const void *blob, int size);
 int np_client_take_match(void *out, int cap);

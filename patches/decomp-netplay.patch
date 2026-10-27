@@ -1,3 +1,38 @@
+diff --git a/src/gm/gmcamera.c b/src/gm/gmcamera.c
+index c225d29..f447fb6 100644
+--- a/src/gm/gmcamera.c
++++ b/src/gm/gmcamera.c
+@@ -848,6 +848,30 @@ void gmCameraPlayerFollowFuncCamera(GObj *camera_gobj)
+     FTStruct *fp;
+ 
+     cobj = CObjGetStruct(camera_gobj);
++#ifdef PORT
++    /* Co-op bonus stage: when the followed player is out (stock -1) retarget to a
++     * surviving human so the camera doesn't freeze where they fell. */
++    {
++        FTStruct *cur = ftGetStruct(gGMCameraStruct.pfollow_fighter_gobj);
++
++        if ((cur != NULL) && (gSCManagerBattleState->players[cur->player].stock_count == -1))
++        {
++            s32 i;
++
++            for (i = 0; i < GMCOMMON_PLAYERS_MAX; i++)
++            {
++                GObj *g = gSCManagerBattleState->players[i].fighter_gobj;
++
++                if ((i != cur->player) && (g != NULL) && (gSCManagerBattleState->players[i].pkind != nFTPlayerKindNot) &&
++                    (gSCManagerBattleState->players[i].stock_count != -1))
++                {
++                    gGMCameraStruct.pfollow_fighter_gobj = g;
++                    break;
++                }
++            }
++        }
++    }
++#endif
+     pos = DObjGetStruct(gGMCameraStruct.pfollow_fighter_gobj)->translate.vec.f;
+     fp = ftGetStruct(gGMCameraStruct.pfollow_fighter_gobj);
+ 
 diff --git a/src/if/ifcommon.c b/src/if/ifcommon.c
 index 262fdc3..023780f 100644
 --- a/src/if/ifcommon.c
@@ -65,6 +100,50 @@ index 9e161b9..946020a 100644
  					port_classic_coop_set_context(0);
  					syTaskmanSetLoadScene();
  					return;
+diff --git a/src/sc/sc1pmode/sc1pbonusstage.c b/src/sc/sc1pmode/sc1pbonusstage.c
+index 8a7f873..29e106b 100644
+--- a/src/sc/sc1pmode/sc1pbonusstage.c
++++ b/src/sc/sc1pmode/sc1pbonusstage.c
+@@ -6,6 +6,7 @@ extern void port_coroutine_yield(void);
+ #include <gr/ground.h>
+ #include <if/interface.h>
+ #include <sc/scene.h>
++#include <sys/netlobby.h>
+ #include <sys/video.h>
+ #include <reloc_data.h>
+ #include <sys/audio.h>
+@@ -482,7 +483,7 @@ void sc1PBonusStageInitVars(void)
+ 
+ 		gSCManagerBattleState->is_team_battle = TRUE;
+ 		gSCManagerBattleState->is_not_teamshadows = TRUE;
+-		gSCManagerBattleState->is_team_attack = port_classic_coop_friendly_fire() ? TRUE : FALSE;
++		gSCManagerBattleState->is_team_attack = (syNetLobbyIsRun() != FALSE) ? syNetLobbyGetFriendlyFire() : (port_classic_coop_friendly_fire() ? TRUE : FALSE);
+ 		gSCManagerBattleState->players[gSCManagerSceneData.player].team = 0;
+ 		gSCManagerBattleState->players[gSCManagerSceneData.coop_player2].team = 0;
+ 	}
+diff --git a/src/sc/sc1pmode/sc1pgame.c b/src/sc/sc1pmode/sc1pgame.c
+index 2c4f782..067f8e1 100644
+--- a/src/sc/sc1pmode/sc1pgame.c
++++ b/src/sc/sc1pmode/sc1pgame.c
+@@ -5,6 +5,7 @@ extern void port_coroutine_yield(void);
+ #include <gr/ground.h>
+ #include <if/interface.h>
+ #include <sc/scene.h>
++#include <sys/netlobby.h>
+ #include <sys/video.h>
+ #include <sys/dma.h>
+ #include <reloc_data.h>
+@@ -1060,6 +1061,10 @@ void sc1PGameSetupStageAll(void)
+     gSCManagerBattleState->gkind = stagesetup->gkind;
+     gSCManagerBattleState->is_team_attack = comsetup->is_team_attack;
+ #ifdef PORT
++    if (syNetLobbyIsRun() != FALSE)
++    {
++        gSCManagerBattleState->is_team_attack = syNetLobbyGetFriendlyFire(); /* host option, same on all peers */
++    }
+     /* Co-op: the blanket clear above wiped P2's slot — re-activate it on
+      * every common stage and the Master Hand fight. */
+     if (sc1PManagerIsCoopActive() && (gSCManagerSceneData.spgame_stage <= nSC1PGameStageCommonEnd))
 diff --git a/src/sc/sc1pmode/sc1pmanager.c b/src/sc/sc1pmode/sc1pmanager.c
 index 95e709d..0ea505c 100644
 --- a/src/sc/sc1pmode/sc1pmanager.c
@@ -191,7 +270,7 @@ index 93de722..a94dbac 100644
  
  	return TRUE;
 diff --git a/src/sys/netinput.c b/src/sys/netinput.c
-index c6ecef7..a1d7c73 100644
+index c6ecef7..3e6d3e0 100644
 --- a/src/sys/netinput.c
 +++ b/src/sys/netinput.c
 @@ -1,5 +1,6 @@
@@ -201,7 +280,7 @@ index c6ecef7..a1d7c73 100644
  #include <sys/netpeer.h>
  #include <sys/taskman.h>
  
-@@ -532,12 +533,67 @@ sb32 syNetInputGetReplayMetadata(SYNetInputReplayMetadata *out_metadata)
+@@ -532,12 +533,68 @@ sb32 syNetInputGetReplayMetadata(SYNetInputReplayMetadata *out_metadata)
  	return TRUE;
  }
  
@@ -228,6 +307,7 @@ index c6ecef7..a1d7c73 100644
 +	}
 +	syNetLobbySampleLocal(tick);
 +	syNetLobbySetHeld(FALSE);
++	syNetLobbyReseedTick(tick);
 +
 +	for (player = 0; player < MAXCONTROLLERS; player++)
 +	{
@@ -271,10 +351,10 @@ index c6ecef7..a1d7c73 100644
  
 diff --git a/src/sys/netlobby.c b/src/sys/netlobby.c
 new file mode 100644
-index 0000000..3832db4
+index 0000000..09d3249
 --- /dev/null
 +++ b/src/sys/netlobby.c
-@@ -0,0 +1,522 @@
+@@ -0,0 +1,566 @@
 +#include <sys/netlobby.h>
 +
 +#ifdef PORT
@@ -308,7 +388,7 @@ index 0000000..3832db4
 +	u8 player, fkind, costume, shade;
 +	u8 coop_player2, coop_fkind2, coop_costume2, coop_shade2;
 +	u8 coop_pkind2, coop_level2, spgame_stage, difficulty;
-+	u8 stock_count, pad[3];
++	u8 stock_count, friendly_fire, pad[2];
 +
 +} SYNetLobbyRunConfig;
 +
@@ -316,6 +396,7 @@ index 0000000..3832db4
 +static sb32 sSYNetLobbyIsRun;
 +static sb32 sSYNetLobbyIsSession; /* lockstep started (StartVSSession / StartRunSession ran) */
 +static u32 sSYNetLobbyRunSeed;
++static sb32 sSYNetLobbyFriendlyFire;
 +static sb32 sSYNetLobbyIsHeld;
 +static s32 sSYNetLobbyLocalSlot;
 +static u32 sSYNetLobbyMask;
@@ -412,6 +493,7 @@ index 0000000..3832db4
 +	gSCManagerBackupData.spgame_difficulty = cfg->difficulty;
 +	gSCManagerBackupData.spgame_stock_count = cfg->stock_count;
 +	sSYNetLobbyRunSeed = cfg->rng_seed;
++	sSYNetLobbyFriendlyFire = cfg->friendly_fire;
 +}
 +
 +/* Host, VS CSS in classic (1P co-op) context: the host pressed Start. Freeze the
@@ -444,6 +526,8 @@ index 0000000..3832db4
 +	/* Difficulty and lives come from the host's Online menu, not the CSS. */
 +	cfg.difficulty = np_get_run_difficulty();
 +	cfg.stock_count = np_get_run_stocks();
++	cfg.friendly_fire = np_get_friendly_fire() ? 1 : 0;
++	sSYNetLobbyFriendlyFire = cfg.friendly_fire;
 +
 +	/* Same fighter + costume as P1: use the next costume so they look different. */
 +	if ((cfg.coop_fkind2 == cfg.fkind) && (cfg.coop_costume2 == cfg.costume))
@@ -602,6 +686,7 @@ index 0000000..3832db4
 +	}
 +	syNetReplayApplyBattleMetadata(&metadata);
 +	syUtilsSetRandomSeed(metadata.rng_seed);
++	sSYNetLobbyRunSeed = metadata.rng_seed;
 +
 +	sSYNetLobbyIsMatch = TRUE;
 +	sSYNetLobbyIsHeld = TRUE;
@@ -617,6 +702,7 @@ index 0000000..3832db4
 +	{
 +		return;
 +	}
++	syUtilsSetRandomSeed(sSYNetLobbyRunSeed); /* both peers start from the identical seed */
 +	syNetLobbyStartSession();
 +}
 +
@@ -694,6 +780,7 @@ index 0000000..3832db4
 +void syNetLobbyFrame(void)
 +{
 +	static s32 sPrevState = NP_IDLE;
++	static s32 sPrevMode = -1;
 +	s32 state;
 +
 +	np_poll();
@@ -718,6 +805,25 @@ index 0000000..3832db4
 +		sPrevState = state;
 +	}
 +
++	/* Host switched VS <-> 1P in the Online menu without closing the room: reopen the CSS in the right context. */
++	if ((state == NP_HOSTING) && (sSYNetLobbyIsMatch == FALSE) && (np_match_active() == 0))
++	{
++		s32 mode = np_get_mode();
++
++		if ((sPrevMode != -1) && (mode != sPrevMode))
++		{
++			extern void port_classic_coop_set_context(int);
++
++			port_classic_coop_set_context(mode == 1);
++			gSCManagerTransferBattleState.is_reset_players = TRUE;
++			portSCManagerRequestScene(nSCKindPlayersVS);
++		}
++		sPrevMode = mode;
++	}
++	else if (state != NP_HOSTING)
++	{
++		sPrevMode = -1;
++	}
 +	if (np_consume_abort() != 0)
 +	{
 +		syNetLobbyAbort();
@@ -758,6 +864,7 @@ index 0000000..3832db4
 +			memcpy(&metadata, blob, sizeof(metadata));
 +			syNetReplayApplyBattleMetadata(&metadata);
 +			syUtilsSetRandomSeed(metadata.rng_seed);
++			sSYNetLobbyRunSeed = metadata.rng_seed;
 +
 +			sSYNetLobbyIsMatch = TRUE;
 +			sSYNetLobbyIsHeld = TRUE;
@@ -772,7 +879,24 @@ index 0000000..3832db4
 +	}
 +}
 +
++
++/* Per-tick RNG resync: any RNG draw made outside the simulation (draw code, menus, local-only effects)
++ * can no longer push peers apart for more than one tick. Seed is a hash of (match seed, tick). */
++void syNetLobbyReseedTick(u32 tick)
++{
++	u32 h = sSYNetLobbyRunSeed ^ (tick * 2654435761U);
++
++	h ^= h >> 15;
++	h *= 2246822519U;
++	h ^= h >> 13;
++	syUtilsSetRandomSeed((s32)h);
++}
++
++sb32 syNetLobbyGetFriendlyFire(void) { return sSYNetLobbyFriendlyFire; }
++
 +#else /* !PORT */
++sb32 syNetLobbyGetFriendlyFire(void) { return FALSE; }
++void syNetLobbyReseedTick(u32 tick) {}
 +
 +sb32 syNetLobbyIsMatch(void) { return FALSE; }
 +sb32 syNetLobbyIsRun(void) { return FALSE; }
@@ -799,10 +923,10 @@ index 0000000..3832db4
 +#endif
 diff --git a/src/sys/netlobby.h b/src/sys/netlobby.h
 new file mode 100644
-index 0000000..8d0dbad
+index 0000000..dc6a52b
 --- /dev/null
 +++ b/src/sys/netlobby.h
-@@ -0,0 +1,32 @@
+@@ -0,0 +1,34 @@
 +#ifndef _SYNETLOBBY_H_
 +#define _SYNETLOBBY_H_
 +
@@ -825,6 +949,8 @@ index 0000000..8d0dbad
 +extern void syNetLobbyStartVSSession(void);        /* after syNetInputStartVSSession */
 +extern void syNetLobbyStopVSSession(void);
 +extern sb32 syNetLobbyCheckExecutionReady(void);
++extern void syNetLobbyReseedTick(u32 tick);
++extern sb32 syNetLobbyGetFriendlyFire(void);
 +extern sb32 syNetLobbyCheckInputsReady(u32 tick);  /* called by syNetInputFuncRead */
 +extern void syNetLobbySetHeld(sb32 is_held);
 +extern void syNetLobbySampleLocal(u32 tick);       /* sample hardware, store for tick + delay */

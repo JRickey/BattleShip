@@ -22,6 +22,15 @@ Funciona por UDP, sirve para red local y para Radmin VPN (o cualquier VPN/IP dir
 Puestos de jugador que el host deje como "Human" pero sin cliente conectado se quedan quietos; los
 puestos CPU del host siguen siendo CPU.
 
+## Modos y número de jugadores
+
+* **Max players (2–4)**: el host lo elige antes de crear la sala (VS Mode). Los demás reciben "sala llena".
+* **VS Mode**: 2–4 jugadores se pelean.
+* **1P Mode (co-op, experimental)**: tú y **un** amigo juegan el modo historia como aliados (el port solo
+  soporta co-op de 2 jugadores). Toda la partida 1P es una sola sesión sincronizada. Si algo se desincroniza
+  (por ejemplo por datos de guardado distintos al desbloquear cosas) la partida se cancela para los dos.
+  El host entra por 1P Mode → pantalla de selección, elige personaje/dificultad y pulsa Start.
+
 ## Cómo funciona por dentro
 
 **Lockstep determinista + input delay** (el mismo modelo que el netplay de juegos de pelea simples,
@@ -63,3 +72,10 @@ sin rollback):
 * El mando local siempre es el del puerto 1. Cada jugador debe tener los mismos ajustes que afecten
   la simulación (por ejemplo, spawn neutral o cambios de reglas del menú de mejoras).
 * Los personajes de los clientes se eligen desde el menú Online, no desde la pantalla de selección.
+
+## Update: desync, camera, friendly fire, live mode switch
+- RNG is re-seeded on both peers at session start and every lockstep tick (hash of match seed + tick), so stray RNG draws (draw code, local effects) can no longer accumulate into a desync (VS, Polygon team, Master Hand).
+- Bonus stage (co-op): if the followed player is eliminated, the camera retargets to a surviving player.
+- Friendly fire (1P online): host checkbox, default OFF, synced to the client in the run config.
+- The host can switch VS <-> 1P in the room window without closing it (1P needs <= 2 players).
+- 1P with 3-4 players is NOT implemented: the co-op code supports exactly one extra human (`coop_player2`).

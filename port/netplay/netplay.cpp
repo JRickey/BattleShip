@@ -56,6 +56,9 @@ void np_set_run_options(int difficulty, int stock_count) {
 }
 int np_get_run_difficulty(void) { return sRunDifficulty; }
 int np_get_run_stocks(void) { return sRunStocks; }
+static int sFriendlyFire = 0;
+void np_set_friendly_fire(int on) { sFriendlyFire = on ? 1 : 0; }
+int np_get_friendly_fire(void) { return sFriendlyFire; }
 
 int np_host_begin_match(const void *b, int n) { return S().HostBeginMatch(b, n) ? 1 : 0; }
 int np_client_take_match(void *out, int cap) { return S().ClientTakeMatch(out, cap); }

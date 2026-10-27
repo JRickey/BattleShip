@@ -1705,6 +1705,7 @@ void RenderNetplayPanel(WidgetInfo& /*widget*/) {
     static int maxPlayers = 4;
     static int difficulty = 2;  // 0 Very Easy .. 4 Very Hard
     static int lives = 3;       // 1..5
+    static bool friendlyFire = false;
     static int fighter = 0;
     static int costume = 0;
     static bool loaded = false;
@@ -1718,6 +1719,7 @@ void RenderNetplayPanel(WidgetInfo& /*widget*/) {
         maxPlayers = CVarGetInteger("gNetplay.MaxPlayers", 4);
         difficulty = CVarGetInteger("gNetplay.Difficulty", 2);
         lives = CVarGetInteger("gNetplay.Lives", 3);
+        friendlyFire = CVarGetInteger("gNetplay.FriendlyFire", 0) != 0;
         fighter = CVarGetInteger("gNetplay.Fighter", 0);
         costume = CVarGetInteger("gNetplay.Costume", 0);
     }
@@ -1730,6 +1732,7 @@ void RenderNetplayPanel(WidgetInfo& /*widget*/) {
         CVarSetInteger("gNetplay.MaxPlayers", maxPlayers);
         CVarSetInteger("gNetplay.Difficulty", difficulty);
         CVarSetInteger("gNetplay.Lives", lives);
+        CVarSetInteger("gNetplay.FriendlyFire", friendlyFire ? 1 : 0);
         CVarSetInteger("gNetplay.Fighter", fighter);
         CVarSetInteger("gNetplay.Costume", costume);
         Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
@@ -1785,6 +1788,7 @@ void RenderNetplayPanel(WidgetInfo& /*widget*/) {
             }
             lives = std::clamp(lives, 1, 5);
             ImGui::SliderInt("Lives (stocks)", &lives, 1, 5);
+            ImGui::Checkbox("Friendly fire (players can hurt each other)", &friendlyFire);
         } else {
             maxPlayers = std::clamp(maxPlayers, 2, 4);
             ImGui::SliderInt("Max players", &maxPlayers, 2, 4);
@@ -1797,6 +1801,7 @@ void RenderNetplayPanel(WidgetInfo& /*widget*/) {
             if (np_host((uint16_t)port, name)) {
                 np_set_mode(mode);
                 np_set_run_options(difficulty, lives - 1);
+                np_set_friendly_fire(friendlyFire ? 1 : 0);
                 np_set_max_players(mode == 1 ? 2 : maxPlayers);
             }
         }
@@ -1844,6 +1849,42 @@ void RenderNetplayPanel(WidgetInfo& /*widget*/) {
     }
     ImGui::Separator();
     if (np_is_host()) {
+        // Switch mode without closing the room.
+        mode = np_get_mode();
+        int newMode = mode;
+        ImGui::Text("Game mode (you can change it anytime)");
+        ImGui::RadioButton("VS Mode", &newMode, 0);
+        ImGui::SameLine();
+        const bool can1P = np_player_count() <= 2;
+        if (!can1P) ImGui::BeginDisabled();
+        ImGui::RadioButton("1P Mode (co-op, experimental)", &newMode, 1);
+        if (!can1P) {
+            ImGui::EndDisabled();
+            ImGui::TextDisabled("1P Mode supports 2 players: ask extra players to leave first.");
+        }
+        if (newMode != mode) {
+            mode = newMode;
+            save();
+            np_set_mode(mode);
+            np_set_max_players(mode == 1 ? 2 : maxPlayers);
+        }
+        if (mode == 1) {
+            static const char* kDiffs[] = { "Very Easy", "Easy", "Normal", "Hard", "Very Hard" };
+            difficulty = std::clamp(difficulty, 0, 4);
+            if (ImGui::BeginCombo("Difficulty", kDiffs[difficulty])) {
+                for (int i = 0; i < 5; i++) {
+                    if (ImGui::Selectable(kDiffs[i], i == difficulty)) difficulty = i;
+                }
+                ImGui::EndCombo();
+            }
+            lives = std::clamp(lives, 1, 5);
+            ImGui::SliderInt("Lives (stocks)", &lives, 1, 5);
+            ImGui::Checkbox("Friendly fire", &friendlyFire);
+            np_set_run_options(difficulty, lives - 1);
+            np_set_friendly_fire(friendlyFire ? 1 : 0);
+            save();
+        }
+        ImGui::Separator();
         if (np_get_mode() == 1) {
             ImGui::TextWrapped("1P Mode: you are on the character select screen. Pick your fighter, then press "
                                "Start. The difficulty and lives are the ones you chose in this menu before hosting "
