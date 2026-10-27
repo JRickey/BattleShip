@@ -1,3 +1,30 @@
+diff --git a/src/ft/ftcommon/ftcommondead.c b/src/ft/ftcommon/ftcommondead.c
+index d3b6371..cf3f001 100644
+--- a/src/ft/ftcommon/ftcommondead.c
++++ b/src/ft/ftcommon/ftcommondead.c
+@@ -108,11 +108,18 @@ void ftCommonDeadUpdateScore(FTStruct *this_fp)
+          * handoff state from ever affecting solo bonus practice. */
+         if (sc1PManagerIsCoopActive())
+         {
+-            s32 _other = (this_fp->player == gSCManagerSceneData.player) ? gSCManagerSceneData.coop_player2 : gSCManagerSceneData.player;
++            s32 _i;
++            sb32 _other_alive = FALSE;
+ 
+-            if ((gSCManagerBattleState->players[this_fp->player].pkind == nFTPlayerKindMan) &&
+-                (gSCManagerBattleState->players[_other].pkind == nFTPlayerKindMan) &&
+-                (gSCManagerBattleState->players[_other].stock_count != -1))
++            for (_i = 0; _i < GMCOMMON_PLAYERS_MAX; _i++)
++            {
++                if ((_i != this_fp->player) && (gSCManagerBattleState->players[_i].pkind == nFTPlayerKindMan) &&
++                    (gSCManagerBattleState->players[_i].stock_count != -1))
++                {
++                    _other_alive = TRUE;
++                }
++            }
++            if ((gSCManagerBattleState->players[this_fp->player].pkind == nFTPlayerKindMan) && (_other_alive != FALSE))
+             {
+                 gSCManagerBattleState->players[this_fp->player].stock_count = -1;
+                 return;
 diff --git a/src/gm/gmcamera.c b/src/gm/gmcamera.c
 index c225d29..f447fb6 100644
 --- a/src/gm/gmcamera.c
@@ -63,8 +90,32 @@ index 262fdc3..023780f 100644
              }
          }
      }
+diff --git a/src/mn/mn1pmode/mn1pmode.c b/src/mn/mn1pmode/mn1pmode.c
+index b878ef9..52a2f7b 100644
+--- a/src/mn/mn1pmode/mn1pmode.c
++++ b/src/mn/mn1pmode/mn1pmode.c
+@@ -718,6 +718,7 @@ void mn1PModeInitVars(void)
+      * can never see stale co-op state. The co-op CSS rewrites this on every
+      * confirm. */
+     gSCManagerSceneData.coop_player2 = SCCOMMON_COOP_NO_PLAYER2;
++    gSCManagerSceneData.coop_player3 = SCCOMMON_COOP_NO_PLAYER2;
+ #endif
+ }
+ 
+diff --git a/src/mn/mnplayers/mnplayers1pgame.c b/src/mn/mnplayers/mnplayers1pgame.c
+index f188036..54a1f10 100644
+--- a/src/mn/mnplayers/mnplayers1pgame.c
++++ b/src/mn/mnplayers/mnplayers1pgame.c
+@@ -3416,6 +3416,7 @@ void mnPlayers1PGameSetSceneData(void)
+ 	/* The stock 1P CSS always starts a solo run — scrub any P2 left over
+ 	 * from an earlier Classic Co-op session this boot. */
+ 	gSCManagerSceneData.coop_player2 = SCCOMMON_COOP_NO_PLAYER2;
++	gSCManagerSceneData.coop_player3 = SCCOMMON_COOP_NO_PLAYER2;
+ 	{
+ 		const char *stage_env = getenv("SSB64_SPGAME_STAGE");
+ 		if (stage_env != NULL)
 diff --git a/src/mn/mnplayers/mnplayersvs.c b/src/mn/mnplayers/mnplayersvs.c
-index 9e161b9..946020a 100644
+index 9e161b9..297e695 100644
 --- a/src/mn/mnplayers/mnplayersvs.c
 +++ b/src/mn/mnplayers/mnplayersvs.c
 @@ -1,4 +1,5 @@
@@ -73,6 +124,15 @@ index 9e161b9..946020a 100644
  #include <ft/fighter.h>
  #include <if/interface.h>
  #include <mn/menu.h>
+@@ -2460,7 +2461,7 @@ void mnPlayersVSUpdatePlayerKind(s32 player)
+ 		 * slots 3 and 4 are locked closed and their HMN/CPU/NOT button is
+ 		 * inert. */
+ 		extern int port_classic_coop_context(void);
+-		if (port_classic_coop_context() && (player >= 2))
++		if (port_classic_coop_context() && (player >= ((syNetLobbyIsRoomOpen() != FALSE) ? 3 : 2)))
+ 		{
+ 			return;
+ 		}
 @@ -4841,7 +4842,18 @@ sb32 mnPlayersVSCheckReady(void)
  		}
  	}
@@ -92,7 +152,113 @@ index 9e161b9..946020a 100644
  	{
  		is_ready = FALSE;
  	}
-@@ -5098,6 +5110,7 @@ void mnPlayersVSFuncRun(GObj *gobj)
+@@ -5011,6 +5023,95 @@ void mnPlayersVSPauseSlotProcesses(void)
+ }
+ 
+ // 0x8013A920
++#ifdef PORT
++/* Online rooms: show every connected player on the native character select panels, as if they
++ * were all playing on this screen. Remote players are parked exactly like a human whose fighter is
++ * already selected (holder = none, held = none), so no cursor or puck logic can touch them. */
++static GObj *sMNPlayersVSNetPanel[GMCOMMON_PLAYERS_MAX];
++static s32 sMNPlayersVSNetFkind[GMCOMMON_PLAYERS_MAX];
++static s32 sMNPlayersVSNetCostume[GMCOMMON_PLAYERS_MAX];
++
++static void mnPlayersVSNetSyncPanels(void)
++{
++	s32 s;
++	sb32 is_host = (syNetLobbyIsClient() == FALSE) ? TRUE : FALSE;
++	sb32 enabled = syNetLobbyPanelsEnabled();
++
++	for (s = 0; s < GMCOMMON_PLAYERS_MAX; s++)
++	{
++		MNPlayersSlotVS *slot = &sMNPlayersVSSlots[s];
++		s32 fkind, costume;
++		sb32 has_choice;
++
++		if ((slot->panel == NULL) || (slot->type_button == NULL) || (slot->name_emblem_gobj == NULL) || (slot->puck == NULL))
++		{
++			continue; /* UI not built yet */
++		}
++		if (sMNPlayersVSNetPanel[s] != slot->panel)
++		{
++			sMNPlayersVSNetPanel[s] = slot->panel; /* fresh scene entry */
++			sMNPlayersVSNetFkind[s] = -1;
++			sMNPlayersVSNetCostume[s] = -1;
++		}
++		if ((is_host != FALSE) && (s == 0))
++		{
++			/* Host's own panel is the real one: just publish what it has picked. */
++			if (enabled != FALSE)
++			{
++				if ((slot->pkind == nFTPlayerKindMan) && (slot->is_selected != FALSE) && (slot->fkind != nFTKindNull))
++				{
++					syNetLobbyPublishHostChoice(slot->fkind, slot->costume);
++				}
++			}
++			continue;
++		}
++		has_choice = (enabled != FALSE) ? syNetLobbyGetPanelChoice(s, &fkind, &costume) : FALSE;
++
++		if (has_choice != FALSE)
++		{
++			if ((slot->pkind != nFTPlayerKindMan) || (sMNPlayersVSNetFkind[s] != fkind) || (sMNPlayersVSNetCostume[s] != costume))
++			{
++				if (slot->pkind != nFTPlayerKindMan)
++				{
++					slot->pkind = nFTPlayerKindMan;
++					mnPlayersVSUpdatePlayerKind(s);
++					mnPlayersVSUpdatePlayerKindSelect(slot->type_button, s, slot->pkind);
++				}
++				slot->fkind = fkind;
++				slot->costume = costume;
++				slot->is_selected = TRUE;
++				slot->is_fighter_selected = TRUE;
++				slot->holder_player = GMCOMMON_PLAYERS_MAX;
++				slot->held_player = -1;
++
++				mnPlayersVSCenterPuckInPortrait(slot->puck, fkind);
++				mnPlayersVSUpdateFighter(s);
++				mnPlayersVSUpdateNameAndEmblem(s);
++				mnPlayersVSUpdatePuckDisplay(slot->puck, s);
++
++				sMNPlayersVSNetFkind[s] = fkind;
++				sMNPlayersVSNetCostume[s] = costume;
++			}
++			if (slot->cursor != NULL)
++			{
++				slot->cursor->flags = GOBJ_FLAG_HIDDEN; /* nobody moves a remote cursor */
++			}
++		}
++		else if (sMNPlayersVSNetFkind[s] != -1)
++		{
++			/* Player left (or the room closed): give the panel back. */
++			sMNPlayersVSNetFkind[s] = -1;
++			sMNPlayersVSNetCostume[s] = -1;
++			slot->pkind = nFTPlayerKindNot;
++			mnPlayersVSUpdatePlayerKind(s);
++			mnPlayersVSUpdatePlayerKindSelect(slot->type_button, s, slot->pkind);
++			mnPlayersVSUpdateFighter(s);
++			mnPlayersVSUpdateNameAndEmblem(s);
++		}
++	}
++}
++#endif
++
+ void mnPlayersVSFuncRun(GObj *gobj)
+ {
+ 	s32 gkinds_num;
+@@ -5056,6 +5157,9 @@ void mnPlayersVSFuncRun(GObj *gobj)
+ 	sMNPlayersVSTotalTimeTics++;
+ 
+ 	mnPlayersVSUpdateControllerOrders();
++#ifdef PORT
++	mnPlayersVSNetSyncPanels();
++#endif
+ 
+ 	if (sMNPlayersVSTotalTimeTics == sMNPlayersVSReturnTic)
+ 	{
+@@ -5098,6 +5202,7 @@ void mnPlayersVSFuncRun(GObj *gobj)
  					gSCManagerSceneData.scene_curr = nSCKind1PGame;
  
  					mnPlayersVSSetSceneDataClassicCoop();
@@ -100,8 +266,17 @@ index 9e161b9..946020a 100644
  					port_classic_coop_set_context(0);
  					syTaskmanSetLoadScene();
  					return;
+@@ -5388,7 +5493,7 @@ void mnPlayersVSInitVars(void)
+ 		extern int port_classic_coop_context(void);
+ 		if (port_classic_coop_context())
+ 		{
+-			for (i = 2; i < GMCOMMON_PLAYERS_MAX; i++)
++			for (i = (syNetLobbyIsRoomOpen() != FALSE) ? 3 : 2; i < GMCOMMON_PLAYERS_MAX; i++)
+ 			{
+ 				sMNPlayersVSSlots[i].pkind = nFTPlayerKindNot;
+ 				sMNPlayersVSSlots[i].fkind = nFTKindNull;
 diff --git a/src/sc/sc1pmode/sc1pbonusstage.c b/src/sc/sc1pmode/sc1pbonusstage.c
-index 8a7f873..29e106b 100644
+index 8a7f873..d35b266 100644
 --- a/src/sc/sc1pmode/sc1pbonusstage.c
 +++ b/src/sc/sc1pmode/sc1pbonusstage.c
 @@ -6,6 +6,7 @@ extern void port_coroutine_yield(void);
@@ -112,7 +287,24 @@ index 8a7f873..29e106b 100644
  #include <sys/video.h>
  #include <reloc_data.h>
  #include <sys/audio.h>
-@@ -482,7 +483,7 @@ void sc1PBonusStageInitVars(void)
+@@ -466,7 +467,15 @@ void sc1PBonusStageInitVars(void)
+ 			gSCManagerBattleState->players[player].costume = gSCManagerSceneData.coop_costume2;
+ 			gSCManagerBattleState->players[player].color = player;
+ 
+-			gSCManagerBattleState->pl_count = 2;
++			gSCManagerBattleState->pl_count = (sc1PManagerIsCoop3() != FALSE) ? 3 : 2;
++		}
++		else if (sc1PManagerIsCoop3() && (gSCManagerSceneData.scene_prev == nSCKind1PGame) && (player == gSCManagerSceneData.coop_player3))
++		{
++			gSCManagerBattleState->players[player].pkind = nFTPlayerKindMan;
++			gSCManagerBattleState->players[player].fkind = gSCManagerSceneData.coop_fkind3;
++			gSCManagerBattleState->players[player].costume = gSCManagerSceneData.coop_costume3;
++			gSCManagerBattleState->players[player].color = player;
++			gSCManagerBattleState->pl_count = 3;
+ 		}
+ #endif
+ 		else gSCManagerBattleState->players[player].pkind = nFTPlayerKindNot;
+@@ -482,9 +491,14 @@ void sc1PBonusStageInitVars(void)
  
  		gSCManagerBattleState->is_team_battle = TRUE;
  		gSCManagerBattleState->is_not_teamshadows = TRUE;
@@ -120,9 +312,39 @@ index 8a7f873..29e106b 100644
 +		gSCManagerBattleState->is_team_attack = (syNetLobbyIsRun() != FALSE) ? syNetLobbyGetFriendlyFire() : (port_classic_coop_friendly_fire() ? TRUE : FALSE);
  		gSCManagerBattleState->players[gSCManagerSceneData.player].team = 0;
  		gSCManagerBattleState->players[gSCManagerSceneData.coop_player2].team = 0;
++
++		if (sc1PManagerIsCoop3() != FALSE)
++		{
++			gSCManagerBattleState->players[gSCManagerSceneData.coop_player3].team = 0;
++		}
  	}
+ #endif
+ }
+@@ -1116,6 +1130,11 @@ void sc1PBonusStageSetPlayerInterfacePositions(void)
+ 	{
+ 		dSC1PBonusStagePlayerInterfacePositions[gSCManagerSceneData.player] = 55;
+ 		dSC1PBonusStagePlayerInterfacePositions[gSCManagerSceneData.coop_player2] = 200;
++
++		if (sc1PManagerIsCoop3() != FALSE)
++		{
++			dSC1PBonusStagePlayerInterfacePositions[gSCManagerSceneData.coop_player3] = 260;
++		}
+ 	}
+ 	else
+ 	{
+@@ -1179,6 +1198,10 @@ void sc1PBonusStageFuncStart(void)
+ 		{
+ 			desc.pos.x += 30.0F;
+ 		}
++		else if (sc1PManagerIsCoop3() && (player == gSCManagerSceneData.coop_player3))
++		{
++			desc.pos.x += 60.0F;
++		}
+ #endif
+ 		desc.lr = (desc.pos.x >= 0.0F) ? -1 : +1;
+ 
 diff --git a/src/sc/sc1pmode/sc1pgame.c b/src/sc/sc1pmode/sc1pgame.c
-index 2c4f782..067f8e1 100644
+index 2c4f782..d8b5882 100644
 --- a/src/sc/sc1pmode/sc1pgame.c
 +++ b/src/sc/sc1pmode/sc1pgame.c
 @@ -5,6 +5,7 @@ extern void port_coroutine_yield(void);
@@ -133,7 +355,28 @@ index 2c4f782..067f8e1 100644
  #include <sys/video.h>
  #include <sys/dma.h>
  #include <reloc_data.h>
-@@ -1060,6 +1061,10 @@ void sc1PGameSetupStageAll(void)
+@@ -859,7 +860,8 @@ s32 sc1PGameGetNextFreePlayerPort(s32 player)
+         {
+             player = (player == (GMCOMMON_PLAYERS_MAX - 1)) ? 0 : player + 1;
+         }
+-        while ((player == gSCManagerSceneData.player) || (player == gSCManagerSceneData.coop_player2));
++        while ((player == gSCManagerSceneData.player) || (player == gSCManagerSceneData.coop_player2) ||
++               ((sc1PManagerIsCoop3() != FALSE) && (player == gSCManagerSceneData.coop_player3)));
+ 
+         return player;
+     }
+@@ -880,6 +882,10 @@ sb32 sc1PGameCoopHumanCostumeMatch(s32 fkind, s32 costume)
+     {
+         return TRUE;
+     }
++    if ((sc1PManagerIsCoop3() != FALSE) && (gSCManagerSceneData.coop_fkind3 == fkind) && (gSCManagerSceneData.coop_costume3 == costume))
++    {
++        return TRUE;
++    }
+     return FALSE;
+ }
+ 
+@@ -1060,6 +1066,10 @@ void sc1PGameSetupStageAll(void)
      gSCManagerBattleState->gkind = stagesetup->gkind;
      gSCManagerBattleState->is_team_attack = comsetup->is_team_attack;
  #ifdef PORT
@@ -144,8 +387,169 @@ index 2c4f782..067f8e1 100644
      /* Co-op: the blanket clear above wiped P2's slot — re-activate it on
       * every common stage and the Master Hand fight. */
      if (sc1PManagerIsCoopActive() && (gSCManagerSceneData.spgame_stage <= nSC1PGameStageCommonEnd))
+@@ -1076,6 +1086,15 @@ void sc1PGameSetupStageAll(void)
+ 
+         gSCManagerBattleState->players[p2_slot].is_single_stockicon = FALSE;
+         sSC1PGamePlayerSetups[p2_slot].mapobj_kind = nMPMapObjKind1PGamePlayer;
++
++        if (sc1PManagerIsCoop3() != FALSE)
++        {
++            s32 p3_slot = gSCManagerSceneData.coop_player3;
++
++            gSCManagerBattleState->players[p3_slot].pkind = nFTPlayerKindMan;
++            gSCManagerBattleState->players[p3_slot].is_single_stockicon = FALSE;
++            sSC1PGamePlayerSetups[p3_slot].mapobj_kind = nMPMapObjKind1PGamePlayer;
++        }
+     }
+ #endif
+ 
+@@ -1163,6 +1182,19 @@ void sc1PGameSetupStageAll(void)
+         {
+             gSCManagerBattleState->players[gSCManagerSceneData.player].stock_count = 0;
+         }
++        if (sc1PManagerIsCoop3() != FALSE)
++        {
++            s32 p3_slot = gSCManagerSceneData.coop_player3;
++
++            gSCManagerBattleState->players[p3_slot].pkind = nFTPlayerKindMan;
++            gSCManagerBattleState->players[p3_slot].is_single_stockicon = is_challenger ? TRUE : FALSE;
++            sSC1PGamePlayerSetups[p3_slot].mapobj_kind = is_challenger ? nMPMapObjKind1PGameChallengerPlayer : nMPMapObjKind1PGamePlayer;
++
++            if (gSCManagerBattleState->players[p3_slot].stock_count < 0)
++            {
++                gSCManagerBattleState->players[p3_slot].stock_count = 0;
++            }
++        }
+     }
+ #endif
+     if (gSCManagerSceneData.spgame_stage <= nSC1PGameStageCommonEnd)
+@@ -1192,6 +1224,11 @@ void sc1PGameSetupStageAll(void)
+     if (sc1PManagerIsCoopActive())
+     {
+         sSC1PGamePlayerSetups[gSCManagerSceneData.coop_player2].is_skip_entry = sSC1PGamePlayerSetups[gSCManagerSceneData.player].is_skip_entry;
++
++        if (sc1PManagerIsCoop3() != FALSE)
++        {
++            sSC1PGamePlayerSetups[gSCManagerSceneData.coop_player3].is_skip_entry = sSC1PGamePlayerSetups[gSCManagerSceneData.player].is_skip_entry;
++        }
+     }
+ #endif
+     player = gSCManagerSceneData.player;
+@@ -1223,6 +1260,10 @@ void sc1PGameSetupStageAll(void)
+                 sSC1PGamePlayerSetups[player].mapobj_kind = nMPMapObjKind1PGameAllyStart;
+                 continue;
+             }
++            if ((sc1PManagerIsCoop3() != FALSE) && (i >= 1))
++            {
++                continue; /* three humans leave no free port for a CPU ally */
++            }
+ #endif
+             gSCManagerBattleState->players[gSCManagerSceneData.ally_players[i]].level = comsetup->ally_level[gSCManagerBackupData.spgame_difficulty];
+             gSCManagerBattleState->players[gSCManagerSceneData.ally_players[i]].handicap = comsetup->ally_handicap[gSCManagerBackupData.spgame_difficulty];
+@@ -1295,7 +1336,7 @@ void sc1PGameSetupStageAll(void)
+ #ifdef PORT
+             /* Co-op: two humans leave only two slots for the enemy team;
+              * the rest of the 18 Yoshis arrive through the respawn path. */
+-            if (sc1PManagerIsCoopActive() && (i >= 2))
++            if (sc1PManagerIsCoopActive() && (i >= sc1PManagerCoopEnemyCap()))
+             {
+                 break;
+             }
+@@ -1355,7 +1396,7 @@ void sc1PGameSetupStageAll(void)
+         {
+ #ifdef PORT
+             /* Co-op: two slots for the Polygon team; respawns cover the rest. */
+-            if (sc1PManagerIsCoopActive() && (i >= 2))
++            if (sc1PManagerIsCoopActive() && (i >= sc1PManagerCoopEnemyCap()))
+             {
+                 break;
+             }
+@@ -1429,7 +1470,7 @@ void sc1PGameSetupStageAll(void)
+         {
+ #ifdef PORT
+             /* Co-op: two Polygon racers max — P1 + P2 + 2 fills the slots. */
+-            if (sc1PManagerIsCoopActive() && (i >= 2))
++            if (sc1PManagerIsCoopActive() && (i >= sc1PManagerCoopEnemyCap()))
+             {
+                 break;
+             }
+@@ -1721,7 +1762,7 @@ void sc1PGameWaitStageTeamUpdate(void)
+ #ifdef PORT
+         /* Co-op: P2 gets the same entry animation as P1, not the enemy
+          * snap-into-place. */
+-        else if (sc1PManagerIsCoopActive() && (player == gSCManagerSceneData.coop_player2))
++        else if (sc1PManagerIsCoopPartner(player))
+         {
+             ftCommonAppearSetStatus(fighter_gobj);
+         }
+@@ -1835,6 +1876,16 @@ void sc1PGameWaitStageBossUpdate(void)
+             ftParamUnlockPlayerControl(p2_gobj);
+             ftGetStruct(p2_gobj)->camera_mode = nFTCameraModeDefault;
+         }
++        if (sc1PManagerIsCoop3() != FALSE)
++        {
++            GObj *p3_gobj = gSCManagerBattleState->players[gSCManagerSceneData.coop_player3].fighter_gobj;
++
++            if (p3_gobj != NULL)
++            {
++                ftParamUnlockPlayerControl(p3_gobj);
++                ftGetStruct(p3_gobj)->camera_mode = nFTCameraModeDefault;
++            }
++        }
+     }
+ #endif
+ 
+@@ -2085,8 +2136,7 @@ void sc1PGameSetPlayerDefeatStats(s32 player, s32 team_order)
+     {
+ #ifdef PORT
+         /* Co-op: P1's elimination only ends the stage if P2 is already out. */
+-        if (sc1PManagerIsCoopActive() &&
+-            (gSCManagerBattleState->players[gSCManagerSceneData.coop_player2].stock_count != -1))
++        if (sc1PManagerIsCoopActive() && (sc1PManagerCoopAnyAlive() != FALSE))
+         {
+             return;
+         }
+@@ -2096,11 +2146,11 @@ void sc1PGameSetPlayerDefeatStats(s32 player, s32 team_order)
+ #ifdef PORT
+     /* Co-op: P2 running out last also ends the stage. */
+     else if (sc1PManagerIsCoopActive() &&
+-             (player == gSCManagerSceneData.coop_player2) &&
++             sc1PManagerIsCoopPartner(player) &&
+              (gSCManagerBattleState->players[player].stock_count == -1) &&
+              (gSCManagerBattleState->game_status != nSCBattleGameStatusEnd))
+     {
+-        if (gSCManagerBattleState->players[gSCManagerSceneData.player].stock_count == -1)
++        if (sc1PManagerCoopAllOut() != FALSE)
+         {
+             ifCommonAnnounceEndMessage();
+         }
+@@ -2482,6 +2532,12 @@ void sc1PGameFuncStart(void)
+         {
+             desc.pos.x += 750.0F;
+         }
++        if ((sc1PManagerIsCoop3() != FALSE) && (i == gSCManagerSceneData.coop_player3) &&
++            (sSC1PGamePlayerSetups[i].mapobj_kind == sSC1PGamePlayerSetups[gSCManagerSceneData.player].mapobj_kind))
++        {
++            /* P2 may already stand at +750 (shared point) or on an authored ally point. */
++            desc.pos.x += (sSC1PGamePlayerSetups[gSCManagerSceneData.coop_player2].mapobj_kind == sSC1PGamePlayerSetups[gSCManagerSceneData.player].mapobj_kind) ? 1500.0F : 750.0F;
++        }
+ #endif
+         desc.lr = sc1PGameGetEnemyStartLR(i);
+ 
+@@ -3286,6 +3342,11 @@ void sc1PGameInitBonusStats(void)
+         if (sc1PManagerIsCoopActive())
+         {
+             gSCManagerSceneData.spgame_score += gSCManagerBattleState->players[gSCManagerSceneData.coop_player2].score * 1000;
++
++            if (sc1PManagerIsCoop3() != FALSE)
++            {
++                gSCManagerSceneData.spgame_score += gSCManagerBattleState->players[gSCManagerSceneData.coop_player3].score * 1000;
++            }
+         }
+ #endif
+         sc1PGameAppendBonusStats();
 diff --git a/src/sc/sc1pmode/sc1pmanager.c b/src/sc/sc1pmode/sc1pmanager.c
-index 95e709d..0ea505c 100644
+index 95e709d..cea8f30 100644
 --- a/src/sc/sc1pmode/sc1pmanager.c
 +++ b/src/sc/sc1pmode/sc1pmanager.c
 @@ -1,3 +1,4 @@
@@ -153,16 +557,58 @@ index 95e709d..0ea505c 100644
  #include <gr/ground.h>
  #include <ft/fighter.h>
  #include <sc/scene.h>
-@@ -131,7 +132,7 @@ sb32 sc1PManagerIsCoopActive(void)
+@@ -131,7 +132,49 @@ sb32 sc1PManagerIsCoopActive(void)
  {
  	extern int port_enhancement_classic_coop(void);
  
 -	return (port_enhancement_classic_coop() != 0) && (gSCManagerSceneData.coop_player2 != SCCOMMON_COOP_NO_PLAYER2);
 +	return ((port_enhancement_classic_coop() != 0) || (syNetLobbyIsRun() != FALSE)) && (gSCManagerSceneData.coop_player2 != SCCOMMON_COOP_NO_PLAYER2);
++}
++
++/* Online 1P can have a third human (coop_player3). */
++sb32 sc1PManagerIsCoop3(void)
++{
++	return (sc1PManagerIsCoopActive() != FALSE) && (syNetLobbyIsRun() != FALSE) && (gSCManagerSceneData.coop_player3 != SCCOMMON_COOP_NO_PLAYER2);
++}
++
++sb32 sc1PManagerIsCoopPartner(s32 slot)
++{
++	if (sc1PManagerIsCoopActive() == FALSE)
++	{
++		return FALSE;
++	}
++	return (slot == gSCManagerSceneData.coop_player2) || ((sc1PManagerIsCoop3() != FALSE) && (slot == gSCManagerSceneData.coop_player3));
++}
++
++sb32 sc1PManagerCoopAnyAlive(void)
++{
++	if (gSCManager1PGameBattleState.players[gSCManagerSceneData.player].stock_count != -1)
++	{
++		return TRUE;
++	}
++	if (gSCManager1PGameBattleState.players[gSCManagerSceneData.coop_player2].stock_count != -1)
++	{
++		return TRUE;
++	}
++	if ((sc1PManagerIsCoop3() != FALSE) && (gSCManager1PGameBattleState.players[gSCManagerSceneData.coop_player3].stock_count != -1))
++	{
++		return TRUE;
++	}
++	return FALSE;
++}
++
++sb32 sc1PManagerCoopAllOut(void)
++{
++	return (sc1PManagerCoopAnyAlive() == FALSE) ? TRUE : FALSE;
++}
++
++s32 sc1PManagerCoopEnemyCap(void)
++{
++	return (sc1PManagerIsCoop3() != FALSE) ? 1 : 2;
  }
  #endif
  
-@@ -300,6 +301,9 @@ void sc1PManagerUpdateScene(void)
+@@ -300,6 +343,9 @@ void sc1PManagerUpdateScene(void)
      s32 player;
      s32 spgame_stage;
  
@@ -172,6 +618,99 @@ index 95e709d..0ea505c 100644
      sSC1PManagerScenePrev = gSCManagerSceneData.scene_prev;
  
      gSCManager1PGameBattleState.is_team_battle = TRUE;
+@@ -363,7 +409,8 @@ void sc1PManagerUpdateScene(void)
+ 
+         for (free_port = 0; free_port < GMCOMMON_PLAYERS_MAX; free_port++)
+         {
+-            if ((free_port != gSCManagerSceneData.player) && (free_port != p2_slot))
++            if ((free_port != gSCManagerSceneData.player) && (free_port != p2_slot) &&
++                ((sc1PManagerIsCoop3() == FALSE) || (free_port != gSCManagerSceneData.coop_player3)))
+             {
+                 gSCManagerSceneData.ally_players[1] = free_port;
+                 break;
+@@ -394,6 +441,23 @@ void sc1PManagerUpdateScene(void)
+         gSCManager1PGameBattleState.players[p2_slot].costume = gSCManagerSceneData.coop_costume2;
+         gSCManager1PGameBattleState.players[p2_slot].stock_count = gSCManagerBackupData.spgame_stock_count;
+         gSCManager1PGameBattleState.players[p2_slot].is_spgame_enemy = FALSE;
++
++        if (sc1PManagerIsCoop3() != FALSE)
++        {
++            /* Online 1P with a third human: configured exactly like P2 (always a human, team 0). */
++            s32 p3_slot = gSCManagerSceneData.coop_player3;
++
++            gSCManager1PGameBattleState.players[p3_slot].handicap = FTCOMMON_HANDICAP_DEFAULT;
++            gSCManager1PGameBattleState.players[p3_slot].pkind = nFTPlayerKindMan;
++            gSCManager1PGameBattleState.players[p3_slot].team = 0;
++            gSCManager1PGameBattleState.players[p3_slot].shade = gSCManagerSceneData.coop_shade3;
++            gSCManager1PGameBattleState.players[p3_slot].color = p3_slot;
++            gSCManager1PGameBattleState.players[p3_slot].tag = p3_slot;
++            gSCManager1PGameBattleState.players[p3_slot].fkind = gSCManagerSceneData.coop_fkind3;
++            gSCManager1PGameBattleState.players[p3_slot].costume = gSCManagerSceneData.coop_costume3;
++            gSCManager1PGameBattleState.players[p3_slot].stock_count = gSCManagerBackupData.spgame_stock_count;
++            gSCManager1PGameBattleState.players[p3_slot].is_spgame_enemy = FALSE;
++        }
+     }
+ #endif
+     if (gSCManagerSceneData.spgame_stage >= nSC1PGameStageChallengerStart)
+@@ -540,8 +604,7 @@ void sc1PManagerUpdateScene(void)
+                      * stocks; only both-eliminated (or time out) loses. */
+                     if (sc1PManagerIsCoopActive())
+                     {
+-                        if (((gSCManager1PGameBattleState.players[gSCManagerSceneData.player].stock_count == -1) &&
+-                             (gSCManager1PGameBattleState.players[gSCManagerSceneData.coop_player2].stock_count == -1)) ||
++                        if ((sc1PManagerCoopAllOut() != FALSE) ||
+                             (gSCManager1PGameBattleState.time_remain == 0))
+                         {
+                             is_player_lose = TRUE;
+@@ -581,6 +644,11 @@ void sc1PManagerUpdateScene(void)
+                     if (sc1PManagerIsCoopActive())
+                     {
+                         gSCManager1PGameBattleState.players[gSCManagerSceneData.coop_player2].stock_count = gSCManagerBackupData.spgame_stock_count;
++
++                        if (sc1PManagerIsCoop3() != FALSE)
++                        {
++                            gSCManager1PGameBattleState.players[gSCManagerSceneData.coop_player3].stock_count = gSCManagerBackupData.spgame_stock_count;
++                        }
+                     }
+ #endif
+                     gSCManagerSceneData.spgame_stage--;
+@@ -712,6 +780,11 @@ skip_main_stages:
+         if (sc1PManagerIsCoopActive())
+         {
+             gSCManager1PGameBattleState.players[gSCManagerSceneData.coop_player2].stock_count = 0;
++
++            if (sc1PManagerIsCoop3() != FALSE)
++            {
++                gSCManager1PGameBattleState.players[gSCManagerSceneData.coop_player3].stock_count = 0;
++            }
+         }
+ #endif
+ 
+@@ -741,7 +814,7 @@ skip_main_stages:
+          * landed the KO while P1 was already out. The P1-only solo test below
+          * would mislabel that as a loss. */
+         if (((gSCManager1PGameBattleState.players[gSCManagerSceneData.player].stock_count != -1) ||
+-             (sc1PManagerIsCoopActive() && (gSCManager1PGameBattleState.players[gSCManagerSceneData.coop_player2].stock_count != -1))) &&
++             (sc1PManagerIsCoopActive() && (sc1PManagerCoopAnyAlive() != FALSE))) &&
+             (gSCManager1PGameBattleState.time_remain != 0))
+ #else
+         if ((gSCManager1PGameBattleState.players[gSCManagerSceneData.player].stock_count != -1) && (gSCManager1PGameBattleState.time_remain != 0))
+diff --git a/src/sc/sc1pmode/sc1pmanager.h b/src/sc/sc1pmode/sc1pmanager.h
+index ee0a491..9a399b0 100644
+--- a/src/sc/sc1pmode/sc1pmanager.h
++++ b/src/sc/sc1pmode/sc1pmanager.h
+@@ -33,6 +33,11 @@ extern u8 gSC1PManagerKirbyTeamModelPartID;
+ // Classic Co-op: TRUE while a co-op classic run is active (port toggle
+ // latched on AND the CSS handed off a second human in coop_player2).
+ extern sb32 sc1PManagerIsCoopActive(void);
++extern sb32 sc1PManagerIsCoop3(void);                   // third human (online) present
++extern sb32 sc1PManagerIsCoopPartner(s32 slot);         // slot is P2 or P3 (not P1)
++extern sb32 sc1PManagerCoopAllOut(void);                // every human out of stocks
++extern sb32 sc1PManagerCoopAnyAlive(void);              // at least one human still has stocks
++extern s32 sc1PManagerCoopEnemyCap(void);               // enemy slots left for team stages
+ #endif
+ 
+ extern s32 sc1PManagerGetFighterKindsNum(u16 flag);
 diff --git a/src/sc/sccommon/scvsbattle.c b/src/sc/sccommon/scvsbattle.c
 index 51ca7f2..19259db 100644
 --- a/src/sc/sccommon/scvsbattle.c
@@ -206,10 +745,18 @@ index 51ca7f2..19259db 100644
  	gSCManagerSceneData.scene_curr = nSCKindVSResults;
  
 diff --git a/src/sc/scmanager.c b/src/sc/scmanager.c
-index 93de722..a94dbac 100644
+index 93de722..f5bbd40 100644
 --- a/src/sc/scmanager.c
 +++ b/src/sc/scmanager.c
-@@ -1887,6 +1887,7 @@ void scManagerRunPrintGObjStatus(void)
+@@ -910,6 +910,7 @@ void scManagerRunLoop(sb32 arg)
+ 	 * as port 0, which is a valid port — the sentinel must be explicit.
+ 	 * The co-op CSS rewrites this on every Classic entry. */
+ 	gSCManagerSceneData.coop_player2 = SCCOMMON_COOP_NO_PLAYER2;
++	gSCManagerSceneData.coop_player3 = SCCOMMON_COOP_NO_PLAYER2;
+ 	{
+ 		const char *env = getenv("SSB64_START_SCENE");
+ 		if (env != NULL)
+@@ -1887,6 +1888,7 @@ void scManagerRunPrintGObjStatus(void)
   * stores that taskman/scmanager consume at the next frame boundary. */
  static ub32 sPortResetPending = FALSE;
  static s32 sPortResetTarget = nSCKindOpeningRoom;
@@ -217,7 +764,7 @@ index 93de722..a94dbac 100644
  
  void portSCManagerRequestReset(void)
  {
-@@ -1894,6 +1895,7 @@ void portSCManagerRequestReset(void)
+@@ -1894,6 +1896,7 @@ void portSCManagerRequestReset(void)
  	extern int port_enhancement_boot_to_vs_css(void);
  
  	sPortResetTarget = port_enhancement_boot_to_vs_css() ? nSCKindPlayersVS : nSCKindOpeningRoom;
@@ -225,7 +772,7 @@ index 93de722..a94dbac 100644
  	sPortResetPending = TRUE;
  
  	/* Speak the game's native match-abort language: is_reset is what the
-@@ -1914,6 +1916,34 @@ void portSCManagerRequestReset(void)
+@@ -1914,6 +1917,34 @@ void portSCManagerRequestReset(void)
  	syTaskmanSetLoadScene();
  }
  
@@ -260,7 +807,7 @@ index 93de722..a94dbac 100644
  /* If a reset is pending: re-apply the target scene (undoing any scene_curr
   * writes a nested manager made since the request), clear the pending flag,
   * and return TRUE so nested managers know to unwind to scManagerRunLoop. */
-@@ -1925,7 +1955,7 @@ sb32 portSCManagerConsumeReset(void)
+@@ -1925,7 +1956,7 @@ sb32 portSCManagerConsumeReset(void)
  	}
  	sPortResetPending = FALSE;
  
@@ -269,6 +816,55 @@ index 93de722..a94dbac 100644
  	gSCManagerSceneData.scene_curr = sPortResetTarget;
  
  	return TRUE;
+diff --git a/src/sc/sctypes.h b/src/sc/sctypes.h
+index 6c8e8bd..44a31ec 100644
+--- a/src/sc/sctypes.h
++++ b/src/sc/sctypes.h
+@@ -487,6 +487,10 @@ struct SCCommonData
+ 	u8 coop_shade2;									// P2's duplicate-costume shade
+ 	u8 coop_pkind2;									// P2's player kind
+ 	u8 coop_level2;									// P2's CPU level
++	u8 coop_player3;								// Third human (online only): controller port, or SCCOMMON_COOP_NO_PLAYER2
++	u8 coop_fkind3;
++	u8 coop_costume3;
++	u8 coop_shade3;
+ #endif
+ };
+ 
+diff --git a/src/sys/controller.c b/src/sys/controller.c
+index 428e99d..65eb79f 100644
+--- a/src/sys/controller.c
++++ b/src/sys/controller.c
+@@ -7,6 +7,9 @@
+ #include "enhancements/enhancements.h"
+ #include "sc/scmanager.h"
+ #include "sc/sctypes.h"
++#ifdef PORT
++#include <sys/netlobby.h>
++#endif
+ 
+ // 0x800450F0
+ OSMesgQueue sSYControllerInitMesgQueue; // Queue for OS controller Init, Status, and Read
+@@ -120,6 +123,19 @@ void syControllerReadDeviceData(void)
+     osContStartReadData(&sSYControllerInitMesgQueue);
+     osRecvMesg(&sSYControllerInitMesgQueue, NULL, OS_MESG_BLOCK);
+     osContGetReadData(sSYControllerData);
++#ifdef PORT
++    /* Online room open: only physical port 0 plays (it drives this player's slot);
++     * the other local ports are switched off until the room is closed or left. */
++    if (syNetLobbyIsRoomOpen() != FALSE)
++    {
++        for (i = (syNetLobbyBlockPad0() != FALSE) ? 0 : 1; i < MAXCONTROLLERS; i++)
++        {
++            sSYControllerData[i].button = 0;
++            sSYControllerData[i].stick_x = 0;
++            sSYControllerData[i].stick_y = 0;
++        }
++    }
++#endif
+ 
+     for (i = 0; i != MAXCONTROLLERS; i++)
+     {
 diff --git a/src/sys/netinput.c b/src/sys/netinput.c
 index c6ecef7..3e6d3e0 100644
 --- a/src/sys/netinput.c
@@ -351,10 +947,10 @@ index c6ecef7..3e6d3e0 100644
  
 diff --git a/src/sys/netlobby.c b/src/sys/netlobby.c
 new file mode 100644
-index 0000000..09d3249
+index 0000000..9a508dd
 --- /dev/null
 +++ b/src/sys/netlobby.c
-@@ -0,0 +1,566 @@
+@@ -0,0 +1,674 @@
 +#include <sys/netlobby.h>
 +
 +#ifdef PORT
@@ -388,7 +984,8 @@ index 0000000..09d3249
 +	u8 player, fkind, costume, shade;
 +	u8 coop_player2, coop_fkind2, coop_costume2, coop_shade2;
 +	u8 coop_pkind2, coop_level2, spgame_stage, difficulty;
-+	u8 stock_count, friendly_fire, pad[2];
++	u8 stock_count, friendly_fire, coop_player3, coop_fkind3;
++	u8 coop_costume3, coop_shade3, pad[2];
 +
 +} SYNetLobbyRunConfig;
 +
@@ -449,6 +1046,10 @@ index 0000000..09d3249
 +	{
 +		return 0;
 +	}
++	if (np_get_host_costume() >= 0)
++	{
++		gSCManagerBattleState->players[0].costume = np_get_host_costume(); /* host's pick from the Online menu */
++	}
 +	for (slot = 1; slot < MAXCONTROLLERS; slot++)
 +	{
 +		if (np_slot_used(slot) != 0)
@@ -471,6 +1072,7 @@ index 0000000..09d3249
 +	sSYNetLobbyIsSession = FALSE;
 +	sSYNetLobbyIsHeld = FALSE;
 +	sSYNetLobbyMask = 0;
++	gSCManagerSceneData.coop_player3 = 0xFF; /* no third human outside an online run */
 +}
 +
 +sb32 syNetLobbyIsRun(void)
@@ -490,6 +1092,10 @@ index 0000000..09d3249
 +	gSCManagerSceneData.coop_shade2 = cfg->coop_shade2;
 +	gSCManagerSceneData.coop_pkind2 = cfg->coop_pkind2;
 +	gSCManagerSceneData.coop_level2 = cfg->coop_level2;
++	gSCManagerSceneData.coop_player3 = cfg->coop_player3;
++	gSCManagerSceneData.coop_fkind3 = cfg->coop_fkind3;
++	gSCManagerSceneData.coop_costume3 = cfg->coop_costume3;
++	gSCManagerSceneData.coop_shade3 = cfg->coop_shade3;
 +	gSCManagerBackupData.spgame_difficulty = cfg->difficulty;
 +	gSCManagerBackupData.spgame_stock_count = cfg->stock_count;
 +	sSYNetLobbyRunSeed = cfg->rng_seed;
@@ -502,22 +1108,47 @@ index 0000000..09d3249
 +{
 +	SYNetLobbyRunConfig cfg;
 +	int fighter, costume;
++	int p2_slot = 1, p3_slot = -1;
 +
 +	if ((sSYNetLobbyIsMatch != FALSE) || (np_state() != NP_HOSTING) || (np_get_mode() != 1) ||
-+	    (np_player_count() != 2))
++	    (np_player_count() < 2) || (np_player_count() > 3))
 +	{
 +		return FALSE;
 +	}
-+	np_slot_choice(1, &fighter, &costume);
++	{
++		int s, found = 0;
++
++		for (s = 1; s < MAXCONTROLLERS; s++)
++		{
++			if (np_slot_used(s) != 0)
++			{
++				if (found == 0)
++				{
++					p2_slot = s;
++				}
++				else if (found == 1)
++				{
++					p3_slot = s;
++				}
++				found++;
++			}
++		}
++	}
++	np_slot_choice(p2_slot, &fighter, &costume);
 +
 +	memset(&cfg, 0, sizeof(cfg));
 +	cfg.magic = SYNETLOBBY_RUN_MAGIC;
 +	cfg.rng_seed = syUtilsRandSeed();
 +	cfg.player = 0;
 +	cfg.fkind = gSCManagerSceneData.fkind;
++	if (np_get_host_costume() >= 0)
++	{
++		gSCManagerSceneData.costume = np_get_host_costume();
++	}
 +	cfg.costume = gSCManagerSceneData.costume;
 +	cfg.spgame_stage = gSCManagerSceneData.spgame_stage;
-+	cfg.coop_player2 = 1;
++	cfg.coop_player2 = p2_slot;
++	cfg.coop_player3 = 0xFF; /* SCCOMMON_COOP_NO_PLAYER2 */
 +	cfg.coop_fkind2 = syNetLobbyGetFighterKind(fighter);
 +	cfg.coop_costume2 = costume & 3;
 +	cfg.coop_shade2 = 0;
@@ -533,6 +1164,22 @@ index 0000000..09d3249
 +	if ((cfg.coop_fkind2 == cfg.fkind) && (cfg.coop_costume2 == cfg.costume))
 +	{
 +		cfg.coop_costume2 = (cfg.coop_costume2 + 1) & 3;
++	}
++	if (p3_slot >= 0)
++	{
++		int f3, c3;
++
++		np_slot_choice(p3_slot, &f3, &c3);
++		cfg.coop_player3 = p3_slot;
++		cfg.coop_fkind3 = syNetLobbyGetFighterKind(f3);
++		cfg.coop_costume3 = c3 & 3;
++
++		/* Different look from P1 and P2 when the same fighter is picked. */
++		while (((cfg.coop_fkind3 == cfg.fkind) && (cfg.coop_costume3 == cfg.costume)) ||
++		       ((cfg.coop_fkind3 == cfg.coop_fkind2) && (cfg.coop_costume3 == cfg.coop_costume2)))
++		{
++			cfg.coop_costume3 = (cfg.coop_costume3 + 1) & 3;
++		}
 +	}
 +	if (np_host_begin_match(&cfg, sizeof(cfg)) == 0)
 +	{
@@ -894,7 +1541,64 @@ index 0000000..09d3249
 +
 +sb32 syNetLobbyGetFriendlyFire(void) { return sSYNetLobbyFriendlyFire; }
 +
++sb32 syNetLobbyIsRoomOpen(void)
++{
++	int st = np_state();
++
++	return ((st == NP_HOSTING) || (st == NP_CONNECTED)) ? TRUE : FALSE;
++}
++
++/* ---- character select panels -------------------------------------------- */
++
++sb32 syNetLobbyPanelsEnabled(void)
++{
++	return ((syNetLobbyIsRoomOpen() != FALSE) && (np_get_panels() != 0) && (sSYNetLobbyIsMatch == FALSE)) ? TRUE : FALSE;
++}
++
++/* TRUE when `slot` has a connected player; fills the fighter kind / costume they picked in the Online menu. */
++sb32 syNetLobbyGetPanelChoice(s32 slot, s32 *fkind, s32 *costume)
++{
++	int fighter, cost;
++
++	if ((slot < 0) || (slot >= MAXCONTROLLERS) || (np_slot_used(slot) == 0))
++	{
++		return FALSE;
++	}
++	np_slot_choice(slot, &fighter, &cost);
++	*fkind = syNetLobbyGetFighterKind(fighter);
++	*costume = cost & 3;
++	return TRUE;
++}
++
++/* Host: broadcast what P1 currently has selected on the character select screen. */
++void syNetLobbyPublishHostChoice(s32 fkind, s32 costume)
++{
++	static s32 sLastFkind = -1, sLastCostume = -1;
++
++	if ((np_state() != NP_HOSTING) || (fkind < nFTKindPlayableStart) || (fkind >= (nFTKindPlayableStart + syNetLobbyGetFighterCount())))
++	{
++		return;
++	}
++	if ((fkind != sLastFkind) || (costume != sLastCostume))
++	{
++		sLastFkind = fkind;
++		sLastCostume = costume;
++		np_set_choice(fkind - nFTKindPlayableStart, costume & 3);
++	}
++}
++
++/* A client in the lobby does not drive the character select (it picks in the Online menu). */
++sb32 syNetLobbyBlockPad0(void)
++{
++	return ((np_state() == NP_CONNECTED) && (sSYNetLobbyIsMatch == FALSE) && (np_get_panels() != 0)) ? TRUE : FALSE;
++}
++
 +#else /* !PORT */
++sb32 syNetLobbyPanelsEnabled(void) { return FALSE; }
++sb32 syNetLobbyGetPanelChoice(s32 slot, s32 *fkind, s32 *costume) { return FALSE; }
++void syNetLobbyPublishHostChoice(s32 fkind, s32 costume) {}
++sb32 syNetLobbyBlockPad0(void) { return FALSE; }
++sb32 syNetLobbyIsRoomOpen(void) { return FALSE; }
 +sb32 syNetLobbyGetFriendlyFire(void) { return FALSE; }
 +void syNetLobbyReseedTick(u32 tick) {}
 +
@@ -923,10 +1627,10 @@ index 0000000..09d3249
 +#endif
 diff --git a/src/sys/netlobby.h b/src/sys/netlobby.h
 new file mode 100644
-index 0000000..dc6a52b
+index 0000000..1a8e6cf
 --- /dev/null
 +++ b/src/sys/netlobby.h
-@@ -0,0 +1,34 @@
+@@ -0,0 +1,39 @@
 +#ifndef _SYNETLOBBY_H_
 +#define _SYNETLOBBY_H_
 +
@@ -950,6 +1654,11 @@ index 0000000..dc6a52b
 +extern void syNetLobbyStopVSSession(void);
 +extern sb32 syNetLobbyCheckExecutionReady(void);
 +extern void syNetLobbyReseedTick(u32 tick);
++extern sb32 syNetLobbyPanelsEnabled(void);
++extern sb32 syNetLobbyGetPanelChoice(s32 slot, s32 *fkind, s32 *costume);
++extern void syNetLobbyPublishHostChoice(s32 fkind, s32 costume);
++extern sb32 syNetLobbyBlockPad0(void);
++extern sb32 syNetLobbyIsRoomOpen(void); /* hosting or connected to an online room */
 +extern sb32 syNetLobbyGetFriendlyFire(void);
 +extern sb32 syNetLobbyCheckInputsReady(u32 tick);  /* called by syNetInputFuncRead */
 +extern void syNetLobbySetHeld(sb32 is_held);

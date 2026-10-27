@@ -59,6 +59,12 @@ int np_get_run_stocks(void) { return sRunStocks; }
 static int sFriendlyFire = 0;
 void np_set_friendly_fire(int on) { sFriendlyFire = on ? 1 : 0; }
 int np_get_friendly_fire(void) { return sFriendlyFire; }
+static int sHostCostume = -1;
+void np_set_host_costume(int c) { sHostCostume = (c < 0) ? -1 : (c & 3); }
+int np_get_host_costume(void) { return sHostCostume; }
+static int sPanels = 1;
+void np_set_panels(int on) { sPanels = on ? 1 : 0; }
+int np_get_panels(void) { return sPanels; }
 
 int np_host_begin_match(const void *b, int n) { return S().HostBeginMatch(b, n) ? 1 : 0; }
 int np_client_take_match(void *out, int cap) { return S().ClientTakeMatch(out, cap); }

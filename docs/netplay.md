@@ -79,3 +79,16 @@ sin rollback):
 - Friendly fire (1P online): host checkbox, default OFF, synced to the client in the run config.
 - The host can switch VS <-> 1P in the room window without closing it (1P needs <= 2 players).
 - 1P with 3-4 players is NOT implemented: the co-op code supports exactly one extra human (`coop_player2`).
+
+## Update 3: 1P Mode with 3 players, roster strip, host costume
+- 1P Mode online now supports up to 3 players (host + 2 friends). New `coop_player3` fields in `SCSceneData`; helpers in `sc1pmanager.c` (`sc1PManagerIsCoop3`, `IsCoopPartner`, `CoopAnyAlive/AllOut`, `CoopEnemyCap`).
+- With 3 humans only ONE port is left for enemies: team stages (Yoshi/Polygon) spawn 1 enemy at a time (the rest through respawn), and Giant DK's stage has no CPU ally. 4 humans is impossible (every enemy needs a player port).
+- Character select shows a strip with connected players (name, fighter, costume).
+- Host can pick the P1 costume in the Online menu (or leave it to the character select screen).
+- The 1P intro screen only shows P2's card; P3 appears when the stage starts.
+
+## Update 4: local ports 2-4 switched off while in a room
+While hosting or connected to a room, only physical controller port 0 is read (it drives your online slot); ports 2-4 report neutral input (`syControllerReadDeviceData`, `syNetLobbyIsRoomOpen`). They work again as soon as the room is closed or you leave.
+
+## Update 5: players on the native character select panels
+In a room, every connected player is shown on the game's own character select panels (fighter model, name emblem, costume) with the player's name above the panel (`mnPlayersVSNetSyncPanels`). The host's real P1 selection is broadcast to the clients (`syNetLobbyPublishHostChoice`), so clients see P1 live. Clients' own pad 0 is neutral in the lobby so they cannot move the (hidden) cursors. Toggle: "Show connected players on the character select panels" in the Online menu (CVar `gNetplay.ShowPanels`); when off, the old name strip is drawn. 1P Mode allows panels for P1-P3.

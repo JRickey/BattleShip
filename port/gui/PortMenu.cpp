@@ -1706,6 +1706,8 @@ void RenderNetplayPanel(WidgetInfo& /*widget*/) {
     static int difficulty = 2;  // 0 Very Easy .. 4 Very Hard
     static int lives = 3;       // 1..5
     static bool friendlyFire = false;
+    static int hostCostume = -1; // -1 = pick on the character select screen
+    static bool showPanels = true;
     static int fighter = 0;
     static int costume = 0;
     static bool loaded = false;
@@ -1720,6 +1722,9 @@ void RenderNetplayPanel(WidgetInfo& /*widget*/) {
         difficulty = CVarGetInteger("gNetplay.Difficulty", 2);
         lives = CVarGetInteger("gNetplay.Lives", 3);
         friendlyFire = CVarGetInteger("gNetplay.FriendlyFire", 0) != 0;
+        hostCostume = CVarGetInteger("gNetplay.HostCostume", -1);
+        showPanels = CVarGetInteger("gNetplay.ShowPanels", 1) != 0;
+        np_set_panels(showPanels ? 1 : 0);
         fighter = CVarGetInteger("gNetplay.Fighter", 0);
         costume = CVarGetInteger("gNetplay.Costume", 0);
     }
@@ -1733,6 +1738,8 @@ void RenderNetplayPanel(WidgetInfo& /*widget*/) {
         CVarSetInteger("gNetplay.Difficulty", difficulty);
         CVarSetInteger("gNetplay.Lives", lives);
         CVarSetInteger("gNetplay.FriendlyFire", friendlyFire ? 1 : 0);
+        CVarSetInteger("gNetplay.HostCostume", hostCostume);
+        CVarSetInteger("gNetplay.ShowPanels", showPanels ? 1 : 0);
         CVarSetInteger("gNetplay.Fighter", fighter);
         CVarSetInteger("gNetplay.Costume", costume);
         Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
@@ -1760,8 +1767,8 @@ void RenderNetplayPanel(WidgetInfo& /*widget*/) {
         ImGui::BulletText("Lag or stuttering? The host can raise the Input delay before hosting.");
         ImGui::BulletText("If someone disconnects during a match, the match ends for everybody.");
         ImGui::BulletText("VS Mode: 2 to 4 players fight each other. The host chooses how many can join.");
-        ImGui::BulletText("1P Mode (experimental): you and ONE friend play the story mode together as allies.\n"
-                          "Only 2 players are supported. If it desyncs, the run is cancelled for both.");
+        ImGui::BulletText("1P Mode (experimental): you and up to TWO friends play the story mode together as allies.\n"
+                          "1P Mode only allows up to 3 players. If it desyncs, the run is cancelled for everybody.");
     };
 
     if (idle) {
@@ -1775,9 +1782,10 @@ void RenderNetplayPanel(WidgetInfo& /*widget*/) {
         ImGui::RadioButton("VS Mode (fight each other)", &mode, 0);
         ImGui::RadioButton("1P Mode (co-op, experimental)", &mode, 1);
         if (mode == 1) {
-            maxPlayers = 2;
+            maxPlayers = std::clamp(maxPlayers, 2, 3);
+            ImGui::SliderInt("Max players (1P Mode)", &maxPlayers, 2, 3);
             ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.3f, 1.0f),
-                               "1P Mode only supports 2 players online (the host and one friend, as allies).");
+                               "1P Mode only allows up to 3 players online (the host and up to two friends, as allies).");
             static const char* kDifficulties[] = { "Very Easy", "Easy", "Normal", "Hard", "Very Hard" };
             difficulty = std::clamp(difficulty, 0, 4);
             if (ImGui::BeginCombo("Difficulty", kDifficulties[difficulty])) {
@@ -1793,6 +1801,21 @@ void RenderNetplayPanel(WidgetInfo& /*widget*/) {
             maxPlayers = std::clamp(maxPlayers, 2, 4);
             ImGui::SliderInt("Max players", &maxPlayers, 2, 4);
         }
+        {
+            static const char* kCostumeLabels[] = { "From character select", "Costume 1", "Costume 2", "Costume 3", "Costume 4" };
+            hostCostume = std::clamp(hostCostume, -1, 3);
+            if (ImGui::BeginCombo("Your costume (Player 1)", kCostumeLabels[hostCostume + 1])) {
+                for (int i = -1; i < 4; i++) {
+                    if (ImGui::Selectable(kCostumeLabels[i + 1], i == hostCostume)) hostCostume = i;
+                }
+                ImGui::EndCombo();
+            }
+        }
+        if (ImGui::Checkbox("Show connected players on the character select panels", &showPanels)) {
+            np_set_panels(showPanels ? 1 : 0);
+            save();
+        }
+        ImGui::TextDisabled("Experimental. If the character select screen glitches, turn this off (a name strip is shown instead).");
         ImGui::SliderInt("Input delay (frames)", &delay, 1, 12);
         ImGui::TextDisabled("Higher = smoother over bad connections, but more input lag. 4-6 is good on Radmin.");
         if (ImGui::Button("Host game")) {
@@ -1802,7 +1825,8 @@ void RenderNetplayPanel(WidgetInfo& /*widget*/) {
                 np_set_mode(mode);
                 np_set_run_options(difficulty, lives - 1);
                 np_set_friendly_fire(friendlyFire ? 1 : 0);
-                np_set_max_players(mode == 1 ? 2 : maxPlayers);
+                np_set_host_costume(hostCostume);
+                np_set_max_players(mode == 1 ? std::clamp(maxPlayers, 2, 3) : maxPlayers);
             }
         }
 
@@ -1855,20 +1879,26 @@ void RenderNetplayPanel(WidgetInfo& /*widget*/) {
         ImGui::Text("Game mode (you can change it anytime)");
         ImGui::RadioButton("VS Mode", &newMode, 0);
         ImGui::SameLine();
-        const bool can1P = np_player_count() <= 2;
+        const bool can1P = np_player_count() <= 3;
         if (!can1P) ImGui::BeginDisabled();
         ImGui::RadioButton("1P Mode (co-op, experimental)", &newMode, 1);
         if (!can1P) {
             ImGui::EndDisabled();
-            ImGui::TextDisabled("1P Mode supports 2 players: ask extra players to leave first.");
+            ImGui::TextDisabled("1P Mode only allows up to 3 players: ask the extra player to leave first.");
         }
         if (newMode != mode) {
             mode = newMode;
             save();
             np_set_mode(mode);
-            np_set_max_players(mode == 1 ? 2 : maxPlayers);
+            np_set_max_players(mode == 1 ? std::clamp(maxPlayers, 2, 3) : maxPlayers);
         }
         if (mode == 1) {
+            maxPlayers = std::clamp(maxPlayers, 2, 3);
+            if (ImGui::SliderInt("Max players (1P Mode)", &maxPlayers, (std::max)(2, np_player_count()), 3)) {
+                np_set_max_players(maxPlayers);
+                save();
+            }
+            ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.3f, 1.0f), "1P Mode only allows up to 3 players.");
             static const char* kDiffs[] = { "Very Easy", "Easy", "Normal", "Hard", "Very Hard" };
             difficulty = std::clamp(difficulty, 0, 4);
             if (ImGui::BeginCombo("Difficulty", kDiffs[difficulty])) {
@@ -1884,12 +1914,23 @@ void RenderNetplayPanel(WidgetInfo& /*widget*/) {
             np_set_friendly_fire(friendlyFire ? 1 : 0);
             save();
         }
+        {
+            static const char* kCostumeLabels2[] = { "From character select", "Costume 1", "Costume 2", "Costume 3", "Costume 4" };
+            hostCostume = std::clamp(hostCostume, -1, 3);
+            if (ImGui::BeginCombo("Your costume (Player 1)", kCostumeLabels2[hostCostume + 1])) {
+                for (int i = -1; i < 4; i++) {
+                    if (ImGui::Selectable(kCostumeLabels2[i + 1], i == hostCostume)) { hostCostume = i; save(); }
+                }
+                ImGui::EndCombo();
+            }
+            np_set_host_costume(hostCostume);
+        }
         ImGui::Separator();
         if (np_get_mode() == 1) {
             ImGui::TextWrapped("1P Mode: you are on the character select screen. Pick your fighter, then press "
                                "Start. The difficulty and lives are the ones you chose in this menu before hosting "
-                               "(the ones on the character select screen are ignored online). Your friend is pulled "
-                               "into the run as Player 2 with the fighter they chose here. Only 2 players are supported.");
+                               "(the ones on the character select screen are ignored online). Your friends are pulled "
+                               "into the run as Player 2 and 3 with the fighters they chose here. 1P Mode allows up to 3 players.");
         } else {
             ImGui::TextWrapped("VS Mode: go to the VS character select screen, pick P1 and the rules/stage, then press "
                                "Start as usual: connected players are pulled into the match automatically "
@@ -2132,9 +2173,73 @@ void DrawNetplayBanner(const char* text, ImU32 color) {
     dl->AddText(font, size, ImVec2(x, y), color, text);
 }
 
+// Connected players strip shown on the character select screen.
+// Player names above the native character select panels (320x240 screen space, like the name tags).
+void DrawNetplayPanelNames() {
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    float gx = vp->Pos.x, gy = vp->Pos.y, gw = vp->Size.x, gh = vp->Size.y;
+    if (!port_widescreen_enabled()) {
+        const float w43 = gh * 4.0f / 3.0f;
+        if (w43 <= gw) { gx += (gw - w43) * 0.5f; gw = w43; }
+        else { const float h43 = gw * 3.0f / 4.0f; gy += (gh - h43) * 0.5f; gh = h43; }
+    }
+    static const ImU32 cols[4] = { IM_COL32(237, 54, 54, 255), IM_COL32(78, 78, 233, 255),
+                                   IM_COL32(255, 223, 26, 255), IM_COL32(78, 185, 78, 255) };
+    ImDrawList* dl = ImGui::GetForegroundDrawList();
+    ImFont* font = ImGui::GetFont();
+    const float size = (std::max)(13.0f, gh / 30.0f);
+    for (int s = 0; s < 4; s++) {
+        if (!np_slot_used(s)) continue;
+        char label[48];
+        snprintf(label, sizeof(label), "%s%s", np_slot_name(s), np_local_slot() == s ? " (you)" : "");
+        const ImVec2 sz = font->CalcTextSizeA(size, FLT_MAX, 0.0f, label);
+        // Panel s sits at x = 22 + s*69 (about 64 wide), y = 126 in 320x240 coordinates.
+        const float cx = gx + ((22.0f + s * 69.0f + 32.0f) / 320.0f) * gw;
+        const float top = gy + (121.0f / 240.0f) * gh - sz.y;
+        dl->AddRectFilled(ImVec2(cx - sz.x * 0.5f - 4, top - 2), ImVec2(cx + sz.x * 0.5f + 4, top + sz.y + 2), IM_COL32(0, 0, 0, 175), 4.0f);
+        dl->AddText(font, size, ImVec2(cx - sz.x * 0.5f, top), cols[s], label);
+    }
+}
+
+void DrawNetplayRoster() {
+    if (np_get_panels()) { DrawNetplayPanelNames(); return; }
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    ImDrawList* dl = ImGui::GetForegroundDrawList();
+    ImFont* font = ImGui::GetFont();
+    static const ImU32 cols[4] = { IM_COL32(237, 54, 54, 255), IM_COL32(78, 78, 233, 255),
+                                   IM_COL32(255, 223, 26, 255), IM_COL32(78, 185, 78, 255) };
+    const float size = (std::max)(13.0f, vp->Size.y / 38.0f);
+    const float cw = vp->Size.x * 0.2f, ch = size * 3.4f, gap = vp->Size.x * 0.01f;
+    const float total = cw * 4 + gap * 3;
+    const float x0 = vp->Pos.x + (vp->Size.x - total) * 0.5f;
+    const float y0 = vp->Pos.y + vp->Size.y * 0.11f;
+    for (int s = 0; s < 4; s++) {
+        const float x = x0 + s * (cw + gap);
+        dl->AddRectFilled(ImVec2(x, y0), ImVec2(x + cw, y0 + ch), IM_COL32(0, 0, 0, 165), 6.0f);
+        dl->AddRect(ImVec2(x, y0), ImVec2(x + cw, y0 + ch), np_slot_used(s) ? cols[s] : IM_COL32(120, 120, 120, 255), 6.0f, 0, 2.0f);
+        char l1[64], l2[96];
+        if (np_slot_used(s)) {
+            snprintf(l1, sizeof(l1), "P%d  %s", s + 1, np_slot_name(s));
+            if (s == 0) {
+                snprintf(l2, sizeof(l2), "Host");
+            } else {
+                int f = 0, c = 0;
+                np_slot_choice(s, &f, &c);
+                snprintf(l2, sizeof(l2), "%s (costume %d)", syNetLobbyGetFighterName(f), c + 1);
+            }
+        } else {
+            snprintf(l1, sizeof(l1), "P%d", s + 1);
+            snprintf(l2, sizeof(l2), "(empty)");
+        }
+        dl->AddText(font, size, ImVec2(x + 8, y0 + 4), np_slot_used(s) ? cols[s] : IM_COL32(150, 150, 150, 255), l1);
+        dl->AddText(font, size * 0.9f, ImVec2(x + 8, y0 + 4 + size * 1.5f), IM_COL32(235, 235, 235, 255), l2);
+    }
+}
+
 void DrawNetplayNameTags() {
     if (!np_match_active()) {
         const int st = np_state();
+        if (st == NP_CONNECTED || st == NP_HOSTING) DrawNetplayRoster();
         if (st == NP_CONNECTED) {
             DrawNetplayBanner(np_get_mode() == 1 ? "Connected! Waiting for the host to start the 1P co-op run..."
                                                  : "Connected! Waiting for the host to start the match...",

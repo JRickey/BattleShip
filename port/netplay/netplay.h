@@ -38,6 +38,10 @@ int np_get_run_difficulty(void);
 int np_get_run_stocks(void);
 void np_set_friendly_fire(int on); /* 1P online: allow players to hurt each other (default off) */
 int np_get_friendly_fire(void);
+void np_set_host_costume(int costume); /* host (P1) costume 0..3, or -1 = use the one picked on the character select screen */
+int np_get_host_costume(void);
+void np_set_panels(int on); /* show connected players on the character select panels (default on) */
+int np_get_panels(void);
 
 int np_host_begin_match(const void *blob, int size);
 int np_client_take_match(void *out, int cap);
