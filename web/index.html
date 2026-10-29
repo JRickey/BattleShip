@@ -1,0 +1,739 @@
+<title>BattleShipDX Asset Editor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: barra superior, 3 columnas (categorias | cuadricula | inspector). Editor oscuro a proposito. */
+:root{--bg:#14161a;--panel:#1b1e24;--panel2:#22262d;--line:#2d323b;--fg:#e6e8ec;--mut:#8b93a1;--acc:#ff7a3d;--acc2:#2e6bff;--ok:#3ecf8e;--chk1:#2a2e36;--chk2:#323741;color-scheme:dark;
+--ui:'IBM Plex Sans',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.4 var(--ui);overflow:hidden}
+#app{height:100%;display:flex;flex-direction:column;padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+header{display:flex;gap:10px;align-items:center;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font-size:14px;margin:0 8px 0 0;font-weight:600;letter-spacing:.02em}
+header h1 b{color:var(--acc)}
+button,.btn{font:inherit;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:6px 11px;cursor:pointer}
+button:hover,.btn:hover{border-color:var(--mut)}
+button.pri{background:var(--acc);border-color:var(--acc);color:#1a0d05;font-weight:600}
+button:disabled{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible,.cell:focus-visible{outline:2px solid var(--acc2);outline-offset:1px}
+.sp{flex:1}
+.stat{color:var(--mut);font-family:var(--mono);font-size:12px}
+main{flex:1;display:grid;grid-template-columns:230px minmax(0,1fr) 330px;min-height:0}
+aside{background:var(--panel);overflow:auto;min-height:0}
+#cats{border-right:1px solid var(--line)}
+#insp{border-left:1px solid var(--line);padding:12px}
+.sech{padding:10px 12px 6px;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.09em}
+.cat{display:flex;justify-content:space-between;gap:6px;padding:6px 12px;cursor:pointer;border-left:3px solid transparent}
+.cat:hover{background:var(--panel2)}
+.cat.on{background:var(--panel2);border-left-color:var(--acc)}
+.cat span:last-child{color:var(--mut);font-family:var(--mono);font-size:12px}
+.cat.sub{padding-left:26px;font-size:12px}
+#mid{display:flex;flex-direction:column;min-width:0;min-height:0}
+#tools{display:flex;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap}
+#q{background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:5px;padding:6px 9px;min-width:0;flex:1;max-width:280px;font:inherit}
+label.chip{display:flex;gap:5px;align-items:center;color:var(--mut)}
+#grid{flex:1;overflow:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;align-content:start}
+.cell{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px;cursor:pointer;min-width:0}
+.cell:hover{border-color:var(--mut)}
+.cell.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.cell .th{height:92px;display:flex;align-items:center;justify-content:center;background:repeating-conic-gradient(var(--chk1) 0 25%,var(--chk2) 0 50%) 0 0/12px 12px;border-radius:3px;overflow:hidden}
+.cell canvas{max-width:100%;max-height:92px;image-rendering:pixelated}
+.cell .m{display:flex;justify-content:space-between;margin-top:5px;font:11px var(--mono);color:var(--mut)}
+.cell.mod .m span:first-child{color:var(--ok)}
+.empty{grid-column:1/-1;text-align:center;color:var(--mut);padding:50px 20px}
+.empty h2{color:var(--fg);font-size:16px;margin:0 0 8px}
+#drop{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;font-size:20px;z-index:20;pointer-events:none}
+#drop.on{display:flex}
+#big{background:repeating-conic-gradient(var(--chk1) 0 25%,var(--chk2) 0 50%) 0 0/16px 16px;border:1px solid var(--line);border-radius:6px;height:230px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px}
+#big canvas{image-rendering:pixelated;max-width:100%;max-height:100%}
+.tabs{display:flex;gap:4px;margin-bottom:8px}
+.tabs button{padding:3px 9px;font-size:12px}
+.tabs button.on{background:var(--acc2);border-color:var(--acc2)}
+dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:10px 0;font-size:12px}
+dt{color:var(--mut)} dd{margin:0;font-family:var(--mono);word-break:break-all}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.note{color:var(--mut);font-size:11.5px;margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.toast{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);padding:8px 14px;border-radius:6px;z-index:30}
+#view{flex:1;position:relative;min-height:0;display:none;background:#0d0f12}
+#view canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#hud{position:absolute;left:12px;top:10px;font:12px var(--mono);color:var(--mut);pointer-events:none;text-shadow:0 1px 2px #000}
+#mus{flex:1;overflow:auto;padding:12px;display:none}
+.mrow{display:grid;grid-template-columns:34px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:6px 8px;border-bottom:1px solid var(--line)}
+.mrow .id{font:12px var(--mono);color:var(--mut)}
+.mrow.has{background:var(--panel)}
+.mrow .fn{color:var(--ok);font:12px var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#lang{background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:5px;padding:5px 6px;font:inherit}
+.modes{display:flex;gap:2px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:2px}
+.modes button{border:0;background:transparent;padding:4px 12px}
+.modes button.on{background:var(--acc);color:#1a0d05;font-weight:600}
+#prog{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;z-index:40;padding:16px}
+#prog.on{display:flex}
+#prog .box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;width:min(520px,100%)}
+#prog h3{margin:0 0 10px;font-size:15px}
+#bar{height:10px;background:var(--bg);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+#bar i{display:block;height:100%;width:0;background:var(--acc)}
+#plog{max-height:150px;overflow:auto;font:11.5px var(--mono);color:var(--mut);margin-top:10px;white-space:pre-wrap}
+#ptxt{margin-top:8px;font-family:var(--mono);font-size:12px}
+@media(max-width:900px){main{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;overflow:auto}#cats{max-height:150px;border-right:0;border-bottom:1px solid var(--line)}#insp{border-left:0;border-top:1px solid var(--line)}body{overflow:auto}#app{height:auto;min-height:100%}#grid{max-height:60vh}}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<div id="app">
+ <header>
+  <h1><b>BattleShipDX</b> <span data-i="Asset Editor">Asset Editor</span></h1>
+  <label class="btn pri" for="file" id="openlbl" data-i="Open BattleShip.o2r">Open BattleShip.o2r</label>
+  <input id="file" type="file" accept=".o2r,.zip" hidden>
+  <div class="modes" id="modes"><button data-m="tex" class="on" data-i="Textures">Textures</button><button data-m="lvl" data-i="3D Levels">3D Levels</button><button data-m="mus" data-i="Music">Music</button></div>
+  <span class="stat" id="stat" data-i="no file">no file</span>
+  <span class="sp"></span>
+  <span class="stat" id="modcount"></span>
+  <button id="dlAll" disabled data-it="All textures as PNG in one zip, to edit on your PC" title="All textures as PNG in one zip, to edit on your PC" data-i="Download all textures (.zip)">Download all textures (.zip)</button><label class="btn" for="folder" id="folderlbl" data-it="Folder with the edited textures" title="Folder with the edited textures" data-i="Import edited folder…">Import edited folder…</label><input id="folder" type="file" webkitdirectory multiple hidden><button id="expAll" disabled data-i="Export pack (.zip)">Export pack (.zip)</button><button id="expO2r" disabled data-it="Same content, .o2r extension" title="Same content, .o2r extension" data-i="Export pack (.o2r)">Export pack (.o2r)</button><button id="expMus" disabled hidden data-i="Export music pack (.zip)">Export music pack (.zip)</button><select id="lang" aria-label="Language"><option value="en">English</option><option value="es">Español</option></select>
+ </header>
+ <main>
+  <aside id="cats"><div class="sech" id="cathead" data-i="Resources">Resources</div><div id="catlist"></div></aside>
+  <section id="mid">
+   <div id="tools">
+    <input id="q" data-ip="Search file or size (e.g. 64x64)" placeholder="Search file or size (e.g. 64x64)" disabled>
+    <label class="chip"><input type="checkbox" id="onlyMod"> <span data-i="only modified">only modified</span></label>
+    <label class="chip"><input type="checkbox" id="hideTiny" checked> <span data-i="hide &lt; 8px">hide &lt; 8px</span></label>
+    <span class="sp"></span><span class="stat" id="shown"></span>
+   </div>
+   <div id="grid"></div>
+   <div id="view"><canvas id="gl"></canvas><div id="hud"></div></div>
+   <div id="mus"></div>
+  </section>
+  <aside id="insp"><div class="sech" style="padding:0 0 8px" data-i="Inspector">Inspector</div><div id="inspbody"><div class="note" style="border:0;margin:0" data-i="Select a texture.">Select a texture.</div></div></aside>
+ </main>
+</div>
+<div id="prog"><div class="box"><h3 id="ptitle"></h3><div id="bar"><i></i></div><div id="ptxt"></div><div id="plog"></div><div class="row"><button id="pclose" hidden data-i="Close">Close</button><button id="pcancel" data-i="Cancel">Cancel</button></div></div></div>
+<div id="drop" data-i="Drop your BattleShip.o2r">Drop your BattleShip.o2r</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
+<script>
+
+// ---- i18n: English is the source language; Spanish is an option ----
+const ES={
+'Asset Editor':'Editor de recursos','Open BattleShip.o2r':'Abrir BattleShip.o2r','Textures':'Texturas','3D Levels':'Niveles 3D','Music':'Música','no file':'sin archivo',
+'Download all textures (.zip)':'Descargar todas las texturas (.zip)','All textures as PNG in one zip, to edit on your PC':'Todas las texturas como PNG en un zip, para editarlas en tu PC',
+'Import edited folder…':'Importar carpeta editada…','Folder with the edited textures':'Carpeta con las texturas editadas','Export pack (.zip)':'Exportar pack (.zip)','Export pack (.o2r)':'Exportar pack (.o2r)',
+'Same content, .o2r extension':'Mismo contenido, extensión .o2r','Export music pack (.zip)':'Exportar pack de música (.zip)','Resources':'Recursos','Search file or size (e.g. 64x64)':'Buscar archivo o tamaño (ej: 64x64)',
+'only modified':'solo modificadas','hide < 8px':'ocultar < 8px','Inspector':'Inspector','Select a texture.':'Selecciona una textura.','Close':'Cerrar','Cancel':'Cancelar','Drop your BattleShip.o2r':'Suelta tu BattleShip.o2r',
+'reading…':'leyendo…','no reloc_* resources found':'no hay recursos reloc_*','{0} textures':'{0} texturas','Could not read: {0}':'No se pudo leer: {0}','All':'Todas','{0} shown':'{0} mostradas',
+'Open your BattleShip.o2r':'Abre tu BattleShip.o2r','It is read in your browser. Nothing is uploaded. Drag the file here or use the button above.':'Se lee en tu navegador. No se sube nada. Arrastra el archivo aquí o usa el botón de arriba.',
+'Showing 1500 of {0}. Filter by category or search.':'Mostrando 1500 de {0}. Filtra por categoría o busca.','Original':'Original','Replacement':'Reemplazo','File':'Archivo','Size':'Tamaño','Format':'Formato','Hi-res key':'Clave hi-res',
+'menu sprite ({0} strips)':'sprite de menú ({0} tiras)','Replace with PNG…':'Reemplazar con PNG…','Remove replacement':'Quitar reemplazo','Save original (PNG)':'Guardar original (PNG)',
+'A new PNG can be larger than the original (x2, x4…) but must keep the same proportions. The replacement applies to every identical texture in the game, because the key depends on the content.':'Un PNG nuevo puede ser más grande que el original (x2, x4…) pero con la misma proporción. El reemplazo se aplica a todas las texturas idénticas del juego, porque la clave depende del contenido.',
+'The PNG must keep the same proportions ({0}×{1}) or be a multiple: x2, x4…':'El PNG debe tener la misma proporción ({0}×{1}) o ser un múltiplo: x2, x4…','Replacement applied':'Reemplazo aplicado','{0} modified':'{0} modificadas',
+'Building the pack':'Armando el pack','Cancelled':'Cancelado','Done: {0} images':'Listo: {0} imágenes','elapsed':'transcurrido','~{0} left':'quedan ~{0}','Exporting textures to PNG':'Exportando texturas a PNG','Done: {0} textures':'Listo: {0} texturas',
+'The folder has no PNG files':'La carpeta no tiene PNG','Importing edited textures':'Importando texturas editadas','Unrecognized name: {0}':'Nombre no reconocido: {0}','Different proportions ({0}×{1} vs {2}×{3}): {4}':'Proporción distinta ({0}×{1} vs {2}×{3}): {4}',
+'Replaced {0} · unchanged {1} · errors {2} · unknown {3}':'Reemplazadas {0} · sin cambios {1} · con error {2} · desconocidas {3}','Dream Land (small)':'Dream Land (pequeño)','Dream Land (test)':'Dream Land (prueba)',"Yoshi's Island (small)":"Yoshi's Island (pequeño)",
+'How to Play':'Cómo jugar','Bonus':'Bonus','Targets':'Targets','Platforms':'Plataformas','Levels and models':'Niveles y modelos','Tracks':'Pistas','Open the .o2r first.':'Abre el .o2r primero.','Levels':'Niveles','Fighters (model)':'Luchadores (modelo)',
+'{0} parts · {1} triangles · {2} textures · drag=rotate · shift+drag=pan · wheel=zoom · click=pick texture':'{0} partes · {1} triángulos · {2} texturas · arrastra=girar · shift+arrastra=mover · rueda=zoom · clic=elegir textura',
+'Add your MP3, OGG or WAV files. Tracks in the list below are assigned automatically to that song (saved as <code>music/&lt;number&gt;.mp3</code>). <b>Free tracks</b> keep their own name and you choose them per song in the port\'s <b>Audio Editor</b> menu (Assets → Audio Editor). Put the .zip or .o2r in the <code>mods</code> folder. Tick “once” for jingles that must not loop.':'Agrega tus MP3, OGG o WAV. Las pistas de la lista de abajo se asignan solas a esa canción (se guardan como <code>music/&lt;número&gt;.mp3</code>). Las <b>pistas libres</b> se guardan con su nombre y las eliges por canción en el menú <b>Audio Editor</b> del port (Assets → Audio Editor). Pon el .zip o .o2r en la carpeta <code>mods</code>. Marca «una vez» en fanfarrias que no deben repetirse.',
+'Free tracks':'Pistas libres','(selectable from the port menu)':'(elegibles desde el menú del port)','Add tracks…':'Agregar pistas…','once':'una vez','Remove':'Quitar','Assign directly to a song':'Asignar directo a una canción','Change':'Cambiar','Choose audio…':'Elegir audio…',
+'Use MP3, OGG or WAV':'Usa MP3, OGG o WAV','{0} tracks in the pack':'{0} pistas en el pack','Download is not available in this view':'La descarga no está disponible en esta vista',
+'Mushroom Kingdom (hurry)':'Mushroom Kingdom (apurado)','Character / Stage Select':'Selección de personaje / escenario','Victory (default)':'Victoria (genérica)','Victory: Mario':'Victoria Mario','Victory: Samus':'Victoria Samus','Victory: Donkey Kong':'Victoria Donkey Kong','Victory: Kirby':'Victoria Kirby','Victory: Fox':'Victoria Fox','Victory: Ness':'Victoria Ness','Victory: Yoshi':'Victoria Yoshi','Victory: Captain Falcon':'Victoria Captain Falcon','Victory: Pokémon':'Victoria Pokémon','Victory: Link':'Victoria Link',
+'VS Results':'Resultados VS','Final Stage (Master Hand)':'Escenario final (Master Hand)','Master Hand Appears':'Aparece Master Hand','Bonus Stage':'Bonus','1P Stage Clear':'1P: nivel superado','Bonus Stage Clear':'Bonus superado','1P Game Clear':'1P: juego superado','Bonus Stage Failure':'Bonus fallido','Continue?':'¿Continuar?','Opening Movie':'Intro (película)','1P Stage Cards':'1P: tarjetas de nivel','Ending Movie':'Final (película)','Credits':'Créditos','Secret Found':'Secreto encontrado','Challenger Approaching':'Challenger approaching','Training Mode':'Modo entrenamiento','Character Data / VS Records':'Datos / récords','Main Menu':'Menú principal','Hammer':'Martillo','Star':'Estrella'
+};
+let LANG='en';try{LANG=localStorage.getItem('lang')||((navigator.language||'').toLowerCase().startsWith('es')?'en':'en')}catch(e){}
+function T(s,...a){let r=LANG==='es'&&ES[s]!==undefined?ES[s]:s;return r.replace(/\{(\d+)\}/g,(m,i)=>a[+i]!==undefined?a[+i]:m)}
+function applyLang(){
+  document.documentElement.lang=LANG;
+  document.querySelectorAll('[data-i]').forEach(e=>{e.textContent=T(e.getAttribute('data-i').replace('&lt;','<'))});
+  document.querySelectorAll('[data-it]').forEach(e=>{e.title=T(e.getAttribute('data-it'))});
+  document.querySelectorAll('[data-ip]').forEach(e=>{e.placeholder=T(e.getAttribute('data-ip'))});
+  if(!ST.entries){$('#stat').textContent=T('no file')}else{$('#stat').textContent=ST.name+' · '+T('{0} textures',ST.tex.length)}
+  $('#lang').value=LANG;
+  if(typeof MODE!=='undefined'){updMod();if(MODE==='tex'){buildCats();render()}else if(MODE==='lvl'){buildLevels();if(CUR)$('#hud').textContent=''}else buildMusic();$('#cathead').textContent=MODE==='tex'?T('Resources'):MODE==='lvl'?T('Levels and models'):T('Tracks')}
+  if(ST.sel)showInsp();
+}
+const module={exports:{}};
+// ---- o2r / reloc core (works in node and browser) ----
+const CRC_T=(()=>{const t=new Uint32Array(256);for(let i=0;i<256;i++){let c=i;for(let j=0;j<8;j++)c=c&1?(c>>>1)^0xEDB88320:c>>>1;t[i]=c>>>0}return t})();
+function crc32(b){let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC_T[(c^b[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0}
+function parseReloc(raw){
+  const dv=new DataView(raw.buffer,raw.byteOffset,raw.byteLength);
+  let p=0x40; const le=raw[0]===0;
+  const fileId=dv.getUint32(p,le), ri=dv.getUint16(p+4,le), re=dv.getUint16(p+6,le), n=dv.getUint32(p+8,le); p+=12;
+  const ext=[]; for(let i=0;i<n;i++){ext.push(dv.getUint16(p,le));p+=2}
+  const size=dv.getUint32(p,le); p+=4;
+  const data=raw.subarray(p,p+size);
+  const d=new DataView(data.buffer,data.byteOffset,data.byteLength);
+  const w=i=>d.getUint32(i*4,false);
+  const intern=new Map(), extern=new Map();
+  let o=ri,c=0; while(o!==0xFFFF&&c<500000&&o*4<size){const v=w(o);intern.set(o*4,(v&0xFFFF)*4);o=v>>>16;c++}
+  o=re;let k=0; while(o!==0xFFFF&&c<900000&&o*4<size){const v=w(o);extern.set(o*4,{file:ext[k],off:(v&0xFFFF)*4});o=v>>>16;k++;c++}
+  return {fileId,ext,size,data,d,w,intern,extern};
+}
+// --- pixel decode (Fast3D style scaling) ---
+const S5=v=>(v*255/31)|0, S4=v=>(v*255/15)|0, S3=v=>(v*255/7)|0;
+function bpp(siz){return [4,8,16,32][siz]}
+let SWAP=false;
+function readTexel(data,off,rowBytes,x,y,siz){
+  const b=off+y*rowBytes;
+  if(SWAP&&(y&1)){const bytes=siz===0?x>>1:x*[1,1,2,4][siz];const nb=bytes^4;const sh=nb-bytes; // word swap on odd rows
+    if(siz===0){const v=data[b+nb];return (x&1)?v&15:v>>4}
+    if(siz===1)return data[b+x+sh];
+    if(siz===2)return (data[b+x*2+sh]<<8)|data[b+x*2+sh+1];
+    return ((data[b+x*4+sh]<<24)|(data[b+x*4+sh+1]<<16)|(data[b+x*4+sh+2]<<8)|data[b+x*4+sh+3])>>>0}
+  if(siz===0){const v=data[b+(x>>1)];return (x&1)?v&15:v>>4}
+  if(siz===1)return data[b+x];
+  if(siz===2)return (data[b+x*2]<<8)|data[b+x*2+1];
+  return ((data[b+x*4]<<24)|(data[b+x*4+1]<<16)|(data[b+x*4+2]<<8)|data[b+x*4+3])>>>0;
+}
+function palEntry(pal,i,tlutIA){ // pal: Uint8Array of BE u16
+  if(!pal||i*2+1>=pal.length)return [255,0,255,255];
+  const v=(pal[i*2]<<8)|pal[i*2+1];
+  if(tlutIA){const I=v>>8,A=v&255;return [I,I,I,A]}
+  return [S5(v>>11&31),S5(v>>6&31),S5(v>>1&31),v&1?255:0];
+}
+// decode to tightly packed RGBA8
+function decodeTex(data,off,fmt,siz,w,h,rowBytes,pal,tlutIA){
+  const out=new Uint8Array(w*h*4);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const t=readTexel(data,off,rowBytes,x,y,siz); let r,g,b,a;
+    if(fmt===0){ // RGBA
+      if(siz===2){r=S5(t>>11&31);g=S5(t>>6&31);b=S5(t>>1&31);a=t&1?255:0}
+      else {r=t>>>24;g=(t>>16)&255;b=(t>>8)&255;a=t&255}
+    }else if(fmt===2){ // CI
+      [r,g,b,a]=palEntry(pal,t,tlutIA);
+    }else if(fmt===3){ // IA
+      if(siz===0){r=g=b=S3(t>>1);a=t&1?255:0}
+      else if(siz===1){r=g=b=S4(t>>4);a=S4(t&15)}
+      else {r=g=b=t>>8;a=t&255}
+    }else{ // I
+      if(siz===0){r=g=b=a=S4(t)} else {r=g=b=a=t}
+    }
+    const o=(y*w+x)*4; out[o]=r;out[o+1]=g;out[o+2]=b;out[o+3]=a;
+  }
+  return out;
+}
+Object.assign(module.exports,{crc32,parseReloc,decodeTex,bpp});
+
+// ---- texture discovery ----
+function buildIndex(entries){ // entries: {name: Uint8Array}
+  const files=new Map(), byId=new Map();
+  for(const n in entries){
+    if(!/^reloc_/.test(n)||/^reloc_(animations|submotions)\//.test(n))continue;
+    try{const r=parseReloc(entries[n]);r.name=n;files.set(n,r);byId.set(r.fileId,r)}catch(e){}
+  }
+  return {files,byId};
+}
+function resolveSlot(r,idx,byId){ // byte offset of pointer slot -> {file,off}
+  if(r.intern.has(idx))return {file:r,off:r.intern.get(idx)};
+  if(r.extern.has(idx)){const e=r.extern.get(idx);const f=byId.get(e.file);return f?{file:f,off:e.off}:null}
+  return null;
+}
+const TEXKEY=(f,o)=>f.name+"@"+o;
+function scanDL(r,byId,out){
+  const n=(r.size>>3); const w=r.w; let tlut=null;
+  const tiles={},ts={}; let timg=null,load=null,done=true,pos=0;
+  const fin=()=>{
+    if(!timg||done)return; done=true;
+    const rt=ts[0]?0:(Object.keys(ts).map(Number).sort()[0]);
+    let T=tiles[rt!==undefined?rt:0]; if(!T){const ks=Object.keys(tiles).map(Number).filter(k=>k!==7);T=tiles[ks[0]]}
+    if(!T||!load)return;
+    let fmt,siz,wd,ht;
+    if(T){fmt=T.fmt;siz=T.siz;const S=ts[rt!==undefined?rt:0];
+      if(S){wd=((S.lrs-S.uls)>>2)+1;ht=((S.lrt-S.ult)>>2)+1}
+      else{wd=Math.max(1,(T.line*64)/[4,8,16,32][T.siz]|0);ht=Math.max(1,((load?load.texels:wd*wd)/wd)|0)}
+    }else return;
+    if(!(wd>0&&ht>0&&wd<=512&&ht<=512))return;
+    const key=TEXKEY(timg.tgt.file,timg.tgt.off)+"/"+fmt+siz+"/"+wd+"x"+ht+(fmt===2?"/"+(tlut?TEXKEY(tlut.tgt.file,tlut.tgt.off):""):"");
+    if(!out.has(key))out.set(key,{key,file:timg.tgt.file.name,off:timg.tgt.off,fmt,siz,w:wd,h:ht,line:T?T.line:Math.ceil(wd*[4,8,16,32][siz]/64),
+      pal:fmt===2&&tlut?{file:tlut.tgt.file.name,off:tlut.tgt.off,count:tlut.count}:null,src:r.name});
+  };
+  for(let i=0;i<n;i++){
+    const w0=w(i*2), op=w0>>>24;
+    if(op===0xFD){
+      fin();
+      const s=resolveSlot(r,i*8+4,byId);
+      timg=s?{tgt:s,fmt:(w0>>21)&7,siz:(w0>>19)&3,i}:null; load=null; done=!timg;
+    }else if(op===0xF5){const w1=w(i*2+1);const t=(w1>>24)&7;
+      tiles[t]={fmt:(w0>>21)&7,siz:(w0>>19)&3,line:(w0>>9)&0x1FF,pal:(w1>>20)&15,i}}
+    else if(op===0xF2){const w1=w(i*2+1);const t=(w1>>24)&7;
+      ts[t]={uls:(w0>>12)&0xFFF,ult:w0&0xFFF,lrs:(w1>>12)&0xFFF,lrt:w1&0xFFF,i};
+      if(timg&&load&&t!==7)fin()}
+    else if(op===0xF0&&timg){const w1=w(i*2+1);tlut={tgt:timg.tgt,count:((w1>>14)&0x3FF)+1};timg=null;done=true}
+    else if(op===0xF3){const w1=w(i*2+1);load={texels:((w1>>12)&0xFFF)+1}}
+    else if(op===0xF4){const w1=w(i*2+1);load={texels:(((w1>>12)&0xFFF)>>2)+1}}
+    else if((op===0x05||op===0x06||op===0x07||op===0xDF)&&timg)fin();
+  }
+  fin();
+}
+function discover(entries){
+  const idx=buildIndex(entries); const out=new Map();
+  for(const r of idx.files.values())scanDL(r,idx.byId,out);
+  return {idx,textures:[...out.values()]};
+}
+function renderStrip(idx,t){
+  const f=idx.files.get(t.file); const rowBytes=Math.max(1,t.line*8);
+  let pal=null; if(t.pal){const pf=idx.files.get(t.pal.file);pal=pf.data.subarray(t.pal.off,t.pal.off+t.pal.count*2)}
+  const need=Math.min(rowBytes,Math.ceil(t.w*bpp(t.siz)/8))
+  const rgba=decodeTex(f.data,t.off,t.fmt,t.siz,t.w,t.h,Math.max(rowBytes,need),pal,false);
+  return rgba;
+}
+module.exports.discover=discover;module.exports.buildIndex=buildIndex;
+
+// ---- sprite (menu) discovery ----
+function scanSprites(r,byId,out){
+  const d=r.d;
+  for(const [slot] of r.intern){
+    const b=slot-52; if(b<0||b+68>r.size)continue;
+    const nb=d.getInt16(b+40,false), fmt=d.getUint8(b+48), siz=d.getUint8(b+49);
+    if(nb<1||nb>128||fmt>4||siz>3)continue;
+    const bm=resolveSlot(r,slot,byId); if(!bm||bm.file!==r)continue;
+    const lutS=resolveSlot(r,b+32,byId); const nT=d.getInt16(b+30,false);
+    let ok=true; const items=[];
+    for(let i=0;i<nb;i++){
+      const o=bm.off+i*16; if(o+16>r.size){ok=false;break}
+      const wi=d.getInt16(o+2,false), ah=d.getInt16(o+12,false), bw=d.getInt16(o,false);
+      const buf=resolveSlot(r,o+8,byId);
+      if(!buf){continue}
+      if(wi<=0||wi>512||ah<=0||ah>512){ok=false;break}
+      items.push({o,wi,ah,buf});
+    }
+    if(!ok)continue;
+    if(!items.length)continue;
+    const gkey="spr:"+r.name+"@"+b;
+    if(out.has(gkey))continue;
+    const strips=items.map(it=>({file:it.buf.file.name,off:it.buf.off,fmt,siz,w:it.wi,h:it.ah,line:Math.ceil(it.wi*[4,8,16,32][siz]/64),swap:true,
+      pal:fmt===2&&lutS?{file:lutS.file.name,off:lutS.off,count:nT>0?nT:(siz===0?16:256)}:null}));
+    const W=Math.max(...strips.map(t=>t.w)),H=strips.reduce((a,t)=>a+t.h,0);
+    out.set(gkey,{key:gkey,sprite:true,strips,w:W,h:H,fmt,siz,src:r.name,off:b});
+  }
+}
+const _disc=discover;
+function discoverAll(entries){
+  const {idx,textures}=_disc(entries); const out=new Map(textures.map(t=>[t.key,t]));
+  for(const r of idx.files.values())scanSprites(r,idx.byId,out);
+  return {idx,textures:[...out.values()]};
+}
+module.exports.discover=discoverAll;
+
+function renderEntry(idx,t){
+  if(!t.sprite)return renderStrip(idx,t);
+  SWAP=true;try{return _stack(idx,t)}finally{SWAP=false}
+}
+function _stack(idx,t){
+  const out=new Uint8Array(t.w*t.h*4); let y0=0;
+  for(const s of t.strips){const p=renderStrip(idx,s);for(let y=0;y<s.h;y++)out.set(p.subarray(y*s.w*4,(y+1)*s.w*4),((y0+y)*t.w)*4);y0+=s.h}
+  return out;
+}
+module.exports.renderEntry=renderEntry;module.exports.renderStrip=function(i,t){SWAP=!!t.swap;try{return renderStrip(i,t)}finally{SWAP=false}};
+module.exports.resolveSlot=resolveSlot;
+
+// ---- 3D scene extraction (DObjDesc trees + F3DEX2 display lists) ----
+function findDescArrays(r){
+  const out=[]; const fl=o=>r.d.getFloat32(o,false);
+  for(let o=0;o+44<=r.size;o+=4){
+    const id=r.w(o/4); if((id&0xFFF)!==0||(id&~0xF000)!==0)continue;
+    let p=o,n=0,ok=true,prev=-1;
+    while(p+44<=r.size){
+      const i=r.w(p/4); if(i===18)break;
+      const lv=i&0xFFF; if(lv>16||lv>prev+1){ok=false;break}
+      let bad=false;for(let k=8;k<=40;k+=4){const v=fl(p+k);if(!isFinite(v)||Math.abs(v)>1e7)bad=true}
+      if(bad||(Math.abs(fl(p+32))<1e-4&&Math.abs(fl(p+36))<1e-4)){ok=false;break}
+      prev=lv;n++;p+=44;if(n>80)break}
+    if(ok&&n>=1&&p+44<=r.size&&r.w(p/4)===18)out.push({off:o,n});
+  }
+  return out;
+}
+function extractDL(idx,rr,start,out,st,depth){
+  if(depth>10)return; let i=start>>3;
+  for(let n=0;n<30000&&i*8+8<=rr.size;n++,i++){
+    const w0=rr.w(i*2),w1=rr.w(i*2+1),op=w0>>>24;
+    if(op===0xDF)return;
+    if(op===0xDE){const s=resolveSlot(rr,i*8+4,idx.byId);
+      if(s&&(s.off&7)===0){if((w0>>16)&1){extractDL(idx,s.file,s.off,out,st,depth+1);return}extractDL(idx,s.file,s.off,out,{...st,v:st.v.slice()},depth+1)}}
+    else if(op===0xFD){const s=resolveSlot(rr,i*8+4,idx.byId);st.tex=s?s.file.name+'@'+s.off:null;st.timg=s?{fmt:(w0>>21)&7,siz:(w0>>19)&3}:null;st.tseq=(st.tseq||0)+1}
+    else if(op===0xF5){const t=(w1>>24)&7;(st.tiles=st.tiles||{})[t]={fmt:(w0>>21)&7,siz:(w0>>19)&3,line:(w0>>9)&0x1FF}}
+    else if(op===0xF2){const t=(w1>>24)&7;(st.ts=st.ts||{})[t]={uls:(w0>>12)&0xFFF,ult:w0&0xFFF,lrs:(w1>>12)&0xFFF,lrt:w1&0xFFF}}
+    else if(op===0xF0&&st.tex&&st.timg){st.tlut={tex:st.tex,count:((w1>>14)&0x3FF)+1};st.tex=null}
+    else if(op===0x01){const s=resolveSlot(rr,i*8+4,idx.byId);const nn=(w0>>12)&0xFF,v0=((w0>>1)&0x7F)-nn;
+      if(s&&nn>0&&v0>=0&&v0+nn<=64)for(let k=0;k<nn;k++){const o=s.off+k*16;if(o+16>s.file.size)break;const d=s.file.d;
+        st.v[v0+k]=[d.getInt16(o),d.getInt16(o+2),d.getInt16(o+4),d.getInt16(o+8),d.getInt16(o+10),d.getUint8(o+12),d.getUint8(o+13),d.getUint8(o+14),d.getUint8(o+15)]}}
+    else if(op===0x05||op===0x06||op===0x07){
+      const tri=(a,b,c)=>{const A=st.v[a],B=st.v[b],Cc=st.v[c];if(!A||!B||!Cc)return;const k=(st.tex||'')+'|'+(st.tseq||0);let g=out.get(k);if(!g){g={tex:st.tex,v:[],info:texInfo(st)};out.set(k,g)}g.v.push(A,B,Cc)};
+      tri((w0>>16&255)>>1,(w0>>8&255)>>1,(w0&255)>>1);
+      if(op!==0x05)tri((w1>>16&255)>>1,(w1>>8&255)>>1,(w1&255)>>1);}
+  }
+}
+function texInfo(st){
+  if(!st.tex||!st.timg)return null;
+  const T=(st.tiles&&(st.tiles[0]||st.tiles[1]))||null;if(!T)return null;
+  const S=st.ts&&(st.ts[0]||st.ts[1]);let w,h;
+  if(S){w=((S.lrs-S.uls)>>2)+1;h=((S.lrt-S.ult)>>2)+1}else return null;
+  if(!(w>0&&h>0&&w<=512&&h<=512))return null;
+  return {fmt:T.fmt,siz:T.siz,w,h,line:T.line,tlut:st.tlut?st.tlut.tex:null,tlutCount:st.tlut?st.tlut.count:0};
+}
+// returns {parts:[{nodes:[{level,T,R,S,groups:[{tex,v:[...]}]}]}]}
+function buildScene(idx,fileName){
+  const r=idx.files.get(fileName); const roots=[]; // [{file,off}]
+  const seen=new Set();
+  const addArrays=f=>{for(const a of findDescArrays(f)){const k=f.name+'@'+a.off;if(!seen.has(k)){seen.add(k);roots.push({f,off:a.off})}}};
+  addArrays(r);
+  // follow extern slots (maps point into data banks)
+  for(const [slot,e] of r.extern){const f=idx.byId.get(e.file);if(!f)continue;
+    // only arrays that start exactly at (or near) the pointer target
+    for(const a of findDescArrays(f)){ if(a.off===e.off){const k=f.name+'@'+a.off;if(!seen.has(k)){seen.add(k);roots.push({f,off:a.off})}} }}
+  const parts=[];
+  for(const {f,off} of roots){
+    const nodes=[];let p=off;const carry={v:[],tex:null};
+    while(p+44<=f.size&&f.w(p/4)!==18){
+      const id=f.w(p/4);const fl=k=>f.d.getFloat32(p+k,false);
+      const s=resolveSlot(f,p+4,idx.byId);const out=new Map();
+      if(s&&(s.off&7)===0){carry.v=[];extractDL(idx,s.file,s.off,out,carry,0)}
+      nodes.push({level:id&0xFFF,T:[fl(8),fl(12),fl(16)],R:[fl(20),fl(24),fl(28)],S:[fl(32),fl(36),fl(40)],groups:[...out.values()]});
+      p+=44;
+    }
+    if(nodes.some(n=>n.groups.length))parts.push({src:f.name+'@'+off,nodes});
+  }
+  return {parts};
+}
+module.exports.buildScene=buildScene;module.exports.findDescArrays=findDescArrays;
+
+const M=module.exports;
+const $=s=>document.querySelector(s);
+const FM=['RGBA','YUV','CI','IA','I'],SZ=['4b','8b','16b','32b'];
+let ST={entries:null,idx:null,tex:[],cat:'*',sel:null,repl:new Map(),thumbs:new Map(),name:''};
+const hex=n=>n.toString(16).toUpperCase().padStart(8,'0');
+function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),3200)}
+function catOf(t){const p=t.src.split('/');return p[0].replace('reloc_','')}
+function fileOf(t){return t.src.split('/').slice(1).join('/')}
+async function load(buf,name){
+  $('#stat').textContent=T('reading…');
+  await new Promise(r=>setTimeout(r,20));
+  try{
+    const z=fflate.unzipSync(new Uint8Array(buf),{filter:f=>/^reloc_/.test(f.name)&&!/^reloc_(animations|submotions)\//.test(f.name)});
+    const names=Object.keys(z); if(!names.length)throw new Error(T('no reloc_* resources found'));
+    const d=M.discover(z);
+    ST={entries:z,idx:d.idx,tex:d.textures,cat:'*',sel:null,repl:new Map(),thumbs:new Map(),name};
+    $('#stat').textContent=name+' · '+T('{0} textures',d.textures.length);
+    $('#q').disabled=false;
+    buildCats();render();updMod();
+  }catch(e){$('#stat').textContent='error';toast(T('Could not read: {0}',e.message))}
+}
+function buildCats(){
+  if(MODE!=='tex')return;
+  const m=new Map();for(const t of ST.tex){const c=catOf(t);m.set(c,(m.get(c)||0)+1)}
+  const el=$('#catlist');el.innerHTML='';
+  const add=(k,l,n,sub)=>{const d=document.createElement('div');d.className='cat'+(sub?' sub':'')+(ST.cat===k?' on':'');d.innerHTML='<span></span><span>'+n+'</span>';d.firstChild.textContent=l;d.onclick=()=>{ST.cat=k;buildCats();render()};el.appendChild(d)};
+  add('*',T('All'),ST.tex.length);
+  [...m.keys()].sort().forEach(k=>add(k,k.replace(/_/g,' '),m.get(k)));
+}
+function visible(){
+  const q=$('#q').value.trim().toLowerCase(),om=$('#onlyMod').checked,ht=$('#hideTiny').checked;
+  return ST.tex.filter(t=>{
+    if(ST.cat!=='*'&&catOf(t)!==ST.cat)return false;
+    if(om&&!ST.repl.has(t.key))return false;
+    if(ht&&(t.w<8||t.h<8))return false;
+    if(q&&!(t.src.toLowerCase().includes(q)||(t.w+'x'+t.h).includes(q)))return false;
+    return true});
+}
+const io=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting){io.unobserve(e.target);paintThumb(e.target)}},{root:null,rootMargin:'200px'});
+function drawRGBA(cv,px,w,h){cv.width=w;cv.height=h;const c=cv.getContext('2d');c.putImageData(new ImageData(new Uint8ClampedArray(px.buffer,px.byteOffset,w*h*4),w,h),0,0)}
+function getPx(t){let p=ST.thumbs.get(t.key);if(!p){try{p=M.renderEntry(ST.idx,t)}catch(e){p=new Uint8Array(t.w*t.h*4)}ST.thumbs.set(t.key,p)}return p}
+function paintThumb(cv){const t=ST.tex[cv.dataset.i];const r=ST.repl.get(t.key);
+  if(r)cv.getContext('2d').drawImage(r.canvas,0,0,cv.width=Math.min(r.w,160),cv.height=Math.min(r.h,160)*1,0,0,cv.width,cv.height);
+  else drawRGBA(cv,getPx(t),t.w,t.h)}
+function render(){
+  const g=$('#grid');g.innerHTML='';
+  if(!ST.entries){g.innerHTML='<div class="empty"><h2></h2><span></span></div>';g.querySelector('h2').textContent=T('Open your BattleShip.o2r');g.querySelector('span').textContent=T('It is read in your browser. Nothing is uploaded. Drag the file here or use the button above.');return}
+  const v=visible();$('#shown').textContent=T('{0} shown',v.length);
+  const frag=document.createDocumentFragment();
+  for(const t of v.slice(0,1500)){
+    const i=ST.tex.indexOf(t);
+    const c=document.createElement('div');c.className='cell'+(ST.sel===t?' on':'')+(ST.repl.has(t.key)?' mod':'');c.tabIndex=0;
+    c.innerHTML='<div class="th"><canvas data-i="'+i+'"></canvas></div><div class="m"><span>'+t.w+'×'+t.h+'</span><span>'+FM[t.fmt]+SZ[t.siz]+'</span></div>';
+    c.onclick=()=>select(t);c.onkeydown=e=>{if(e.key==='Enter')select(t)};
+    frag.appendChild(c);io.observe(c.firstChild.firstChild);
+  }
+  g.appendChild(frag);
+  if(v.length>1500){const d=document.createElement('div');d.className='empty';d.textContent=T('Showing 1500 of {0}. Filter by category or search.',v.length);g.appendChild(d)}
+}
+let showMode='cur';
+function select(t){ST.sel=t;document.querySelectorAll('.cell.on').forEach(e=>e.classList.remove('on'));
+  const i=ST.tex.indexOf(t);const cv=document.querySelector('canvas[data-i="'+i+'"]');if(cv)cv.closest('.cell').classList.add('on');showInsp()}
+function keysOf(t){ // lista de strips con su clave del port
+  const strips=t.sprite?t.strips:[t];
+  return strips.map(s=>{const px=M.renderStrip(ST.idx,s);return{s,crc:M.crc32(px),name:'#'+hex(M.crc32(px))+'#'+s.fmt.toString(16).toUpperCase()+'#'+s.siz.toString(16).toUpperCase()}});
+}
+function showInsp(){
+  const t=ST.sel,b=$('#inspbody');if(!t){return}
+  const r=ST.repl.get(t.key);const ks=keysOf(t);
+  b.innerHTML='<div class="tabs"><button data-m="orig"></button><button data-m="new" '+(r?'':'disabled')+'></button></div><div id="big"><canvas></canvas></div>'+
+   '<dl><dt></dt><dd></dd><dt></dt><dd>'+t.w+'×'+t.h+'</dd><dt></dt><dd class="fmt"></dd>'+
+   '<dt></dt><dd>'+ks.slice(0,4).map(k=>k.name).join('<br>')+(ks.length>4?'<br>… +'+(ks.length-4):'')+'</dd></dl>'+
+   '<div class="row"><label class="btn pri" for="rep"></label><input id="rep" type="file" accept="image/png" hidden><button id="revert" '+(r?'':'disabled')+'></button><button id="dlorig"></button></div>'+
+   '<div class="note"></div>';
+  const tb=b.querySelectorAll('.tabs button');tb[0].textContent=T('Original');tb[1].textContent=T('Replacement');
+  const dts=b.querySelectorAll('dt');[T('File'),T('Size'),T('Format'),T('Hi-res key')].forEach((s,i)=>dts[i].textContent=s);
+  b.querySelector('.fmt').textContent=FM[t.fmt]+' '+SZ[t.siz]+(t.sprite?' · '+T('menu sprite ({0} strips)',t.strips.length):'');
+  b.querySelector('label[for=rep]').textContent=T('Replace with PNG…');$('#revert').textContent=T('Remove replacement');$('#dlorig').textContent=T('Save original (PNG)');
+  b.querySelector('.note').textContent=T('A new PNG can be larger than the original (x2, x4…) but must keep the same proportions. The replacement applies to every identical texture in the game, because the key depends on the content.');
+  b.querySelectorAll('dd')[0].textContent=t.src+(t.sprite?'':' @0x'+t.off.toString(16));
+  const cv=b.querySelector('#big canvas');
+  const show=m=>{b.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.m===m));
+    if(m==='new'&&r){cv.width=r.w;cv.height=r.h;cv.getContext('2d').drawImage(r.canvas,0,0)}else drawRGBA(cv,getPx(t),t.w,t.h);
+    const sc=Math.max(1,Math.min(8,Math.floor(300/Math.max(t.w,t.h))));cv.style.width=(cv.width*(m==='new'?1:sc))+'px';cv.style.maxWidth='100%';cv.style.height='auto'};
+  b.querySelectorAll('.tabs button').forEach(x=>x.onclick=()=>show(x.dataset.m));
+  show(r?'new':'orig');
+  $('#rep').onchange=async e=>{const f=e.target.files[0];if(f)await setRepl(t,f)};
+  $('#revert').onclick=()=>{ST.repl.delete(t.key);after(t)};
+  $('#dlorig').onclick=async()=>{const px=getPx(t);const c=document.createElement('canvas');drawRGBA(c,px,t.w,t.h);save(fname(t)+'.png',await pngBytes(c))};
+}
+const fname=t=>(t.src.split('/').pop()+'_'+(t.sprite?'spr':t.off.toString(16))+'_'+t.w+'x'+t.h).replace(/[^\w.-]/g,'_');
+function after(t){updMod();if(MODE==='tex')render();select(t);if(MODE==='lvl')refresh3D()}
+function updMod(){const n=ST.repl.size;$('#modcount').textContent=n?T('{0} modified',n):'';$('#expAll').disabled=!n;$('#expO2r').disabled=!n;$('#dlAll').disabled=!ST.entries}
+async function setRepl(t,file){
+  const bm=await createImageBitmap(file);
+  const kx=bm.width/t.w,ky=bm.height/t.h;
+  if(Math.abs(kx-ky)>0.02||bm.width<t.w){toast(T('The PNG must keep the same proportions ({0}×{1}) or be a multiple: x2, x4…',t.w,t.h));return}
+  const c=document.createElement('canvas');c.width=bm.width;c.height=bm.height;c.getContext('2d').drawImage(bm,0,0);
+  ST.repl.set(t.key,{canvas:c,w:c.width,h:c.height,k:kx});after(t);toast(T('Replacement applied'));
+}
+function pngBytes(c){return new Promise(r=>c.toBlob(async b=>r(new Uint8Array(await b.arrayBuffer())),'image/png'))}
+async function save(filename,data){
+  try{const d=window.claude&&await claude.use('downloads');if(d){await d.save({filename,data});return}}catch(e){if(e&&e.code==='declined')return}
+  try{const u=URL.createObjectURL(new Blob([data]));const a=document.createElement('a');a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
+  catch(e){toast(T('Download is not available in this view'))}
+}
+async function buildPack(ext){
+  const files={};let n=0;const list=[...ST.repl.keys()];let done=0;
+  P.start(T('Building the pack'),list.length);
+  for(const t of ST.tex){const r=ST.repl.get(t.key);if(!r)continue;
+    if(P.cancel)return null;
+    const strips=t.sprite?t.strips:[t];let y0=0;
+    for(const s of strips){
+      const px=M.M.renderStrip(ST.idx,s);const crc=M.M.crc32(px);
+      const sy=Math.round(y0*r.k),sh=Math.round(s.h*r.k),sw=Math.round(s.w*r.k);
+      const c=document.createElement('canvas');c.width=sw;c.height=sh;c.getContext('2d').drawImage(r.canvas,0,sy,sw,sh,0,0,sw,sh);
+      const nm=(t.src.split('/').pop()+'_'+s.off.toString(16)).replace(/[^\w-]/g,'_')+'#'+hex(crc)+'#'+s.fmt.toString(16).toUpperCase()+'#'+s.siz.toString(16).toUpperCase()+'.png';
+      files[nm]=[await pngBytes(c),{level:0}];n++;y0+=s.h}
+    P.step(++done)}
+  files['README.txt']=new TextEncoder().encode('Hi-res texture pack for BattleShipDX. Copy this file into the mods folder (next to BattleShip.o2r).\n');
+  return {bytes:fflate.zipSync(files),n};
+}
+async function exportPack(ext){
+  if(!ST.repl.size)return;
+  const r=await buildPack(ext);if(!r){P.end(T('Cancelled'));return}
+  P.end(T('Done: {0} images',r.n));
+  save('BattleShipDX-HiRes-Pack.'+ext,r.bytes);
+}
+// ---- progreso ----
+const P={cancel:false,t0:0,total:0,
+  start(title,total){this.cancel=false;this.t0=performance.now();this.total=total;$('#ptitle').textContent=title;$('#plog').textContent='';$('#pclose').hidden=true;$('#pcancel').hidden=false;$('#prog').classList.add('on');this.step(0)},
+  step(i){const el=(performance.now()-this.t0)/1000,rate=i/Math.max(el,0.001),left=rate>0?(this.total-i)/rate:0;
+    $('#bar i').style.width=(this.total?i/this.total*100:100)+'%';
+    $('#ptxt').textContent=i+' / '+this.total+' · '+Math.round(i/Math.max(1,this.total)*100)+'% · '+fmtT(el)+' '+T('elapsed')+(i>2&&i<this.total?' · '+T('~{0} left',fmtT(left)):'')},
+  log(s){const l=$('#plog');l.textContent+=s+'\n';l.scrollTop=l.scrollHeight},
+  end(msg){$('#ptxt').textContent=msg+' · '+fmtT((performance.now()-this.t0)/1000);$('#bar i').style.width='100%';$('#pclose').hidden=false;$('#pcancel').hidden=true}};
+const fmtT=s=>s<60?Math.round(s)+' s':Math.floor(s/60)+' min '+Math.round(s%60)+' s';
+$('#pcancel').onclick=()=>{P.cancel=true};$('#pclose').onclick=()=>$('#prog').classList.remove('on');
+const yieldUI=()=>new Promise(r=>setTimeout(r,0));
+// ---- descargar todas las texturas ----
+function texPath(t,used){
+  const cat=catOf(t),base=t.src.split('/').pop();
+  let nm=cat+'/'+base+'_'+(t.sprite?'spr':'')+t.off.toString(16)+'_'+t.w+'x'+t.h+'.png';
+  if(used.has(nm.toLowerCase())){let k=2;while(used.has(nm.toLowerCase().replace('.png','_'+k+'.png')))k++;nm=nm.replace('.png','_'+k+'.png')}
+  used.add(nm.toLowerCase());return nm;
+}
+function nameMap(){if(ST._nm)return ST._nm;const used=new Set(),m=new Map();for(const t of ST.tex)m.set(texPath(t,used),t);return ST._nm=m}
+async function downloadAll(){
+  const nm=nameMap();const files={};let i=0;P.start(T('Exporting textures to PNG'),nm.size);
+  const c=document.createElement('canvas');
+  for(const [path,t] of nm){
+    if(P.cancel){P.end(T('Cancelled'));return}
+    drawRGBA(c,getPx(t),t.w,t.h);files[path]=[await pngBytes(c),{level:0}];
+    if(++i%25===0){P.step(i);await yieldUI()}
+  }
+  P.step(i);files['README.txt']=new TextEncoder().encode('Edit the PNGs without renaming them or changing their proportions (you can make them x2, x4...). Then use "Import edited folder" in the editor.\n');
+  P.end(T('Done: {0} textures',i));
+  save('BattleShipDX-Textures.zip',fflate.zipSync(files));
+}
+// ---- importar carpeta ----
+async function importFolder(fileList){
+  const nm=nameMap();const byBase=new Map();for(const [p,t] of nm)byBase.set(p.split('/').pop().toLowerCase(),t);
+  const fs=[...fileList].filter(f=>/\.png$/i.test(f.name));
+  if(!fs.length){toast(T('The folder has no PNG files'));return}
+  P.start(T('Importing edited textures'),fs.length);let ok=0,same=0,bad=0,unk=0,i=0;
+  const cmp=document.createElement('canvas'),cx=cmp.getContext('2d',{willReadFrequently:true});
+  for(const f of fs){
+    if(P.cancel){P.end(T('Cancelled'));break}
+    const t=byBase.get(f.name.toLowerCase());
+    if(!t){unk++;if(unk<=5)P.log(T('Unrecognized name: {0}',f.name))}
+    else{
+      try{
+        const bm=await createImageBitmap(f);const kx=bm.width/t.w,ky=bm.height/t.h;
+        if(Math.abs(kx-ky)>0.02||bm.width<t.w){bad++;P.log(T('Different proportions ({0}×{1} vs {2}×{3}): {4}',bm.width,bm.height,t.w,t.h,f.name))}
+        else{
+          let changed=true;
+          if(bm.width===t.w&&bm.height===t.h){cmp.width=t.w;cmp.height=t.h;cx.clearRect(0,0,t.w,t.h);cx.drawImage(bm,0,0);
+            const a=cx.getImageData(0,0,t.w,t.h).data,b=getPx(t);changed=false;for(let q=0;q<a.length;q++){if(a[q]!==b[q]&&!(a[q-(q%4)+3]===0&&b[q-(q%4)+3]===0)){changed=true;break}}}
+          if(!changed)same++;else{const c=document.createElement('canvas');c.width=bm.width;c.height=bm.height;c.getContext('2d').drawImage(bm,0,0);ST.repl.set(t.key,{canvas:c,w:c.width,h:c.height,k:kx});ok++}
+        }
+        bm.close&&bm.close();
+      }catch(e){bad++;P.log(T('Could not read: {0}',f.name))}
+    }
+    if(++i%10===0){P.step(i);await yieldUI()}
+  }
+  P.step(i);P.end(T('Replaced {0} · unchanged {1} · errors {2} · unknown {3}',ok,same,bad,unk));
+  updMod();if(MODE==='tex')render();
+}
+$('#dlAll').onclick=downloadAll;
+$('#folder').onchange=async e=>{if(e.target.files.length)await importFolder(e.target.files);e.target.value=''};
+$('#expO2r').onclick=()=>exportPack('o2r');
+$('#expAll').onclick=()=>exportPack('zip');
+$('#file').onchange=async e=>{const f=e.target.files[0];if(f)load(await f.arrayBuffer(),f.name)};
+['q','onlyMod','hideTiny'].forEach(i=>$('#'+i).addEventListener('input',render));
+addEventListener('dragover',e=>{e.preventDefault();$('#drop').classList.add('on')});
+addEventListener('dragleave',e=>{if(!e.relatedTarget)$('#drop').classList.remove('on')});
+addEventListener('drop',async e=>{e.preventDefault();$('#drop').classList.remove('on');const f=e.dataTransfer.files[0];if(f)load(await f.arrayBuffer(),f.name)});
+render();
+
+let MODE='tex';
+const STAGES={GRPupupuMap:'Dream Land',GRPupupuSmallMap:'Dream Land (small)',GRPupupuTestMap:'Dream Land (test)',GRZebesMap:'Planet Zebes',GRInishieMap:'Mushroom Kingdom',GRJungleMap:'Kongo Jungle',GRCastleMap:"Peach's Castle",GRSectorMap:'Sector Z',GRYosterMap:"Yoshi's Island",GRYosterSmallMap:"Yoshi's Island (small)",GRYamabukiMap:'Saffron City',GRHyruleMap:'Hyrule Castle',GRLastMap:'Final Destination',GRExplainMap:'How to Play',GRZakoMap:'Battlefield',GRMetalMap:'Metal Mario / Meta Crystal',GRBonus3Map:'Bonus 3 (Master Hand)'};
+function stageName(n){const k=n.split('/').pop();if(STAGES[k])return STAGES[k];const m=k.match(/^GRBonus([12])(\w+)Map$/);return m?(T('Bonus')+' '+(m[1]==='1'?T('Targets'):T('Platforms'))+' · '+m[2]):T(k)}
+const BGM=['Dream Land','Planet Zebes','Mushroom Kingdom','Mushroom Kingdom (hurry)','Sector Z','Kongo Jungle',"Peach's Castle",'Saffron City',"Yoshi's Island",'Hyrule Castle','Character / Stage Select','Victory (default)','Victory: Mario','Victory: Samus','Victory: Donkey Kong','Victory: Kirby','Victory: Fox','Victory: Ness','Victory: Yoshi','Victory: Captain Falcon','Victory: Pokémon','Victory: Link','VS Results','Final Stage (Master Hand)','Master Hand Appears','Final Destination','Bonus Stage','1P Stage Clear','Bonus Stage Clear','1P Game Clear','Bonus Stage Failure','Continue?','Game Over','Opening Movie','How to Play','1P Stage Cards','Battlefield','Meta Crystal','Ending Movie','Credits','Secret Found','Challenger Approaching','Training Mode','Character Data / VS Records','Main Menu','Hammer','Star'];
+const MS={files:new Map(),free:[]}; // files: id -> track asignada por número; free: pistas con nombre libre
+function setMode(m){
+  MODE=m;document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  $('#grid').style.display=m==='tex'?'':'none';$('#tools').style.display=m==='tex'?'':'none';
+  $('#view').style.display=m==='lvl'?'block':'none';$('#mus').style.display=m==='mus'?'block':'none';
+  $('#expAll').hidden=m==='mus';$('#expO2r').hidden=m==='mus';$('#dlAll').hidden=m!=='tex';$('#folderlbl').hidden=m!=='tex';$('#expMus').hidden=m!=='mus';
+  $('#cats .sech').textContent=m==='tex'?T('Resources'):m==='lvl'?T('Levels and models'):T('Tracks');
+  if(m==='tex'){buildCats();render()}
+  else if(m==='lvl'){buildLevels();initGL()}
+  else{$('#catlist').innerHTML='';buildMusic()}
+}
+document.querySelectorAll('#modes button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+// ---- niveles / modelos ----
+let LV=null,GL=null,CUR=null;
+function buildLevels(){
+  const el=$('#catlist');el.innerHTML='';
+  if(!ST.idx){el.innerHTML='<div class="note" style="border:0">'+T('Open the .o2r first.')+'</div>';return}
+  const names=[...ST.idx.files.keys()];
+  const maps=names.filter(n=>/^reloc_stages\/GR\w+Map$/.test(n)).sort((a,b)=>stageName(a).localeCompare(stageName(b)));
+  const models=names.filter(n=>/^reloc_fighters_main\/\w+Model$/.test(n)).sort();
+  const add=(n,l)=>{const d=document.createElement('div');d.className='cat'+(CUR===n?' on':'');d.innerHTML='<span></span><span></span>';d.firstChild.textContent=l;d.onclick=()=>{CUR=n;buildLevels();show3D(n)};el.appendChild(d)};
+  const h=t=>{const d=document.createElement('div');d.className='sech';d.textContent=t;el.appendChild(d)};
+  h(T('Levels'));maps.filter(n=>!/Bonus/.test(n)).forEach(n=>add(n,stageName(n)));
+  h('Bonus');maps.filter(n=>/Bonus/.test(n)).forEach(n=>add(n,stageName(n)));
+  h(T('Fighters (model)'));models.forEach(n=>add(n,n.split('/').pop().replace(/Model$/,'')));
+}
+function keyIndex(){if(ST._tk)return ST._tk;const m=new Map();for(const t of ST.tex)m.set(t.key,t);return ST._tk=m}
+function entryFor(g){
+  const i=g.info;if(!g.tex||!i)return null;
+  const at=g.tex.lastIndexOf('@');const file=g.tex.slice(0,at),off=+g.tex.slice(at+1);
+  const key=g.tex+'/'+i.fmt+i.siz+'/'+i.w+'x'+i.h+(i.fmt===2?'/'+(i.tlut||''):'');
+  const ix=keyIndex();let t=ix.get(key);if(t)return t;
+  let pal=null;if(i.fmt===2&&i.tlut){const a=i.tlut.lastIndexOf('@');pal={file:i.tlut.slice(0,a),off:+i.tlut.slice(a+1),count:i.tlutCount||16}}
+  t={key,file,off,fmt:i.fmt,siz:i.siz,w:i.w,h:i.h,line:i.line,pal,src:file};
+  ST.tex.push(t);ix.set(key,t);ST._nm=null;return t;
+}
+function initGL(){
+  if(GL||!window.THREE)return;
+  const cv=$('#gl');const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+  const scene=new THREE.Scene();scene.background=new THREE.Color(0x0d0f12);
+  const cam=new THREE.PerspectiveCamera(45,1,1,1e6);
+  GL={renderer,scene,cam,root:null,az:0.4,el:0.25,dist:1000,target:new THREE.Vector3(),mats:new Map(),down:null};
+  const rs=()=>{const r=$('#view').getBoundingClientRect();renderer.setSize(r.width,r.height,false);cam.aspect=r.width/Math.max(1,r.height);cam.updateProjectionMatrix();draw()};
+  new ResizeObserver(rs).observe($('#view'));
+  const drag={on:false,x:0,y:0,pan:false,moved:0};
+  cv.addEventListener('pointerdown',e=>{drag.on=true;drag.x=e.clientX;drag.y=e.clientY;drag.pan=e.shiftKey||e.button===2;drag.moved=0;cv.setPointerCapture(e.pointerId)});
+  cv.addEventListener('pointermove',e=>{if(!drag.on)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;drag.moved+=Math.abs(dx)+Math.abs(dy);
+    if(drag.pan){const s=GL.dist*0.0015;const r=new THREE.Vector3().setFromMatrixColumn(cam.matrix,0),u=new THREE.Vector3().setFromMatrixColumn(cam.matrix,1);GL.target.addScaledVector(r,-dx*s).addScaledVector(u,dy*s)}
+    else{GL.az-=dx*0.006;GL.el=Math.max(-1.5,Math.min(1.5,GL.el+dy*0.006))}draw()});
+  cv.addEventListener('pointerup',e=>{drag.on=false;if(drag.moved<4)pick(e)});
+  cv.addEventListener('contextmenu',e=>e.preventDefault());
+  cv.addEventListener('wheel',e=>{e.preventDefault();GL.dist*=Math.exp(e.deltaY*0.001);draw()},{passive:false});
+  rs();
+}
+function draw(){if(!GL)return;const {cam,target,az,el,dist}=GL;cam.position.set(target.x+dist*Math.sin(az)*Math.cos(el),target.y+dist*Math.sin(el),target.z+dist*Math.cos(az)*Math.cos(el));cam.lookAt(target);GL.renderer.render(GL.scene,cam)}
+function matFor(key,t){
+  if(GL.mats.has(key))return GL.mats.get(key);
+  const m=new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,alphaTest:0.35,side:THREE.DoubleSide});
+  m.userData.t=t||null;GL.mats.set(key,m);applyTex(m);return m;
+}
+function applyTex(m){
+  const t=m.userData.t;if(!t){m.map=null;m.needsUpdate=true;return}
+  const r=ST.repl.get(t.key);let cvs;
+  if(r)cvs=r.canvas;else{cvs=document.createElement('canvas');drawRGBA(cvs,getPx(t),t.w,t.h)}
+  if(m.map)m.map.dispose();
+  const tx=new THREE.CanvasTexture(cvs);tx.wrapS=tx.wrapT=THREE.RepeatWrapping;tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.LinearMipmapLinearFilter;
+  m.map=tx;m.needsUpdate=true;
+}
+function refresh3D(){if(!GL)return;for(const m of GL.mats.values())applyTex(m);draw()}
+function show3D(name){
+  if(!GL)initGL();if(!GL)return;
+  GL.mats.forEach(m=>{if(m.map)m.map.dispose();m.dispose()});GL.mats.clear();
+  if(GL.root){GL.scene.remove(GL.root);GL.root.traverse(o=>o.geometry&&o.geometry.dispose())}
+  const sc=M.buildScene(ST.idx,name);const root=new THREE.Group();let tris=0,texn=new Set();
+    for(const part of sc.parts){const stack=[];
+    for(const n of part.nodes){
+      const o=new THREE.Object3D();o.position.set(...n.T);o.rotation.order='ZYX';o.rotation.set(n.R[0],n.R[1],n.R[2]);o.scale.set(...n.S);
+      (n.level>0&&stack[n.level-1]?stack[n.level-1]:root).add(o);stack.length=n.level;stack[n.level]=o;
+      for(const g of n.groups){
+        const t=entryFor(g),tw=t?t.w:32,th=t?t.h:32;const cnt=g.v.length;
+        const pos=new Float32Array(cnt*3),uv=new Float32Array(cnt*2),col=new Float32Array(cnt*3);
+        for(let i=0;i<cnt;i++){const v=g.v[i];pos[i*3]=v[0];pos[i*3+1]=v[1];pos[i*3+2]=v[2];uv[i*2]=v[3]/32/tw;uv[i*2+1]=1-v[4]/32/th;col[i*3]=v[5]/255;col[i*3+1]=v[6]/255;col[i*3+2]=v[7]/255}
+        const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setAttribute('uv',new THREE.BufferAttribute(uv,2));geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+        const mesh=new THREE.Mesh(geo,matFor(t?t.key:'',t));o.add(mesh);tris+=cnt/3;if(t)texn.add(t.key)}}}
+  GL.scene.add(root);GL.root=root;root.updateMatrixWorld(true);
+  const box=new THREE.Box3().setFromObject(root);
+  if(!box.isEmpty()){const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3());GL.target.copy(c);GL.dist=Math.max(s.x,s.y,s.z)*1.6+10}
+  GL.az=0;GL.el=0.15;
+  $('#hud').textContent=stageName(name)+' · '+T('{0} parts · {1} triangles · {2} textures · drag=rotate · shift+drag=pan · wheel=zoom · click=pick texture',sc.parts.length,tris,texn.size);
+  draw();
+}
+const ray=new THREE.Raycaster?null:null;
+function pick(e){
+  if(!GL||!GL.root)return;const r=$('#gl').getBoundingClientRect();
+  const rc=new THREE.Raycaster();rc.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1),GL.cam);
+  const hits=rc.intersectObject(GL.root,true).filter(h=>h.object.material&&h.object.material.userData.t);
+  if(hits.length){select(hits[0].object.material.userData.t)}
+}
+// ---- música ----
+function buildMusic(){
+  const el=$('#mus');el.innerHTML='<div class="note" style="border:0;margin:0 0 12px;color:var(--fg)"></div>';el.firstChild.innerHTML=T('Add your MP3, OGG or WAV files. Tracks in the list below are assigned automatically to that song (saved as <code>music/&lt;number&gt;.mp3</code>). <b>Free tracks</b> keep their own name and you choose them per song in the port\'s <b>Audio Editor</b> menu (Assets → Audio Editor). Put the .zip or .o2r in the <code>mods</code> folder. Tick “once” for jingles that must not loop.');
+  const fr=document.createElement('div');fr.className='mrow has';fr.style.gridTemplateColumns='1fr auto';
+  fr.innerHTML='<span><b></b> <span class="stat"></span></span><span></span>';fr.querySelector('b').textContent=T('Free tracks');fr.querySelector('.stat').textContent=T('(selectable from the port menu)');
+  const fi=document.createElement('input');fi.type='file';fi.multiple=true;fi.accept='.mp3,.ogg,.wav,audio/*';fi.id='mfree';fi.hidden=true;
+  const fl=document.createElement('label');fl.className='btn pri';fl.htmlFor='mfree';fl.textContent=T('Add tracks…');
+  fi.onchange=async()=>{for(const f of fi.files){const ext=(f.name.split('.').pop()||'').toLowerCase();if(!['mp3','ogg','wav'].includes(ext))continue;
+    const nm=f.name.replace(/\.[^.]+$/,'').replace(/[^\w .()\-]/g,'_');
+    MS.free.push({name:nm,ext,loop:true,bytes:new Uint8Array(await f.arrayBuffer()),url:URL.createObjectURL(f)})}buildMusic()};
+  fr.children[1].append(fl,fi);el.appendChild(fr);
+  MS.free.forEach((f,ix)=>{const row=document.createElement('div');row.className='mrow';row.style.gridTemplateColumns='1fr auto';
+    row.innerHTML='<span class="fn" style="color:var(--fg)"></span><span class="act2" style="display:flex;gap:6px;align-items:center"></span>';row.firstChild.textContent=f.name+'.'+f.ext;
+    const b=row.children[1];const pl=document.createElement('button');pl.textContent='▶';pl.onclick=()=>{const au=new Audio(f.url);au.play();setTimeout(()=>au.pause(),15000)};
+    const lp=document.createElement('label');lp.className='chip';lp.innerHTML='<input type="checkbox">'+T('once');lp.firstChild.checked=!f.loop;lp.firstChild.onchange=e=>{f.loop=!e.target.checked};
+    const rm=document.createElement('button');rm.textContent=T('Remove');rm.onclick=()=>{MS.free.splice(ix,1);buildMusic()};b.append(pl,lp,rm);el.appendChild(row)});
+  const h2=document.createElement('div');h2.className='sech';h2.textContent=T('Assign directly to a song');el.appendChild(h2);
+  BGM.forEach((nm0,id)=>{const nm=T(nm0);
+    const f=MS.files.get(id);const row=document.createElement('div');row.className='mrow'+(f?' has':'');
+    row.innerHTML='<span class="id"></span><span class="nm"></span><span class="act"></span><span class="act2"></span>';
+    row.children[0].textContent=id;
+    const lab=row.children[1];lab.textContent=nm;
+    if(f){const s=document.createElement('div');s.className='fn';s.textContent=f.name;lab.appendChild(s)}
+    const a=row.children[2];
+    const inp=document.createElement('input');inp.type='file';inp.accept='.mp3,.ogg,.wav,audio/*';inp.id='m'+id;inp.hidden=true;
+    const lb=document.createElement('label');lb.className='btn';lb.htmlFor='m'+id;lb.textContent=f?T('Change'):T('Choose audio…');
+    inp.onchange=async()=>{const fl=inp.files[0];if(!fl)return;const ext=(fl.name.split('.').pop()||'').toLowerCase();if(!['mp3','ogg','wav'].includes(ext)){toast(T('Use MP3, OGG or WAV'));return}
+      MS.files.set(id,{name:fl.name,ext,loop:!(f&&f.loop===false),bytes:new Uint8Array(await fl.arrayBuffer()),url:URL.createObjectURL(fl)});buildMusic()};
+    a.append(lb,inp);
+    const b=row.children[3];
+    if(f){const pl=document.createElement('button');pl.textContent='▶';pl.onclick=()=>{const au=new Audio(f.url);au.play();setTimeout(()=>au.pause(),15000)};
+      const lp=document.createElement('label');lp.className='chip';lp.innerHTML='<input type="checkbox">'+T('once');lp.firstChild.checked=!f.loop;lp.firstChild.onchange=e=>{f.loop=!e.target.checked};
+      const rm=document.createElement('button');rm.textContent=T('Remove');rm.onclick=()=>{MS.files.delete(id);buildMusic()};b.append(pl,lp,rm);b.style.display='flex';b.style.gap='6px';b.style.alignItems='center'}
+    el.appendChild(row)});
+  $('#expMus').disabled=!(MS.files.size||MS.free.length);
+}
+$('#expMus').onclick=()=>{const fl={};for(const [id,f] of MS.files)fl['music/'+id+(f.loop?'':'_once')+'.'+f.ext]=[f.bytes,{level:0}];
+  for(const f of MS.free)fl['music/'+f.name+(f.loop?'':'_once')+'.'+f.ext]=[f.bytes,{level:0}];
+  fl['README.txt']=new TextEncoder().encode('Music pack for BattleShipDX. Copy this file into the mods folder next to BattleShip.o2r. Pick tracks in Assets > Audio Editor.\n');
+  save('BattleShipDX-Music-Pack.zip',fflate.zipSync(fl));toast(T('{0} tracks in the pack',MS.files.size+MS.free.length))};
+
+$('#lang').onchange=e=>{LANG=e.target.value;try{localStorage.setItem('lang',LANG)}catch(x){}applyLang()};
+if(LANG!=='en')applyLang();else $('#lang').value='en';
+</script>

@@ -92,3 +92,23 @@ While hosting or connected to a room, only physical controller port 0 is read (i
 
 ## Update 5: players on the native character select panels
 In a room, every connected player is shown on the game's own character select panels (fighter model, name emblem, costume) with the player's name above the panel (`mnPlayersVSNetSyncPanels`). The host's real P1 selection is broadcast to the clients (`syNetLobbyPublishHostChoice`), so clients see P1 live. Clients' own pad 0 is neutral in the lobby so they cannot move the (hidden) cursors. Toggle: "Show connected players on the character select panels" in the Online menu (CVar `gNetplay.ShowPanels`); when off, the old name strip is drawn. 1P Mode allows panels for P1-P3.
+
+## Update 6: desync detection + invisible panel fighters
+- Every 30 ticks both peers hash the simulation state (scene, stage, time, per-player stocks, position, status, damage). Clients send the hash to the host (`T_SYNC`); on mismatch the host cancels the run/match for everybody with "Desync detected at tick N". Every 60 ticks each peer also logs `SSB64 NetSync` lines (per-player x/y/status/damage + hash): diff host and client logs to find the first diverging tick.
+- Character select panels: the game resets a panel when it (re)creates a cursor for a connected controller port, which left remote fighters invisible. The sync now verifies the real slot state every frame and re-applies when needed.
+
+## Update 7: 1P desync root cause (save data / settings differ per PC)
+The 1P flow reads each PC's own save: `unlock_mask` (which challenger stages Ness/Captain/Jigglypuff appear), `fighter_mask` (which fighters are drawn as allies/enemies), bonus records (sound-test unlock check), hiscores and `spgame_time_limit`. Two PCs with different saves walk different stage sequences, so the game desyncs "whenever it wants" and never recovers (VS is immune: everything goes through the metadata blob). Now the host's values travel in the run config; a client plays the run with them and gets its own save back (and re-written) when the run ends. Also a fingerprint of the simulation-affecting port settings (competitive ruleset, neutral spawns, CPU level 9, port bonus stages, unlock-all cheat, tap-jump) is part of the periodic state hash, so mismatching settings are reported as a desync at tick 0.
+
+## Music overrides (mods/music)
+
+Replace any BGM with an MP3/OGG/WAV: put `music/<bgmId>.mp3` (or `.ogg`/`.wav`) in `<app-data>/mods/` as loose files, or inside any `.zip`/`.o2r` in `mods/`. Use `<id>_once.mp3` for non-looping jingles. IDs follow `gmsound.h` (0 Dream Land, 1 Zebes, 2 Mushroom Kingdom, 6 Castle, ...). Disable with CVar `gMusicOverride.Enabled=0`. Source: `port/audio/music_override.cpp` (minimp3 + stb_vorbis in `port/audio/third_party`); hooks in `decomp/src/sys/audio.c` (`syAudioPlayBGM`, `syAudioStopBGM`, volume setters) and the mix in `portAudioSubmitFrame`.
+
+### Audio Editor + gameplay cheats
+
+- **Menu > Assets > Audio Editor**: pick the music file for every BGM id (Default / Original / Random custom / any file in `mods/music`, `.zip` or `.o2r`). Stored in CVars `gMusicOverride.Sel.<id>`. Hi-res texture packs can now also be `.o2r`.
+- **Menu > Settings > Cheats > Gameplay Cheats (offline only)**: infinite jumps, infinite shield, always 0%, infinite stocks/lives, CPU fighters at 999%. Applied in `ftMainProcUpdateInterrupt` / `ftCommonDeadProcUpdate` and forced off while an online room is open (`syNetLobbyIsRoomOpen`).
+
+## Web asset editor
+
+`web/index.html` is a static page (English default, Español option). GitHub Pages deploys it through `.github/workflows/pages.yml`. When you change the editor, copy the new build over `web/index.html` and push.
