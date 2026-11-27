@@ -152,6 +152,32 @@ ICNS_SRC="$ROOT/assets/icon.icns"
 [[ "$VER" == "jp" ]] && ICNS_SRC="$ROOT/assets/icon-jp.icns"
 cp "$ICNS_SRC" "$APP/Contents/Resources/AppIcon.icns"
 
+# Liquid Glass app icon (macOS 26 "Tahoe" and later). Compiled from the Icon
+# Composer package assets/BattleShipIcon.icon when the local Xcode's actool
+# supports that format (Xcode 26+); on older toolchains this block quietly
+# no-ops and the flat AppIcon.icns above ships alone, exactly as before.
+# actool also emits a flattened .icns render of the same artwork, which
+# replaces the hand-made icns so pre-Tahoe systems show matching art.
+# US only for now — assets/BattleShipIcon.icon has no JP variant yet.
+GLASS_ICON=0
+if [[ "$VER" == "us" ]]; then
+  GLASS_TMP="$(mktemp -d)"
+  if xcrun actool "$ROOT/assets/BattleShipIcon.icon" --compile "$GLASS_TMP" \
+       --app-icon BattleShipIcon \
+       --output-partial-info-plist "$GLASS_TMP/partial.plist" \
+       --platform macosx --target-device mac \
+       --minimum-deployment-target 11.0 >/dev/null 2>&1 \
+     && [[ -f "$GLASS_TMP/Assets.car" && -f "$GLASS_TMP/BattleShipIcon.icns" ]]; then
+    cp "$GLASS_TMP/Assets.car"          "$APP/Contents/Resources/Assets.car"
+    cp "$GLASS_TMP/BattleShipIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
+    GLASS_ICON=1
+    step "App icon: Liquid Glass (actool) + flattened icns fallback"
+  else
+    step "App icon: flat icns only (actool unavailable or lacks .icon support)"
+  fi
+  rm -rf "$GLASS_TMP"
+fi
+
 # Bundle the ESC menu fonts. Menu.cpp::FindMenuAssetPath walks up from
 # RealAppBundlePath() (= Contents/Resources inside an .app on macOS)
 # checking each parent for assets/custom/fonts/<name> — so placing the
@@ -227,6 +253,12 @@ cat > "$APP/Contents/Info.plist" <<EOF
 </dict>
 </plist>
 EOF
+
+# The asset-catalog icon key is only valid when Assets.car actually shipped;
+# with it present but the catalog missing, macOS 26+ would show a generic icon.
+if [[ "$GLASS_ICON" == 1 ]]; then
+  plutil -insert CFBundleIconName -string BattleShipIcon "$APP/Contents/Info.plist"
+fi
 
 # Make the binaries executable (cp preserves mode, but be defensive).
 chmod +x "$APP/Contents/MacOS/$APP_NAME" "$APP/Contents/MacOS/torch"
